@@ -22,7 +22,10 @@ export default function Home() {
         {!session ? (
           <Button onClick={() => signIn("azure-ad")}>Login</Button>
         ) : (
-          <Button onClick={() => signOut()}>Logout</Button>
+          <div className="mt-4 text-sm text-muted-foreground">
+            <p>{session.user?.name}</p>
+            <Button onClick={() => signOut()}>Logout</Button>
+          </div>
         )}
       </div>
     </main>
