@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn, signOut, useSession, SessionProvider } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -20,7 +20,7 @@ export default function Home() {
         </p>
 
         {!session ? (
-          <Button onClick={() => signIn()}>Login</Button>
+          <Button onClick={() => signIn("azure-ad")}>Login</Button>
         ) : (
           <Button onClick={() => signOut()}>Logout</Button>
         )}

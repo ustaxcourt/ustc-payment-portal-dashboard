@@ -1,3 +1,5 @@
+console.log("NEXTAUTH ROUTE LOADED");
+
 import NextAuth from "next-auth";
 import { authOptions } from "@/lib/auth";
 

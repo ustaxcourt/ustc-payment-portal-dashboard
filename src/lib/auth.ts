@@ -9,11 +9,16 @@ interface AzureProfile extends Profile {
 
 const clientId = process.env.AUTH_MICROSOFT_ENTRA_ID_ID;
 const clientSecret = process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET;
-const tenantId = process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER;
+const issuer = process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER;
 
-if (!clientId || !clientSecret || !tenantId) {
-    throw new Error("Missing Azure AD environment variables");
+if (!clientId || !clientSecret || !issuer) {
+  throw new Error("Missing Azure AD environment variables");
 }
+
+const tenantId = issuer
+  .replace(/^https:\/\/login\.microsoftonline\.com\//, "")
+  .replace(/\/v2\.0\/?$/, "")
+  .replace(/\/$/, "");
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
