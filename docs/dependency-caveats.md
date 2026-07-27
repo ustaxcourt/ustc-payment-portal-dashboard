@@ -24,6 +24,25 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
+### next 15.5.22 → 16.2.12 — deferred (2026-07-27)
+
+- **Current:** `15.5.22` (pinned exactly, not a range). **Available latest:** `16.2.12`.
+- **Reason:** AWS Amplify Hosting — the hosting target chosen for this app — documents
+  Next.js support through version 15. Next 16 is not officially supported, and the
+  Amplify Hosting issue tracker carries a concrete failure for it: *"Next.js 16.1 build
+  fails with EEXIST error: Turbopack creates symlinks in `.next/node_modules` that
+  Amplify bundler cannot handle,"* plus open reports of WEB_COMPUTE builds stuck in
+  provisioning and SSR compute hangs. We were exposed to that failure by default: Next 16
+  makes Turbopack the default build engine, so a plain `next build` produced
+  `▲ Next.js 16.2.12 (Turbopack)` with no opt-in. On 15.5.22 the build runs on webpack.
+  This app uses no Next 16 feature — it is a placeholder landing page — so the pin costs
+  nothing and removes the largest delivery risk in PAY-330.
+- **Plan:** Upgrade when Amplify documents Next 16 support and the Turbopack bundler
+  issue is closed. Pinned exactly rather than `^15` so the major cannot drift back in
+  through a lockfile refresh. **This pin is contingent on the Amplify hosting decision
+  (ADR 0001 open question 3); if the team selects OpenNext instead, re-evaluate rather
+  than assuming the pin is still required.**
+
 ### hashicorp/aws provider `~> 5.0` → 6.x — deferred (2026-07-27)
 
 - **Current:** `~> 5.0`. **Available latest:** `6.x`.
@@ -57,7 +76,7 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Reason it can't be fixed now:** These advisories cover `postcss <= 8.5.17`.
   Our direct dependency tree is already clear — `@tailwindcss/postcss@4.3.3`
   resolves `postcss@8.5.23`, which is patched. The flagged copy is
-  `postcss@8.4.31`, vendored inside `next@16.2.12` at
+  `postcss@8.4.31`, vendored inside `next@15.5.22` at
   `node_modules/next/node_modules/postcss`. We do not control that pin, and
   `npm audit fix --force` "resolves" it by installing `next@9.3.3` — a downgrade
   across seven major versions that would delete the App Router this app is built
@@ -78,7 +97,7 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Reason it can't be fixed now:** `sharp < 0.35.0` inherits libvips
   vulnerabilities CVE-2026-33327, CVE-2026-33328, CVE-2026-35590 and
   CVE-2026-35591. `sharp` is not a direct dependency — it arrives transitively
-  through `next@16.2.12`, which pins it for `next/image` optimization. As above,
+  through `next@15.5.22`, which pins it for `next/image` optimization. As above,
   the only fix `npm audit` offers is the `next@9.3.3` downgrade.
 - **Mitigation:** The vulnerabilities are in libvips image decoding, reachable
   only by passing untrusted image bytes through `sharp`. This app currently has
