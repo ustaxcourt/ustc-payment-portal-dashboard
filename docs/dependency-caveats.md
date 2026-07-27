@@ -24,7 +24,21 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-_None yet._
+### hashicorp/aws provider `~> 5.0` → 6.x — deferred (2026-07-27)
+
+- **Current:** `~> 5.0`. **Available latest:** `6.x`.
+- **Reason:** This is a greenfield repo with no existing resources, so starting
+  on 6.x would carry no migration cost here — the argument for it is real. We
+  are matching `~> 5.0` anyway, deliberately, because `ustc-payment-portal` has
+  a dated, documented decision to stay on 5.x until a dedicated migration
+  ticket. Starting this repo on 6.x would fragment the org onto two provider
+  majors and turn one migration into two. Nothing in Phase 1 or the planned
+  Amplify/Route53/ACM resources requires 6.x.
+- **Plan:** Migrate alongside `ustc-payment-portal` when its aws-provider-6.x
+  ticket is scheduled, so both repos move together. Revisit sooner if a required
+  Amplify resource or attribute turns out to be 6.x-only — that would be a
+  reason to diverge, and should be raised with the team rather than decided in
+  a PR.
 
 <!-- Format:
 ### <package> <current> → <available> — deferred (<date>)
