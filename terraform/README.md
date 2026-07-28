@@ -29,13 +29,18 @@ Bootstrap creates the state bucket that every other root depends on, so it runs
 with local state and must be applied by a human with SSO credentials — CI cannot
 do it, because the role CI would assume does not exist yet.
 
+Export `AWS_PROFILE` for the whole session rather than prefixing individual
+commands — `terraform init` needs credentials too, because it reaches the S3
+backend.
+
 ```bash
-aws sso login --profile ent-apps-payment-portal-workloads-dev
+export AWS_PROFILE=ent-apps-payment-portal-workloads-dev
+aws sso login                       # opens a browser
+aws sts get-caller-identity         # expect Account 723609007960
 
 cd terraform/bootstrap
 terraform init
-AWS_PROFILE=ent-apps-payment-portal-workloads-dev \
-  terraform apply -var-file=dev.tfvars
+terraform apply -var-file=dev.tfvars
 ```
 
 Repeat with `stg.tfvars` / `prod.tfvars` against the matching profile. Do not
@@ -47,8 +52,13 @@ Then apply the environment root to create the CI roles:
 ```bash
 cd ../environments/dev
 terraform init -backend-config=backend.hcl
-AWS_PROFILE=ent-apps-payment-portal-workloads-dev terraform apply
+terraform plan                      # review before applying
+terraform apply
 ```
+
+If `init` fails with "No valid credential sources found", `AWS_PROFILE` is not
+set in the shell — the S3 backend needs it at init time, not just at apply time.
+Re-run with `-reconfigure` after fixing it.
 
 Take `read_only_role_arn` and `deploy_role_arn` from the outputs and set them as
 GitHub repository secrets:
@@ -65,6 +75,7 @@ skips the plan step with a notice rather than failing.
 ## Day-to-day
 
 ```bash
+export AWS_PROFILE=ent-apps-payment-portal-workloads-dev
 terraform fmt -recursive          # CI enforces this
 cd environments/dev
 terraform init -backend-config=backend.hcl
