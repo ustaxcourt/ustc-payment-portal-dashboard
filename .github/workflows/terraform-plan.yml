@@ -1,0 +1,109 @@
+name: Terraform Validate and Plan
+
+# Read-only. fmt/validate need no AWS; plan is skipped until role ARN secrets exist.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-plan.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_VERSION: "1.15.8"
+
+jobs:
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+      - run: terraform fmt -recursive -check -diff
+        working-directory: terraform
+
+  validate:
+    name: Validate (${{ matrix.env }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, stg, prod]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+      - name: Terraform Init (no backend)
+        working-directory: terraform/environments/${{ matrix.env }}
+        run: terraform init -backend=false -input=false
+      - name: Terraform Validate
+        working-directory: terraform/environments/${{ matrix.env }}
+        run: terraform validate -no-color
+
+  plan:
+    name: Plan (${{ matrix.env }})
+    needs: [fmt, validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: dev
+            role_arn_secret: DEV_AWS_READ_ONLY_ROLE_ARN
+          - env: stg
+            role_arn_secret: STG_AWS_READ_ONLY_ROLE_ARN
+          - env: prod
+            role_arn_secret: PROD_AWS_READ_ONLY_ROLE_ARN
+    steps:
+      - name: Check for role secret
+        id: check
+        run: |
+          if [ -z "${{ secrets[matrix.role_arn_secret] }}" ]; then
+            echo "has_role=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::${{ matrix.role_arn_secret }} is not set — skipping plan for ${{ matrix.env }}."
+          else
+            echo "has_role=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v6
+        if: steps.check.outputs.has_role == 'true'
+
+      - name: Configure AWS Credentials (OIDC - ${{ matrix.env }})
+        if: steps.check.outputs.has_role == 'true'
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets[matrix.role_arn_secret] }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v4
+        if: steps.check.outputs.has_role == 'true'
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        if: steps.check.outputs.has_role == 'true'
+        working-directory: terraform/environments/${{ matrix.env }}
+        run: terraform init -input=false -lock=false -backend-config=backend.hcl -reconfigure
+
+      - name: Terraform Plan
+        if: steps.check.outputs.has_role == 'true'
+        working-directory: terraform/environments/${{ matrix.env }}
+        run: terraform plan -no-color -input=false -lock=false
