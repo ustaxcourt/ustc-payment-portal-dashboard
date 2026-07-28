@@ -21,4 +21,4 @@ module "iam" {
   state_bucket_name = local.state_bucket_name
 }
 
-# Hosting, DNS and certificates land in Phase 2. See docs/PAY-330-implementation-plan.md.
+# Hosting, DNS and certificates land in a follow-up (PAY-330).

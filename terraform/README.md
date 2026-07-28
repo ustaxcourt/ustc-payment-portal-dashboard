@@ -73,9 +73,9 @@ terraform plan
 
 ## Not built yet
 
-Hosting, DNS and certificates are Phase 2, blocked on the Amplify vs OpenNext
-decision. The deployer role is deliberately scoped to state access plus reads
-until then — its write permissions are written alongside the resources they
-grant access to, not guessed at in advance.
+Hosting, DNS and certificates are not built yet, pending the hosting decision in
+ADR 0001 (open question 3). The deployer role is deliberately scoped to state
+access plus reads until then — its write permissions are written alongside the
+resources they grant access to, not guessed at in advance.
 
-See `docs/PAY-330-implementation-plan.md`.
+See PAY-330.
