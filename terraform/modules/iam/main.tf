@@ -7,7 +7,13 @@ data "aws_iam_openid_connect_provider" "github" {
 
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
-  github_sub  = "repo:${var.github_org}/${var.github_repo}:*"
+
+  # Both accepted: this org's tokens carry immutable numeric IDs, the plain form
+  # is kept so the roles survive that setting being turned off.
+  github_subs = [
+    "repo:${var.github_org}@${var.github_org_id}/${var.github_repo}@${var.github_repo_id}:*",
+    "repo:${var.github_org}/${var.github_repo}:*",
+  ]
 
   state_bucket_arn = "arn:aws:s3:::${var.state_bucket_name}"
 
@@ -26,7 +32,7 @@ locals {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           }
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = local.github_sub
+            "token.actions.githubusercontent.com:sub" = local.github_subs
           }
         }
       }
