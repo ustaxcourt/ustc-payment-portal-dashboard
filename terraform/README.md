@@ -14,7 +14,7 @@ terraform/
 
 ## Accounts
 
-| Environment | Account | State bucket | Domain (PAY-330) |
+| Environment | Account | State bucket | Domain |
 | --- | --- | --- | --- |
 | dev | 723609007960 | `ustc-payment-portal-dashboard-terraform-state-dev` | `dev-dashboard.payments.ustaxcourt.gov` |
 | stg | 747103385969 | `ustc-payment-portal-dashboard-terraform-state-stg` | `stg-dashboard.payments.ustaxcourt.gov` |
@@ -88,5 +88,3 @@ Hosting, DNS and certificates are not built yet, pending the hosting decision in
 ADR 0001 (open question 3). The deployer role is deliberately scoped to state
 access plus reads until then — its write permissions are written alongside the
 resources they grant access to, not guessed at in advance.
-
-See PAY-330.

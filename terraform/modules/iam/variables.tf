@@ -27,8 +27,7 @@ variable "github_repo" {
   default     = "ustc-payment-portal-dashboard"
 }
 
-# GitHub issues OIDC tokens whose `sub` embeds immutable numeric IDs, e.g.
-# repo:ustaxcourt@40034127/ustc-payment-portal-dashboard@1311097674:pull_request
+# OIDC sub embeds these: repo:<org>@<org_id>/<repo>@<repo_id>:<event>
 variable "github_org_id" {
   description = "Numeric GitHub organization ID (gh api orgs/<org> --jq .id)"
   type        = string

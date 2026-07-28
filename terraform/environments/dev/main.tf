@@ -21,4 +21,14 @@ module "iam" {
   state_bucket_name = local.state_bucket_name
 }
 
-# Hosting, DNS and certificates land in a follow-up (PAY-330).
+# Resolves only once payments.ustaxcourt.gov delegates to these nameservers.
+resource "aws_route53_zone" "dashboard" {
+  name          = local.dashboard_domain
+  comment       = "Dashboard zone for ${local.environment}; delegated from payments.ustaxcourt.gov"
+  force_destroy = false
+
+  tags = {
+    Name = local.dashboard_domain
+  }
+}
+

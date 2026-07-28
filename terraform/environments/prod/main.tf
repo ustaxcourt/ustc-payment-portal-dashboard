@@ -21,4 +21,3 @@ module "iam" {
   state_bucket_name = local.state_bucket_name
 }
 
-# Hosting, DNS and certificates land in a follow-up (PAY-330).
