@@ -27,15 +27,21 @@ resource "aws_iam_role_policy" "amplify_logs" {
     Version = "2012-10-17"
     Statement = [
       {
+        # DescribeLogGroups does not support resource-level permissions.
+        Effect   = "Allow"
+        Action   = ["logs:DescribeLogGroups"]
+        Resource = "*"
+      },
+      {
+        # The trailing :* covers the log streams inside each group.
         Effect = "Allow"
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:DescribeLogGroups",
           "logs:PutLogEvents",
         ]
-        Resource = "arn:aws:logs:*:*:log-group:/aws/amplify/*"
-      }
+        Resource = "arn:aws:logs:*:*:log-group:/aws/amplify/*:*"
+      },
     ]
   })
 }
