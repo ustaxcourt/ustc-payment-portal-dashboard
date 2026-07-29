@@ -24,6 +24,22 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
+### hashicorp/aws provider 6.56.0 → 6.57.0 — deferred (2026-07-29)
+
+- **Current:** `6.56.0` (pinned exactly, not `~> 6.0`). **Available latest:** `6.57.0`.
+- **Reason:** 6.57.0 fails reading the GitHub OIDC provider. Every `terraform plan`
+  errors on the `aws_iam_openid_connect_provider` data source with
+  `ListOpenIDConnectProviders ... StatusCode: 302, api error UnknownError`. The AWS
+  CLI makes the identical call successfully against the same credentials and account,
+  and every apply on 6.56.0 worked, so this is a provider regression rather than a
+  network, permissions, or configuration problem. It blocks all four Terraform roots,
+  since each reads that data source through `modules/iam`.
+- **Plan:** Pinned exactly so `terraform init -upgrade` cannot silently reintroduce it.
+  Revisit when 6.58.0 ships: relax to `~> 6.0`, run `terraform plan` in `environments/dev`,
+  and confirm the data source reads. **Not yet confirmed against the upstream issue
+  tracker** — check the [provider issues](https://github.com/hashicorp/terraform-provider-aws/issues)
+  before acting, in case the cause is narrower than observed here.
+
 ### next 15.5.22 → 16.2.12 — deferred (2026-07-27)
 
 - **Current:** `15.5.22` (pinned exactly, not a range). **Available latest:** `16.2.12`.
