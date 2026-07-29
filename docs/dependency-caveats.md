@@ -24,6 +24,22 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
+### hashicorp/aws provider 6.56.0 → 6.57.0 — deferred (2026-07-29)
+
+- **Current:** `6.56.0` (pinned exactly, not `~> 6.0`). **Available latest:** `6.57.0`.
+- **Reason:** 6.57.0 fails reading the GitHub OIDC provider. Every `terraform plan`
+  errors on the `aws_iam_openid_connect_provider` data source with
+  `ListOpenIDConnectProviders ... StatusCode: 302, api error UnknownError`. The AWS
+  CLI makes the identical call successfully against the same credentials and account,
+  and every apply on 6.56.0 worked, so this is a provider regression rather than a
+  network, permissions, or configuration problem. It blocks all four Terraform roots,
+  since each reads that data source through `modules/iam`.
+- **Plan:** Pinned exactly so `terraform init -upgrade` cannot silently reintroduce it.
+  Revisit when 6.58.0 ships: relax to `~> 6.0`, run `terraform plan` in `environments/dev`,
+  and confirm the data source reads. **Not yet confirmed against the upstream issue
+  tracker** — check the [provider issues](https://github.com/hashicorp/terraform-provider-aws/issues)
+  before acting, in case the cause is narrower than observed here.
+
 ### next 15.5.22 → 16.2.12 — deferred (2026-07-27)
 
 - **Current:** `15.5.22` (pinned exactly, not a range). **Available latest:** `16.2.12`.
@@ -42,22 +58,6 @@ enough context that the next person doesn't have to re-derive the decision.
   through a lockfile refresh. **This pin is contingent on the Amplify hosting decision
   (ADR 0001 open question 3); if the team selects OpenNext instead, re-evaluate rather
   than assuming the pin is still required.**
-
-### hashicorp/aws provider `~> 5.0` → 6.x — deferred (2026-07-27)
-
-- **Current:** `~> 5.0`. **Available latest:** `6.x`.
-- **Reason:** This is a greenfield repo with no existing resources, so starting
-  on 6.x would carry no migration cost here — the argument for it is real. We
-  are matching `~> 5.0` anyway, deliberately, because `ustc-payment-portal` has
-  a dated, documented decision to stay on 5.x until a dedicated migration
-  ticket. Starting this repo on 6.x would fragment the org onto two provider
-  majors and turn one migration into two. Nothing in Phase 1 or the planned
-  Amplify/Route53/ACM resources requires 6.x.
-- **Plan:** Migrate alongside `ustc-payment-portal` when its aws-provider-6.x
-  ticket is scheduled, so both repos move together. Revisit sooner if a required
-  Amplify resource or attribute turns out to be 6.x-only — that would be a
-  reason to diverge, and should be raised with the team rather than decided in
-  a PR.
 
 <!-- Format:
 ### <package> <current> → <available> — deferred (<date>)

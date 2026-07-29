@@ -12,9 +12,7 @@ locals {
   repo_immutable = "repo:${var.github_org}@${var.github_org_id}/${var.github_repo}@${var.github_repo_id}"
   repo_plain     = "repo:${var.github_org}/${var.github_repo}"
 
-  # Both forms accepted: this org's tokens carry immutable numeric IDs, the plain
-  # form is kept so the roles survive that org setting being turned off.
-  # Read-only is assumed by PR plans; the deployer only from main.
+  # Both forms: this org emits immutable numeric IDs; plain form kept as fallback.
   read_only_subs = [
     "${local.repo_immutable}:pull_request",
     "${local.repo_plain}:pull_request",
@@ -74,7 +72,6 @@ locals {
   ]
 }
 
-# Trust is narrowed per role, so this is built per role rather than shared.
 locals {
   assume_role_policy_for = {
     for k, subs in { read_only = local.read_only_subs, deployer = local.deployer_subs } :
@@ -102,7 +99,6 @@ locals {
   }
 }
 
-# Used by terraform-plan.yml on pull requests.
 resource "aws_iam_role" "github_actions_read_only" {
   name               = "${local.name_prefix}-ci-read-only"
   assume_role_policy = local.assume_role_policy_for["read_only"]
@@ -129,7 +125,7 @@ resource "aws_iam_role_policy" "github_actions_read_only" {
   })
 }
 
-# Hosting/DNS/ACM write permissions land in Phase 2, alongside the resources they grant.
+# Write permissions are added alongside the resources they grant access to.
 resource "aws_iam_role" "github_actions_deployer" {
   name               = "${local.name_prefix}-ci-deployer"
   assume_role_policy = local.assume_role_policy_for["deployer"]

@@ -17,8 +17,26 @@ module "iam" {
   source = "../../modules/iam"
 
   environment       = local.environment
-  aws_region        = local.aws_region
   state_bucket_name = local.state_bucket_name
 }
 
-# Hosting, DNS and certificates land in a follow-up (PAY-330).
+module "amplify" {
+  source = "../../modules/amplify"
+
+  environment      = local.environment
+  dashboard_domain = local.dashboard_domain
+
+  # Previews are dev-only; stg and prod build their production branch alone.
+  preview_branch_patterns = ["PAY-*", "feature/*"]
+}
+
+# Resolves only once payments.ustaxcourt.gov delegates to these nameservers.
+resource "aws_route53_zone" "dashboard" {
+  name          = local.dashboard_domain
+  comment       = "Dashboard zone for ${local.environment}; delegated from payments.ustaxcourt.gov"
+  force_destroy = false
+
+  tags = {
+    Name = local.dashboard_domain
+  }
+}
