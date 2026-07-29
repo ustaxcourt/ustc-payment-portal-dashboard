@@ -9,12 +9,6 @@ variable "environment" {
   type        = string
 }
 
-variable "aws_region" {
-  description = "AWS region"
-  type        = string
-  default     = "us-east-1"
-}
-
 variable "github_org" {
   description = "GitHub organization that owns the repository"
   type        = string

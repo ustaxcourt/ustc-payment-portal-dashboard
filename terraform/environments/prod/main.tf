@@ -17,7 +17,6 @@ module "iam" {
   source = "../../modules/iam"
 
   environment       = local.environment
-  aws_region        = local.aws_region
   state_bucket_name = local.state_bucket_name
 }
 
