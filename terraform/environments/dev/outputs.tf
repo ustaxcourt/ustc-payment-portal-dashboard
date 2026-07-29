@@ -18,6 +18,16 @@ output "dashboard_zone_id" {
   value       = aws_route53_zone.dashboard.zone_id
 }
 
+output "amplify_app_id" {
+  description = "Amplify app ID for this environment"
+  value       = module.amplify.app_id
+}
+
+output "amplify_default_domain" {
+  description = "Amplify-provided domain, usable before the custom domain verifies"
+  value       = module.amplify.default_domain
+}
+
 output "dashboard_zone_name_servers" {
   description = "Give these to the owner of payments.ustaxcourt.gov to create the NS delegation record"
   value       = aws_route53_zone.dashboard.name_servers

@@ -21,6 +21,16 @@ module "iam" {
   state_bucket_name = local.state_bucket_name
 }
 
+module "amplify" {
+  source = "../../modules/amplify"
+
+  environment      = local.environment
+  dashboard_domain = local.dashboard_domain
+
+  # Previews are dev-only; stg and prod build their production branch alone.
+  preview_branch_patterns = ["PAY-*", "feature/*"]
+}
+
 # Resolves only once payments.ustaxcourt.gov delegates to these nameservers.
 resource "aws_route53_zone" "dashboard" {
   name          = local.dashboard_domain
@@ -31,4 +41,3 @@ resource "aws_route53_zone" "dashboard" {
     Name = local.dashboard_domain
   }
 }
-
