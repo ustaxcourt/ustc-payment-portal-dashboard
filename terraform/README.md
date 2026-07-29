@@ -14,7 +14,7 @@ terraform/
 
 ## Accounts
 
-| Environment | Account | State bucket | Domain (PAY-330) |
+| Environment | Account | State bucket | Domain |
 | --- | --- | --- | --- |
 | dev | 723609007960 | `ustc-payment-portal-dashboard-terraform-state-dev` | `dev-dashboard.payments.ustaxcourt.gov` |
 | stg | 747103385969 | `ustc-payment-portal-dashboard-terraform-state-stg` | `stg-dashboard.payments.ustaxcourt.gov` |
@@ -82,11 +82,36 @@ terraform init -backend-config=backend.hcl
 terraform plan
 ```
 
-## Not built yet
+## Hosting
 
-Hosting, DNS and certificates are not built yet, pending the hosting decision in
-ADR 0001 (open question 3). The deployer role is deliberately scoped to state
-access plus reads until then — its write permissions are written alongside the
-resources they grant access to, not guessed at in advance.
+Amplify hosts the dashboard. `modules/amplify` creates the app, its service role,
+the production branch, and the domain association; `aws_amplify_domain_association`
+requests the ACM certificate and writes both the validation record and the ALIAS
+into that environment's hosted zone. That only works because each account owns the
+zone for its own hostname, reached by NS delegation from `payments.ustaxcourt.gov`
+in the prod account.
 
-See PAY-330.
+Connecting the repo is a manual step, once per account: Amplify holds the GitHub
+credential, not Terraform. Create the app in the Amplify console with the repository
+attached, then `terraform import module.amplify.aws_amplify_app.this <app-id>`. An
+app created without a repository is a manual-deploy app and can never be connected
+to Git afterwards.
+
+Treat `aws_amplify_app` as unreplaceable. Terraform cannot recreate the repo
+connection, so any plan showing `must be replaced` on it needs investigating rather
+than applying — `enable_performance_mode` is one attribute known to force it.
+
+## State
+
+| Environment | Bootstrap | CI roles | Zone + delegation | Amplify + domain |
+| --- | --- | --- | --- | --- |
+| dev | done | done | done | done |
+| stg | not started | not started | not started | not started |
+| prod | not started | not started | not started | not started |
+
+Preview branches are dev-only. Staging and production pass no
+`preview_branch_patterns`, so they build their production branch alone.
+
+The deployer role is still scoped to state access plus reads. Its write permissions
+are written alongside the resources they grant access to, not guessed at in advance,
+so applies are run by a human until that is settled.
