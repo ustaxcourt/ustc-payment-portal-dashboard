@@ -77,24 +77,9 @@ resource "aws_amplify_app" "this" {
     }
   }
 
-  build_spec = <<-YAML
-    version: 1
-    frontend:
-      phases:
-        preBuild:
-          commands:
-            - npm ci
-        build:
-          commands:
-            - npm run build
-      artifacts:
-        baseDirectory: .next
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
-  YAML
+  # Build settings live in amplify.yml at the repo root, not here. A repository
+  # amplify.yml overrides any app-level build spec, so setting one in Terraform
+  # would be config that silently does nothing.
 
   # The repo connection is authorised out of band; Terraform must not fight it.
   lifecycle {
