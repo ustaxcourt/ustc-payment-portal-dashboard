@@ -15,6 +15,14 @@ const SECRET_NAMES = [
 ] as const;
 
 
+function secretPrefix(): string | undefined {
+  const explicit = process.env.SSM_SECRET_PREFIX;
+  if (explicit) return explicit.endsWith("/") ? explicit : `${explicit}/`;
+
+  const appId = process.env.AWS_APP_ID;
+  return appId ? `/amplify/shared/${appId}/` : undefined;
+}
+
 async function loadSecrets(): Promise<Record<string, string>> {
   const fromEnv: Record<string, string> = {};
   for (const name of SECRET_NAMES) {
@@ -23,11 +31,9 @@ async function loadSecrets(): Promise<Record<string, string>> {
   }
   if (Object.keys(fromEnv).length === SECRET_NAMES.length) return fromEnv;
 
-  // Injected by Amplify; absent when running locally.
-  const appId = process.env.AWS_APP_ID;
-  if (!appId) return fromEnv;
+  const prefix = secretPrefix();
+  if (!prefix) return fromEnv;
 
-  const prefix = `/amplify/shared/${appId}/`;
   const client = new SSMClient({});
 
   const response = await client.send(
