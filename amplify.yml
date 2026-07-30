@@ -4,39 +4,23 @@ frontend:
   phases:
     preBuild:
       commands:
-        - |
-          npm ci
-          # get_secret() {
-          #   BASE_PATH="/amplify/${AWS_APP_ID}"
-
-          #   aws ssm get-parameter \
-          #     --name "${BASE_PATH}/$1" \
-          #     --with-decryption \
-          #     --query "Parameter.Value" \
-          #     --output text
-          # }
-
-          # ssm_secrets=(
-          #   "AUTH_MICROSOFT_ENTRA_ID_ID"
-          #   "AUTH_MICROSOFT_ENTRA_ID_SECRET"
-          #   "AUTH_MICROSOFT_ENTRA_ID_ISSUER"
-          #   "NEXTAUTH_SECRET"
-          # )
-
-          # for secret in "${ssm_secrets[@]}"; do
-          #   if ! get_secret "$secret" >/dev/null 2>&1; then
-          #     echo "Error: Secret '$secret' not found in SSM Parameter Store at path '/amplify/shared/${AWS_APP_ID}/$secret'."
-          #     exit 1
-          #   fi
-          # done
+        - npm ci
 
     build:
       commands:
-        - echo "AUTH_MICROSOFT_ENTRA_ID_ID=$AUTH_MICROSOFT_ENTRA_ID_ID" >> .env.local
-        - echo "AUTH_MICROSOFT_ENTRA_ID_SECRET=$AUTH_MICROSOFT_ENTRA_ID_SECRET" >> .env.local
-        - echo "AUTH_MICROSOFT_ENTRA_ID_ISSUER=$AUTH_MICROSOFT_ENTRA_ID_ISSUER" >> .env.local
-        - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .env.local
-        - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env.local
+        - rm -f .env.production
+        - |
+          for name in AUTH_MICROSOFT_ENTRA_ID_ID AUTH_MICROSOFT_ENTRA_ID_SECRET AUTH_MICROSOFT_ENTRA_ID_ISSUER NEXTAUTH_SECRET; do
+            value="${!name:-}"
+            if [ -z "$value" ]; then
+              echo "Missing required Amplify environment variable: $name" >&2
+              exit 1
+            fi
+            printf '%s=%s\n' "$name" "$value" >> .env.production
+          done
+          if [ -n "${NEXTAUTH_URL:-}" ]; then
+            printf 'NEXTAUTH_URL=%s\n' "$NEXTAUTH_URL" >> .env.production
+          fi
         - npm run build
 
   artifacts:
