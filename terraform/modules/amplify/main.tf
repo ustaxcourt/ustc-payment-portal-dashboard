@@ -49,7 +49,7 @@ resource "aws_iam_role_policy" "amplify_logs" {
 # The repo connection is made once in the Amplify console and then imported here;
 # Terraform holds no GitHub credential. An app created without `repository` is a
 # manual-deploy app and can never be connected to Git afterwards.
-resource "aws_amplify_app" "this" {
+resource "aws_amplify_app" "payment_portal_dashboard" {
   name                 = local.name
   repository           = var.repository_url
   platform             = "WEB_COMPUTE"
@@ -81,14 +81,16 @@ resource "aws_amplify_app" "this" {
   # amplify.yml overrides any app-level build spec, so setting one in Terraform
   # would be config that silently does nothing.
 
-  # The repo connection is authorised out of band; Terraform must not fight it.
+  # The repo connection is authorised out of band, and app-level environment
+  # variables hold secrets set in the console. Terraform must not fight either —
+  # environment_variables is a whole map, so managing it here would delete them.
   lifecycle {
-    ignore_changes = [access_token, oauth_token]
+    ignore_changes = [access_token, oauth_token, environment_variables]
   }
 }
 
 resource "aws_amplify_branch" "production" {
-  app_id      = aws_amplify_app.this.id
+  app_id      = aws_amplify_app.payment_portal_dashboard.id
   branch_name = var.production_branch
   framework   = "Next.js - SSR"
   stage       = var.environment == "prod" ? "PRODUCTION" : "DEVELOPMENT"
@@ -99,7 +101,7 @@ resource "aws_amplify_branch" "production" {
 # Issues the ACM certificate and writes the ALIAS record into the hosted zone.
 # Only the production branch is attached; preview branches stay on amplifyapp.com.
 resource "aws_amplify_domain_association" "this" {
-  app_id      = aws_amplify_app.this.id
+  app_id      = aws_amplify_app.payment_portal_dashboard.id
   domain_name = var.dashboard_domain
 
   sub_domain {
@@ -108,4 +110,11 @@ resource "aws_amplify_domain_association" "this" {
   }
 
   wait_for_verification = false
+}
+
+# Rename only — without this Terraform would destroy and recreate the app,
+# which would sever the repo connection it cannot rebuild.
+moved {
+  from = aws_amplify_app.this
+  to   = aws_amplify_app.payment_portal_dashboard
 }
