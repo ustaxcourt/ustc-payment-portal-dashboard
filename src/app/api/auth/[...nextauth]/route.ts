@@ -1,8 +1,8 @@
 import NextAuth from "next-auth";
 import { getAuthOptions } from "@/lib/auth";
 
-async function route(request: Request, context: unknown) {
-  const handler = NextAuth(await getAuthOptions());
+function route(request: Request, context: unknown) {
+  const handler = NextAuth(getAuthOptions());
   return handler(request, context as never);
 }
 

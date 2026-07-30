@@ -1,4 +1,3 @@
-import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
 import type { Account, NextAuthOptions, Profile, User } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import AzureADProvider from "next-auth/providers/azure-ad";
@@ -15,66 +14,45 @@ const SECRET_NAMES = [
 ] as const;
 
 
-function secretPrefix(): string | undefined {
-  const explicit = process.env.SSM_SECRET_PREFIX;
-  if (explicit) return explicit.endsWith("/") ? explicit : `${explicit}/`;
+function loadSecrets(): Record<string, string> {
+  const resolved: Record<string, string> = {};
 
-  const appId = process.env.AWS_APP_ID;
-  return appId ? `/amplify/shared/${appId}/` : undefined;
-}
-
-async function loadSecrets(): Promise<Record<string, string>> {
-  const fromEnv: Record<string, string> = {};
-  for (const name of SECRET_NAMES) {
-    const value = process.env[name];
-    if (value) fromEnv[name] = value;
-  }
-  if (Object.keys(fromEnv).length === SECRET_NAMES.length) return fromEnv;
-
-  const prefix = secretPrefix();
-  if (!prefix) return fromEnv;
-
-  const client = new SSMClient({});
-
-  const response = await client.send(
-    new GetParametersCommand({
-      Names: SECRET_NAMES.map((name) => `${prefix}${name}`),
-      WithDecryption: true,
-    }),
-  );
-
-  const fromSsm: Record<string, string> = {};
-  for (const parameter of response.Parameters ?? []) {
-    if (parameter.Name && parameter.Value) {
-      fromSsm[parameter.Name.replace(prefix, "")] = parameter.Value;
+  let injected: Record<string, string> = {};
+  const blob = process.env.secrets;
+  if (blob) {
+    try {
+      injected = JSON.parse(blob) as Record<string, string>;
+    } catch {
+      injected = {};
     }
   }
 
-  return { ...fromSsm, ...fromEnv };
+  for (const name of SECRET_NAMES) {
+    const value = process.env[name] ?? injected[name];
+    if (value) resolved[name] = value;
+  }
+
+  return resolved;
 }
 
-let cached: Promise<NextAuthOptions> | undefined;
+let cached: NextAuthOptions | undefined;
 
 /**
- * Built lazily and memoised. `next build` imports every route to collect page
- * data, so resolving configuration at module scope would make the build depend
- * on runtime secrets.
+ * Resolved lazily. `next build` imports every route to collect page data, so
+ * reading configuration at module scope would make the build require secrets.
  */
-export function getAuthOptions(): Promise<NextAuthOptions> {
-  cached ??= buildAuthOptions().catch((error) => {
-    cached = undefined; // allow the next request to retry
-    throw error;
-  });
+export function getAuthOptions(): NextAuthOptions {
+  cached ??= buildAuthOptions();
   return cached;
 }
 
-async function buildAuthOptions(): Promise<NextAuthOptions> {
-  const secrets = await loadSecrets();
+function buildAuthOptions(): NextAuthOptions {
+  const secrets = loadSecrets();
 
   const missing = SECRET_NAMES.filter((name) => !secrets[name]);
   if (missing.length > 0) {
     throw new Error(
-      `Missing Entra configuration: ${missing.join(", ")}. Expected environment variables, or SSM parameters under /amplify/shared/<appId>/.`,
+      `Missing Entra configuration: ${missing.join(", ")}. Expected environment variables, or SSM parameters under /amplify/<appId>/<branch>/.`,
     );
   }
 
