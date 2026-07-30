@@ -10,17 +10,43 @@ frontend:
       commands:
         - rm -f .env.production
         - |
-          for name in AUTH_MICROSOFT_ENTRA_ID_ID AUTH_MICROSOFT_ENTRA_ID_SECRET AUTH_MICROSOFT_ENTRA_ID_ISSUER NEXTAUTH_SECRET; do
-            value="${!name:-}"
-            if [ -z "$value" ]; then
-              echo "Missing required Amplify environment variable: $name" >&2
-              exit 1
-            fi
-            printf '%s=%s\n' "$name" "$value" >> .env.production
-          done
-          if [ -n "${NEXTAUTH_URL:-}" ]; then
-            printf 'NEXTAUTH_URL=%s\n' "$NEXTAUTH_URL" >> .env.production
-          fi
+          node <<'EOF'
+          const fs = require("fs");
+
+          const required = [
+            "AUTH_MICROSOFT_ENTRA_ID_ID",
+            "AUTH_MICROSOFT_ENTRA_ID_SECRET",
+            "AUTH_MICROSOFT_ENTRA_ID_ISSUER",
+            "NEXTAUTH_SECRET",
+          ];
+
+          let injected = {};
+          if (process.env.secrets) {
+            try {
+              injected = JSON.parse(process.env.secrets);
+            } catch (error) {
+              console.error("Unable to parse Amplify secrets payload.");
+              throw error;
+            }
+          }
+
+          const lines = [];
+          for (const name of required) {
+            const value = process.env[name] ?? injected[name];
+            if (!value) {
+              console.error(`Missing required Amplify secret: ${name}`);
+              process.exit(1);
+            }
+            lines.push(`${name}=${value}`);
+          }
+
+          const nextAuthUrl = process.env.NEXTAUTH_URL;
+          if (nextAuthUrl) {
+            lines.push(`NEXTAUTH_URL=${nextAuthUrl}`);
+          }
+
+          fs.writeFileSync(".env.production", `${lines.join("\n")}\n`);
+          EOF
         - npm run build
 
   artifacts:
