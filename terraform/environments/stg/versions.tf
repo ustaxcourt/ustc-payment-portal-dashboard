@@ -14,6 +14,8 @@ terraform {
 provider "aws" {
   region = local.aws_region
 
+  allowed_account_ids = [local.account_id]
+
   default_tags {
     tags = {
       Project     = "ustc-payment-portal-dashboard"

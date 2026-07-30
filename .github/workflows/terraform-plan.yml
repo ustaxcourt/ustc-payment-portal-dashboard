@@ -1,6 +1,6 @@
 name: Terraform Validate and Plan
 
-# Read-only. fmt/validate need no AWS; plan is skipped until role ARN secrets exist.
+# Plan is skipped until the role ARN secrets exist; fmt/validate need no AWS.
 
 on:
   pull_request:

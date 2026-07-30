@@ -17,8 +17,7 @@ export const metadata: Metadata = {
   title: "Case Services & Finance Dashboard",
   description:
     "Transaction activity dashboard for United States Tax Court Case Services and Finance staff.",
-  // The placeholder may be reachable before authentication is in place (PAY-330
-  // leaves that open); keep it out of search indexes either way.
+  // Reachable before authentication is in place; keep it out of search indexes.
   robots: { index: false, follow: false },
 };
 

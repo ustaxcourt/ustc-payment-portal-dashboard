@@ -14,26 +14,14 @@ terraform {
 provider "aws" {
   region = var.aws_region
 
+  allowed_account_ids = [var.expected_account_id]
+
   default_tags {
     tags = {
       Project   = "ustc-payment-portal-dashboard"
       ManagedBy = "terraform"
       Purpose   = "terraform-backend"
     }
-  }
-}
-
-data "aws_caller_identity" "current" {}
-
-# Guards against applying to the wrong account.
-check "correct_account" {
-  assert {
-    condition = data.aws_caller_identity.current.account_id == var.expected_account_id
-    error_message = format(
-      "Wrong AWS account: credentials are for %s but var.expected_account_id is %s. Check your --profile.",
-      data.aws_caller_identity.current.account_id,
-      var.expected_account_id,
-    )
   }
 }
 
