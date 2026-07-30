@@ -1,12 +1,8 @@
+console.log("NEXTAUTH ROUTE LOADED");
+
 import NextAuth from "next-auth";
-import { getAuthOptions } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 
+const handler = NextAuth(authOptions);
 
-let handler: ReturnType<typeof NextAuth> | undefined;
-
-function route(request: Request, context: unknown) {
-  handler ??= NextAuth(getAuthOptions());
-  return handler(request, context as never);
-}
-
-export { route as GET, route as POST };
+export { handler as GET, handler as POST };
