@@ -11,6 +11,7 @@ const SECRET_NAMES = [
   "AUTH_MICROSOFT_ENTRA_ID_SECRET",
   "AUTH_MICROSOFT_ENTRA_ID_ISSUER",
   "NEXTAUTH_SECRET",
+  "NEXTAUTH_URL",
 ] as const;
 
 
@@ -55,6 +56,11 @@ function buildAuthOptions(): NextAuthOptions {
       `Missing Entra configuration: ${missing.join(", ")}. Expected these values in the Next.js server runtime environment. For Amplify SSR, copy the required variables into .env.production during the build.`,
     );
   }
+
+  // next-auth reads process.env.NEXTAUTH_URL from inside its own package, so it
+  // has to be on the process rather than just in `secrets`. Assign it before the
+  // handler is built, so a trailing slash cannot corrupt the redirect_uri.
+  process.env.NEXTAUTH_URL = secrets.NEXTAUTH_URL.replace(/\/+$/, "");
 
   const tenantId = secrets.AUTH_MICROSOFT_ENTRA_ID_ISSUER.replace(
     /^https:\/\/login\.microsoftonline\.com\//,

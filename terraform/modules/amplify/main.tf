@@ -133,6 +133,10 @@ resource "aws_amplify_branch" "production" {
   stage       = var.environment == "prod" ? "PRODUCTION" : "DEVELOPMENT"
 
   enable_auto_build = true
+
+  environment_variables = {
+    NEXTAUTH_URL = "https://${var.dashboard_domain}"
+  }
 }
 
 # Issues the ACM certificate and writes the ALIAS record into the hosted zone.

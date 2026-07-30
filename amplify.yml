@@ -18,6 +18,7 @@ frontend:
             "AUTH_MICROSOFT_ENTRA_ID_SECRET",
             "AUTH_MICROSOFT_ENTRA_ID_ISSUER",
             "NEXTAUTH_SECRET",
+            "NEXTAUTH_URL",
           ];
 
           let injected = {};
@@ -37,12 +38,7 @@ frontend:
               console.error(`Missing required Amplify secret: ${name}`);
               process.exit(1);
             }
-            lines.push(`${name}=${value}`);
-          }
-
-          const nextAuthUrl = process.env.NEXTAUTH_URL;
-          if (nextAuthUrl) {
-            lines.push(`NEXTAUTH_URL=${nextAuthUrl}`);
+            lines.push(`${name}=${name === "NEXTAUTH_URL" ? value.replace(/\/+$/, "") : value}`);
           }
 
           fs.writeFileSync(".env.production", `${lines.join("\n")}\n`);
