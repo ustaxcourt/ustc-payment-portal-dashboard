@@ -1,12 +1,4 @@
 version: 1
-env:
-  parameter-store:
-    AUTH_MICROSOFT_ENTRA_ID_ID: AUTH_MICROSOFT_ENTRA_ID_ID
-    AUTH_MICROSOFT_ENTRA_ID_SECRET: AUTH_MICROSOFT_ENTRA_ID_SECRET
-    AUTH_MICROSOFT_ENTRA_ID_ISSUER: AUTH_MICROSOFT_ENTRA_ID_ISSUER
-    NEXTAUTH_SECRET: NEXTAUTH_SECRET
-    NEXTAUTH_URL: NEXTAUTH_URL
-    BETTER_AUTH_SECRET: BETTER_AUTH_SECRET
 frontend:
   phases:
     preBuild:
@@ -14,13 +6,9 @@ frontend:
         - npm ci
     build:
       commands:
-        - echo "AUTH_MICROSOFT_ENTRA_ID_ID=$AUTH_MICROSOFT_ENTRA_ID_ID"
-        - echo "AUTH_MICROSOFT_ENTRA_ID_SECRET=$AUTH_MICROSOFT_ENTRA_ID_SECRET"
-        - echo "AUTH_MICROSOFT_ENTRA_ID_ISSUER=$AUTH_MICROSOFT_ENTRA_ID_ISSUER"
-        - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET"
-        - echo "NEXTAUTH_URL=$NEXTAUTH_URL"
-        - echo "BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET"
-        - npm run build
+      - echo "NEXTAUTH_SECRET set? ${NEXTAUTH_SECRET:+YES}"
+      - echo "NEXTAUTH_URL set? ${NEXTAUTH_URL:+YES}"
+      - npm run build
   artifacts:
     baseDirectory: .next
     files:
