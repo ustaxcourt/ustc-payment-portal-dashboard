@@ -51,3 +51,6 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# written during the Amplify build to carry the resolved NEXTAUTH_URL
+.nextauth-url
