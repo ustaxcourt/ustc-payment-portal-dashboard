@@ -125,7 +125,6 @@ resource "aws_iam_role_policy" "github_actions_read_only" {
   })
 }
 
-# Write permissions are added alongside the resources they grant access to.
 resource "aws_iam_role" "github_actions_deployer" {
   name               = "${local.name_prefix}-ci-deployer"
   assume_role_policy = local.assume_role_policy_for["deployer"]

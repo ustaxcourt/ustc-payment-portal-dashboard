@@ -20,8 +20,9 @@ terraform/
 | stg | 747103385969 | `ustc-payment-portal-dashboard-terraform-state-stg` | `stg-dashboard.payments.ustaxcourt.gov` |
 | prod | 802939326821 | `ustc-payment-portal-dashboard-terraform-state-prod` | `dashboard.payments.ustaxcourt.gov` |
 
-Every root asserts the account it is running against and fails before creating
-anything if the credentials point somewhere else.
+Every root pins `allowed_account_ids` on its AWS provider, so a plan or apply
+against the wrong account errors out before the provider makes a single API
+call.
 
 ## First-time setup, per account
 
