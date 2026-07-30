@@ -4,11 +4,31 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
-        - export AUTH_MICROSOFT_ENTRA_ID_ID=$(aws ssm get-parameter --name "/amplify/shared/d2xd0ob1rbbqjb/AUTH_MICROSOFT_ENTRA_ID_ID" --with-decryption --query "Parameter.Value" --output text)
-        - export AUTH_MICROSOFT_ENTRA_ID_SECRET=$(aws ssm get-parameter --name "/amplify/shared/d2xd0ob1rbbqjb/AUTH_MICROSOFT_ENTRA_ID_SECRET" --with-decryption --query "Parameter.Value" --output text)
-        - export AUTH_MICROSOFT_ENTRA_ID_ISSUER=$(aws ssm get-parameter --name "/amplify/shared/d2xd0ob1rbbqjb/AUTH_MICROSOFT_ENTRA_ID_ISSUER" --with-decryption --query "Parameter.Value" --output text)
-        - export NEXTAUTH_SECRET=$(aws ssm get-parameter --name "/amplify/shared/d2xd0ob1rbbqjb/NEXTAUTH_SECRET" --with-decryption --query "Parameter.Value" --output text)
+        - |
+          npm ci
+          get_secret() {
+            BASE_PATH="/amplify/shared/${AWS_APP_ID}"
+
+            aws ssm get-parameter \
+              --name "${BASE_PATH}/$1" \
+              --with-decryption \
+              --query "Parameter.Value" \
+              --output text
+          }
+
+          ssm_secrets=(
+            "AUTH_MICROSOFT_ENTRA_ID_ID"
+            "AUTH_MICROSOFT_ENTRA_ID_SECRET"
+            "AUTH_MICROSOFT_ENTRA_ID_ISSUER"
+            "NEXTAUTH_SECRET"
+          )
+
+          for secret in "${ssm_secrets[@]}"; do
+            if ! get_secret "$secret" >/dev/null 2>&1; then
+              echo "Error: Secret '$secret' not found in SSM Parameter Store at path '/amplify/shared/${AWS_APP_ID}/$secret'."
+              exit 1
+            fi
+          done
 
     build:
       commands:
