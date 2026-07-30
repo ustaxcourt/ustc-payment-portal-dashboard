@@ -13,12 +13,13 @@ frontend:
           node <<'EOF'
           const fs = require("fs");
 
+          const PRODUCTION_BRANCH = "main";
+
           const required = [
             "AUTH_MICROSOFT_ENTRA_ID_ID",
             "AUTH_MICROSOFT_ENTRA_ID_SECRET",
             "AUTH_MICROSOFT_ENTRA_ID_ISSUER",
             "NEXTAUTH_SECRET",
-            "NEXTAUTH_URL",
           ];
 
           let injected = {};
@@ -38,8 +39,33 @@ frontend:
               console.error(`Missing required Amplify secret: ${name}`);
               process.exit(1);
             }
-            lines.push(`${name}=${name === "NEXTAUTH_URL" ? value.replace(/\/+$/, "") : value}`);
+            lines.push(`${name}=${value}`);
           }
+
+          // Previews serve on their own amplifyapp.com subdomain, so the configured
+          // NEXTAUTH_URL — the custom domain — would hand Entra the wrong redirect_uri.
+          const branch = process.env.AWS_BRANCH;
+          let nextAuthUrl = process.env.NEXTAUTH_URL ?? injected.NEXTAUTH_URL;
+
+          if (branch && branch !== PRODUCTION_BRANCH) {
+            if (!process.env.AWS_APP_ID) {
+              console.error("AWS_APP_ID is unset; cannot derive the preview NEXTAUTH_URL.");
+              process.exit(1);
+            }
+            const subdomain = branch.toLowerCase().replace(/[^a-z0-9]/g, "-");
+            nextAuthUrl = `https://${subdomain}.${process.env.AWS_APP_ID}.amplifyapp.com`;
+          }
+
+          if (!nextAuthUrl) {
+            console.error("Missing required Amplify secret: NEXTAUTH_URL");
+            process.exit(1);
+          }
+
+          nextAuthUrl = nextAuthUrl.replace(/\/+$/, "");
+          lines.push(`NEXTAUTH_URL=${nextAuthUrl}`);
+
+          // Not a secret, and the value Entra must have registered.
+          console.log(`Resolved NEXTAUTH_URL=${nextAuthUrl}`);
 
           fs.writeFileSync(".env.production", `${lines.join("\n")}\n`);
           EOF
