@@ -1,3 +1,6 @@
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 locals {
   name = "${var.project_name}-${var.environment}"
 }
@@ -41,6 +44,37 @@ resource "aws_iam_role_policy" "amplify_logs" {
           "logs:PutLogEvents",
         ]
         Resource = "arn:aws:logs:*:*:log-group:/aws/amplify/*:*"
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "amplify_ssm" {
+  name = "${local.name}-amplify-ssm"
+  role = aws_iam_role.amplify.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath",
+        ]
+        Resource = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter/amplify/shared/${aws_amplify_app.payment_portal_dashboard.id}/*"
+      },
+      {
+        # SecureString values are KMS-encrypted; scope the grant to SSM only.
+        Effect   = "Allow"
+        Action   = ["kms:Decrypt"]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = "ssm.${data.aws_region.current.region}.amazonaws.com"
+          }
+        }
       },
     ]
   })
