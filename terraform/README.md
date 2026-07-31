@@ -110,6 +110,11 @@ than applying — `enable_performance_mode` is one attribute known to force it.
 | stg | not started | not started | not started | not started |
 | prod | not started | not started | not started | not started |
 
+All three roots now declare the same resources; the table tracks what has been
+applied. Staging and production cannot be applied straight through — the Amplify
+app must be created in the console and imported first, as in the setup above, or
+the apply produces an app with no working repo connection.
+
 Preview branches are dev-only. Staging and production pass no
 `preview_branch_patterns`, so they build their production branch alone.
 
