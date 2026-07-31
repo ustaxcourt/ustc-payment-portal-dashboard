@@ -83,7 +83,7 @@ resource "aws_amplify_branch" "production" {
   app_id      = aws_amplify_app.payment_portal_dashboard.id
   branch_name = var.production_branch
   framework   = "Next.js - SSR"
-  stage       = var.environment == "prod" ? "PRODUCTION" : "DEVELOPMENT"
+  stage       = lookup({ prod = "PRODUCTION", stg = "BETA" }, var.environment, "DEVELOPMENT")
 
   enable_auto_build = true
 }
