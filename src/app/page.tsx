@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { getAuthOptions } from "@/lib/auth";
+import LogoutButton from "./components/LogoutButton";
 
 export default async function Home() {
   const session = await getServerSession(getAuthOptions());
@@ -22,6 +23,9 @@ export default async function Home() {
           <p>{session.user?.name}</p>
           <p>{session.user?.email}</p>
           <p>This dashboard is not yet available.</p>
+          <div className="pt-4">
+            <LogoutButton />
+          </div>
         </div>
       </div>
     </main>
