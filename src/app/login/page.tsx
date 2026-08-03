@@ -1,9 +1,8 @@
-"use client";
+ "use client";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useEffect } from "react";
-
-import { Button } from "@/components/ui/button";
+import LoginButton from "./../components/LoginButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,12 +25,7 @@ export default function LoginPage() {
           Services &amp; Finance Dashboard.
         </p>
         <div className="mt-8">
-          <Button
-            disabled={status === "loading"}
-            onClick={() => signIn("azure-ad", { callbackUrl: "/" })}
-          >
-            {status === "loading" ? "Checking session..." : "Login"}
-          </Button>
+            <LoginButton />
         </div>
       </div>
     </main>
