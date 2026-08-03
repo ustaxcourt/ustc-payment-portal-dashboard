@@ -1,8 +1,11 @@
-import { Button } from "@base-ui/react";
-import { signIn } from "next-auth/react";
+"use client";
 
+import { signIn, useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
 export default function LoginButton() {
+  const { status } = useSession();
+
   return (
     <Button
       disabled={status === "loading"}
@@ -10,5 +13,5 @@ export default function LoginButton() {
     >
       {status === "loading" ? "Checking session..." : "Login"}
     </Button>
-  )
+  );
 }
