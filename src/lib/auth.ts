@@ -69,6 +69,9 @@ function buildAuthOptions(): NextAuthOptions {
 
   return {
     secret: secrets.NEXTAUTH_SECRET,
+    session: {
+      maxAge: 60 * 60,
+    },
     providers: [
       AzureADProvider({
         clientId: secrets.AUTH_MICROSOFT_ENTRA_ID_ID,
