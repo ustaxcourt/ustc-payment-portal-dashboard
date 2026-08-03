@@ -28,6 +28,11 @@ output "amplify_default_domain" {
   value       = module.amplify.default_domain
 }
 
+output "amplify_compute_role_arn" {
+  description = "SSR compute role, granted execute-api:Invoke by the payment-portal API"
+  value       = module.amplify.compute_role_arn
+}
+
 output "dashboard_zone_name_servers" {
   description = "Give these to the owner of payments.ustaxcourt.gov to create the NS delegation record"
   value       = aws_route53_zone.dashboard.name_servers

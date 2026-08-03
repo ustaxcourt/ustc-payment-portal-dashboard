@@ -2,6 +2,8 @@ locals {
   name = "${var.project_name}-${var.environment}"
 }
 
+data "aws_caller_identity" "current" {}
+
 # Without a service role the SSR compute never starts and requests 404.
 resource "aws_iam_role" "amplify" {
   name = "${local.name}-amplify-service"
@@ -44,6 +46,29 @@ resource "aws_iam_role_policy" "amplify_logs" {
   })
 }
 
+# Credentials for the SSR runtime. The service role above covers build and log
+# delivery only; compute does not inherit it.
+resource "aws_iam_role" "amplify_compute" {
+  name = "${local.name}-amplify-compute"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Action    = "sts:AssumeRole"
+        Principal = { Service = "amplify.amazonaws.com" }
+        # Scoped by account; the app ARN would be circular.
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
+}
+
 # Treat as unreplaceable: the repo connection is made once in the console and
 # imported, and Terraform holds no GitHub credential to rebuild it. This is also
 # why enable_performance_mode (ForceNew) is omitted.
@@ -52,6 +77,7 @@ resource "aws_amplify_app" "payment_portal_dashboard" {
   repository           = var.repository_url
   platform             = "WEB_COMPUTE"
   iam_service_role_arn = aws_iam_role.amplify.arn
+  compute_role_arn     = aws_iam_role.amplify_compute.arn
 
   enable_branch_auto_build = true
 
