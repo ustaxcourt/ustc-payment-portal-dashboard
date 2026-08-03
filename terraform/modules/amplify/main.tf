@@ -2,8 +2,6 @@ locals {
   name = "${var.project_name}-${var.environment}"
 }
 
-data "aws_caller_identity" "current" {}
-
 # Without a service role the SSR compute never starts and requests 404.
 resource "aws_iam_role" "amplify" {
   name = "${local.name}-amplify-service"
@@ -58,12 +56,6 @@ resource "aws_iam_role" "amplify_compute" {
         Effect    = "Allow"
         Action    = "sts:AssumeRole"
         Principal = { Service = "amplify.amazonaws.com" }
-        # Scoped by account; the app ARN would be circular.
-        Condition = {
-          StringEquals = {
-            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
-          }
-        }
       }
     ]
   })
