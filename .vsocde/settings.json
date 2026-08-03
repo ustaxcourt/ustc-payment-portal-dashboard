@@ -1,6 +1,0 @@
-{
-  "files.insertFinalNewline": true,
-  "files.trimTrailingWhitespace": true,
-  "editor.formatOnSave": true,
-  "editor.tabSize": 2    
-}
