@@ -1,10 +1,13 @@
-"use client";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { getAuthOptions } from "@/lib/auth";
 
-import { signIn, signOut, useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
+export default async function Home() {
+  const session = await getServerSession(getAuthOptions());
 
-export default function Home() {
-  const { data: session } = useSession();
+  if (!session) {
+    redirect("/login");
+  }
 
   return (
     <main className="flex flex-1 items-center justify-center p-8">
@@ -15,18 +18,11 @@ export default function Home() {
         <p className="mt-4 text-sm text-muted-foreground sm:text-base">
           United States Tax Court &mdash; payment portal transaction activity.
         </p>
-        <p className="mt-8 text-sm text-muted-foreground">
-          This dashboard is not yet available.
-        </p>
-
-        {!session ? (
-          <Button onClick={() => signIn("azure-ad")}>Login</Button>
-        ) : (
-          <div className="mt-4 text-sm text-muted-foreground">
-            <p>{session.user?.name}</p>
-            <Button onClick={() => signOut()}>Logout</Button>
-          </div>
-        )}
+        <div className="mt-8 space-y-2 text-sm text-muted-foreground">
+          <p>{session.user?.name}</p>
+          <p>{session.user?.email}</p>
+          <p>This dashboard is not yet available.</p>
+        </div>
       </div>
     </main>
   );
