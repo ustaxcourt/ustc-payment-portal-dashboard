@@ -6,6 +6,8 @@ frontend:
         - npm ci
     build:
       commands:
+        # The SSR runtime reads .env.production; console variables do not reach it.
+        - echo "SPIKE_WHOAMI=1" >> .env.production
         - npm run build
   artifacts:
     baseDirectory: .next
