@@ -69,6 +69,10 @@ const sessionConfig: NextAuthOptions["session"] = {
   maxAge: 60 * 60,
 };
 
+const pagesConfig = {
+  signIn: "/login",
+};
+
 function loadSecrets(): Record<string, string> {
   const resolved: Record<string, string> = {};
 
@@ -134,6 +138,7 @@ function buildAuthOptions(): NextAuthOptions {
   return {
     secret: secrets.NEXTAUTH_SECRET,
     session: sessionConfig,
+    pages: pagesConfig,
     providers: [
       AzureADProvider({
         clientId: secrets.AUTH_MICROSOFT_ENTRA_ID_ID,
