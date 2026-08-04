@@ -11,6 +11,7 @@ frontend:
         - rm -f .env.production .nextauth-url
         - |
           node <<'EOF'
+          const { execFileSync } = require("child_process");
           const fs = require("fs");
 
           const PRODUCTION_BRANCH = "main";
@@ -32,9 +33,53 @@ frontend:
             }
           }
 
+          function loadSharedSecret(name) {
+            const appId = process.env.AWS_APP_ID;
+
+            if (!appId) {
+              console.warn(
+                `AWS_APP_ID is unavailable; cannot check shared SSM secret for ${name}.`,
+              );
+              return undefined;
+            }
+
+            const parameterName = `/amplify/shared/${appId}/${name}`;
+
+            try {
+              return execFileSync(
+                "aws",
+                [
+                  "ssm",
+                  "get-parameter",
+                  "--name",
+                  parameterName,
+                  "--with-decryption",
+                  "--query",
+                  "Parameter.Value",
+                  "--output",
+                  "text",
+                ],
+                { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+              ).trim();
+            } catch (error) {
+              const detail =
+                error && typeof error === "object" && "stderr" in error
+                  ? String(error.stderr).trim().split("\n")[0]
+                  : "Unknown SSM error.";
+              console.warn(
+                `Unable to read shared Amplify secret from ${parameterName}: ${detail}`,
+              );
+              return undefined;
+            }
+          }
+
+          function resolveSecret(name) {
+            return process.env[name] ?? injected[name] ?? loadSharedSecret(name);
+          }
+
           const lines = [];
           for (const name of required) {
-            const value = process.env[name] ?? injected[name];
+            const value = resolveSecret(name);
             if (!value) {
               console.error(`Missing required Amplify secret: ${name}`);
               process.exit(1);
