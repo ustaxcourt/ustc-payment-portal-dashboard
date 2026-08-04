@@ -13,6 +13,13 @@ module "amplify" {
 
   # Previews are dev-only; stg and prod build their production branch alone.
   preview_branch_patterns = ["PAY-*", "feature/*"]
+
+  # The payment-portal API shares this account, and its dashboard endpoints are
+  # dev-only. Wildcarded on API id and stage because the id belongs to the other
+  # repo and PR stages are ephemeral; the method and path stay exact.
+  api_invoke_arns = [
+    "arn:aws:execute-api:${local.aws_region}:${local.account_id}:*/*/GET/transaction-log",
+  ]
 }
 
 # Resolves only once payments.ustaxcourt.gov delegates to these nameservers.

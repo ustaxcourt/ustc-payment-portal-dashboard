@@ -61,6 +61,25 @@ resource "aws_iam_role" "amplify_compute" {
   })
 }
 
+# The other half of the API's AWS_IAM check: its resource policy admits this
+# account, and this admits the endpoints. Both must allow.
+resource "aws_iam_role_policy" "amplify_compute_api" {
+  count = length(var.api_invoke_arns) > 0 ? 1 : 0
+  name  = "${local.name}-amplify-compute-api"
+  role  = aws_iam_role.amplify_compute.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["execute-api:Invoke"]
+        Resource = var.api_invoke_arns
+      }
+    ]
+  })
+}
+
 # Treat as unreplaceable: the repo connection is made once in the console and
 # imported, and Terraform holds no GitHub credential to rebuild it. This is also
 # why enable_performance_mode (ForceNew) is omitted.

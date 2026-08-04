@@ -107,7 +107,7 @@ than applying — `enable_performance_mode` is one attribute known to force it.
 | Environment | Bootstrap | CI roles | Zone + delegation | Amplify + domain |
 | --- | --- | --- | --- | --- |
 | dev | done | done | done | done |
-| stg | done | not started | zone only | not started |
+| stg | done | done | done | done |
 | prod | done | not started | zone only | not started |
 
 "Zone only" means the hosted zone exists but nothing resolves yet: the NS records
@@ -115,9 +115,13 @@ that delegate to it live in `ustc-payment-portal` and are applied by that repo's
 manually-dispatched prod deploy.
 
 All three roots now declare the same resources; the table tracks what has been
-applied. Staging and production cannot be applied straight through — the Amplify
-app must be created in the console and imported first, as in the setup above, or
-the apply produces an app with no working repo connection.
+applied. Production cannot be applied straight through — the Amplify app must be
+created in the console and imported first, as in the setup above, or the apply
+produces an app with no working repo connection.
+
+Verify a row rather than trusting it: `terraform state list` against that
+environment prints exactly what it manages. The prod row is the only one not
+confirmed that way.
 
 Preview branches are dev-only. Staging and production pass no
 `preview_branch_patterns`, so they build their production branch alone.
