@@ -1,18 +1,14 @@
- "use client";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
 import LoginButton from "@/components/ui/LoginButton";
+import { getSessionAuthOptions } from "@/lib/auth";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const { status } = useSession();
+export default async function LoginPage() {
+  const session = await getServerSession(getSessionAuthOptions());
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.replace("/");
-    }
-  }, [router, status]);
+  if (session) {
+    redirect("/");
+  }
 
   return (
     <main className="flex flex-1 items-center justify-center p-8">
@@ -25,7 +21,7 @@ export default function LoginPage() {
           Services &amp; Finance Dashboard.
         </p>
         <div className="mt-8">
-            <LoginButton />
+          <LoginButton />
         </div>
       </div>
     </main>

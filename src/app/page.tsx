@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import LogoutButton from "@/components/ui/LogoutButton";
-import { getAuthOptions } from "@/lib/auth";
+import { getSessionAuthOptions } from "@/lib/auth";
 
 export default async function Home() {
-  const session = await getServerSession(getAuthOptions());
+  const session = await getServerSession(getSessionAuthOptions());
 
   if (!session) {
     redirect("/login");

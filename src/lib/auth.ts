@@ -18,6 +18,57 @@ const INLINED: Record<string, string | undefined> = {
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
 };
 
+const authCallbacks: NextAuthOptions["callbacks"] = {
+  async jwt({
+    profile,
+    token,
+    user,
+    account,
+  }: {
+    profile?: Profile | AzureProfile;
+    token: JWT;
+    user: User;
+    account: Account | null;
+  }) {
+    if (account && user) {
+      return {
+        accessToken: account.access_token,
+        idToken: account.id_token,
+        accessTokenExpires: account?.expires_at ? account.expires_at * 1000 : 0,
+        refreshToken: account.refresh_token,
+        profile,
+        user: {
+          ...user,
+          email:
+            profile && "preferred_username" in profile
+              ? profile.preferred_username
+              : "",
+        },
+      };
+    }
+
+    return token;
+  },
+  async session(props) {
+    const session = props.session;
+    const token = props.token;
+
+    if (session) {
+      session.user = token.user as {
+        email: string;
+        name: string;
+        image: string;
+        preferred_username?: string;
+      };
+    }
+    return session;
+  },
+};
+
+const sessionConfig: NextAuthOptions["session"] = {
+  maxAge: 60 * 60,
+};
+
 function loadSecrets(): Record<string, string> {
   const resolved: Record<string, string> = {};
 
@@ -50,6 +101,19 @@ export function getAuthOptions(): NextAuthOptions {
   return cached;
 }
 
+export function getSessionAuthOptions(): Pick<
+  NextAuthOptions,
+  "callbacks" | "secret" | "session"
+> {
+  const secrets = loadSecrets();
+
+  return {
+    secret: secrets.NEXTAUTH_SECRET,
+    session: sessionConfig,
+    callbacks: authCallbacks,
+  };
+}
+
 function buildAuthOptions(): NextAuthOptions {
   const secrets = loadSecrets();
 
@@ -69,9 +133,7 @@ function buildAuthOptions(): NextAuthOptions {
 
   return {
     secret: secrets.NEXTAUTH_SECRET,
-    session: {
-      maxAge: 60 * 60,
-    },
+    session: sessionConfig,
     providers: [
       AzureADProvider({
         clientId: secrets.AUTH_MICROSOFT_ENTRA_ID_ID,
@@ -83,53 +145,6 @@ function buildAuthOptions(): NextAuthOptions {
         httpOptions: { timeout: 10000 },
       }),
     ],
-    callbacks: {
-      async jwt({
-        profile,
-        token,
-        user,
-        account,
-      }: {
-        profile?: Profile | AzureProfile;
-        token: JWT;
-        user: User;
-        account: Account | null;
-      }) {
-        if (account && user) {
-          return {
-            accessToken: account.access_token,
-            idToken: account.id_token,
-            accessTokenExpires: account?.expires_at
-              ? account.expires_at * 1000
-              : 0,
-            refreshToken: account.refresh_token,
-            profile,
-            user: {
-              ...user,
-              email:
-                profile && "preferred_username" in profile
-                  ? profile.preferred_username
-                  : "",
-            },
-          };
-        }
-
-        return token;
-      },
-      async session(props) {
-        const session = props.session;
-        const token = props.token;
-
-        if (session) {
-          session.user = token.user as {
-            email: string;
-            name: string;
-            image: string;
-            preferred_username?: string;
-          };
-        }
-        return session;
-      },
-    },
+    callbacks: authCallbacks,
   };
 }
