@@ -33,18 +33,13 @@ frontend:
             }
           }
 
-          function loadSharedSecret(name) {
-            const appId = process.env.AWS_APP_ID;
+          function getSsmErrorDetail(error) {
+            return error && typeof error === "object" && "stderr" in error
+              ? String(error.stderr).trim().split("\n")[0]
+              : "Unknown SSM error.";
+          }
 
-            if (!appId) {
-              console.warn(
-                `AWS_APP_ID is unavailable; cannot check shared SSM secret for ${name}.`,
-              );
-              return undefined;
-            }
-
-            const parameterName = `/amplify/shared/${appId}/${name}`;
-
+          function loadSsmSecret(parameterName) {
             try {
               return execFileSync(
                 "aws",
@@ -62,19 +57,62 @@ frontend:
                 { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
               ).trim();
             } catch (error) {
-              const detail =
-                error && typeof error === "object" && "stderr" in error
-                  ? String(error.stderr).trim().split("\n")[0]
-                  : "Unknown SSM error.";
               console.warn(
-                `Unable to read shared Amplify secret from ${parameterName}: ${detail}`,
+                `Unable to read Amplify secret from ${parameterName}: ${getSsmErrorDetail(error)}`,
               );
               return undefined;
             }
           }
 
+          function loadBranchSecret(name) {
+            const appId = process.env.AWS_APP_ID;
+            const branch = process.env.AWS_BRANCH;
+
+            if (!appId || !branch) {
+              console.warn(
+                `AWS_APP_ID or AWS_BRANCH is unavailable; cannot check branch SSM secret for ${name}.`,
+              );
+              return undefined;
+            }
+
+            const subdomain = branch.toLowerCase().replace(/[^a-z0-9]/g, "-");
+            const candidates = subdomain === branch
+              ? [`/amplify/${appId}/${branch}/${name}`]
+              : [
+                  `/amplify/${appId}/${subdomain}/${name}`,
+                  `/amplify/${appId}/${branch}/${name}`,
+                ];
+
+            for (const parameterName of candidates) {
+              const value = loadSsmSecret(parameterName);
+              if (value) {
+                return value;
+              }
+            }
+
+            return undefined;
+          }
+
+          function loadSharedSecret(name) {
+            const appId = process.env.AWS_APP_ID;
+
+            if (!appId) {
+              console.warn(
+                `AWS_APP_ID is unavailable; cannot check shared SSM secret for ${name}.`,
+              );
+              return undefined;
+            }
+
+            return loadSsmSecret(`/amplify/shared/${appId}/${name}`);
+          }
+
           function resolveSecret(name) {
-            return process.env[name] ?? injected[name] ?? loadSharedSecret(name);
+            return (
+              process.env[name] ??
+              injected[name] ??
+              loadBranchSecret(name) ??
+              loadSharedSecret(name)
+            );
           }
 
           const lines = [];
