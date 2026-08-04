@@ -118,6 +118,30 @@ export function getSessionAuthOptions(): Pick<
   };
 }
 
+export function getFederatedLogoutUrl(
+  postLogoutPath = "/login",
+): string | null {
+  const secrets = loadSecrets();
+  const issuer = secrets.AUTH_MICROSOFT_ENTRA_ID_ISSUER;
+  const baseUrl = secrets.NEXTAUTH_URL;
+
+  if (!issuer || !baseUrl) {
+    return null;
+  }
+
+  const logoutUrl = new URL(
+    `${issuer.replace(/\/v2\.0\/?$/, "").replace(/\/$/, "")}/oauth2/v2.0/logout`,
+  );
+  const postLogoutRedirectUrl = new URL(postLogoutPath, baseUrl);
+
+  logoutUrl.searchParams.set(
+    "post_logout_redirect_uri",
+    postLogoutRedirectUrl.toString(),
+  );
+
+  return logoutUrl.toString();
+}
+
 function buildAuthOptions(): NextAuthOptions {
   const secrets = loadSecrets();
 
