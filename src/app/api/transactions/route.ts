@@ -2,20 +2,13 @@ import { NextResponse } from "next/server";
 import { getSigned } from "@/lib/paymentPortalApi";
 import { hasDashboardSession } from "@/lib/session";
 
-/**
- * Transaction log for the browser.
- *
- * The browser never reaches the payment-portal API directly: this route holds
- * the Entra session, and the signature it adds comes from the Amplify compute
- * role. Neither credential is exposed to the client.
- */
+/** Transaction log for the browser. Holds the Entra session and signs upstream
+ *  as the compute role, so neither credential reaches the client. */
 
-// Credentials and results are per-request; a cached response would serve one
-// user's timeframe to another.
+// Per-request: a cached response would serve one user's timeframe to another.
 export const dynamic = "force-dynamic";
 
-// Only the log's own parameters are forwarded, so a caller cannot reach past
-// this route and hand arbitrary query strings to the API.
+// Whitelist, so a caller cannot hand arbitrary query strings to the API.
 const FORWARDED = ["from", "to", "status", "page", "pageSize"] as const;
 
 export async function GET(request: Request) {

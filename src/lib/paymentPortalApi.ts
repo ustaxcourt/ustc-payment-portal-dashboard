@@ -5,9 +5,7 @@ import { SignatureV4 } from "@smithy/signature-v4";
 
 const REGION = process.env.AWS_REGION ?? "us-east-1";
 
-// Resolved per signing call. The chain memoises and refreshes on expiry, which
-// a long-running SSR container needs — reading the credential env vars once at
-// module scope would pin stale keys.
+// Memoises and refreshes on expiry; reading the env vars once would pin stale keys.
 const credentials = fromNodeProviderChain();
 
 const signer = new SignatureV4({
@@ -25,13 +23,8 @@ const baseUrl = (): string => {
   return url.replace(/\/$/, "");
 };
 
-/**
- * GETs a payment-portal endpoint with a SigV4 signature.
- *
- * The API authorises on IAM, so the caller is the Amplify compute role rather
- * than the signed-in user. Guard the route before calling this: anything that
- * reaches here is already trusted.
- */
+/** GETs a payment-portal endpoint signed as the Amplify compute role.
+ *  Guard the route before calling: anything reaching here is already trusted. */
 export const getSigned = async (
   path: string,
   search: URLSearchParams,
