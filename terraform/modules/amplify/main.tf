@@ -70,10 +70,11 @@ resource "aws_iam_role_policy" "amplify_ssm" {
         # SecureString values use the aws/ssm managed key; scope to SSM only.
         Effect   = "Allow"
         Action   = ["kms:Decrypt"]
-        Resource = "*"
+        Resource = "arn:aws:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm"
         Condition = {
           StringEquals = {
-            "kms:ViaService" = "ssm.${data.aws_region.current.region}.amazonaws.com"
+            "kms:ViaService"    = "ssm.${data.aws_region.current.region}.amazonaws.com"
+            "kms:CallerAccount" = data.aws_caller_identity.current.account_id
           }
         }
       },

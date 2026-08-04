@@ -124,7 +124,7 @@ function buildAuthOptions(): NextAuthOptions {
   const missing = SECRET_NAMES.filter((name) => !secrets[name]);
   if (missing.length > 0) {
     throw new Error(
-      `Missing Entra configuration: ${missing.join(", ")}. Expected these values in the Next.js server runtime environment. For Amplify SSR, copy the required variables into .env.production during the build.`,
+      `Missing Entra configuration: ${missing.join(", ")}. Expected these values in the Next.js server runtime environment. For Amplify SSR, provide them via Amplify environment variables/secrets; the build can write non-public values to .env.production but NEXTAUTH_URL must be exported in the build environment.`,
     );
   }
 
