@@ -1,0 +1,23 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+      - |
+        APP_ID=$AWS_APP_ID
+        export AUTH_MICROSOFT_ENTRA_ID_ID=$(aws ssm get-parameter --name "/amplify/shared/$APP_ID/AUTH_MICROSOFT_ENTRA_ID_ID" --with-decryption --query "Parameter.Value" --output text)
+        export AUTH_MICROSOFT_ENTRA_ID_SECRET=$(aws ssm get-parameter --name "/amplify/shared/$APP_ID/AUTH_MICROSOFT_ENTRA_ID_SECRET" --with-decryption --query "Parameter.Value" --output text)
+        export AUTH_MICROSOFT_ENTRA_ID_ISSUER=$(aws ssm get-parameter --name "/amplify/shared/$APP_ID/AUTH_MICROSOFT_ENTRA_ID_ISSUER" --with-decryption --query "Parameter.Value" --output text)
+        export NEXTAUTH_SECRET=$(aws ssm get-parameter --name "/amplify/shared/$APP_ID/NEXTAUTH_SECRET" --with-decryption --query "Parameter.Value" --output text)
+
+        npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
