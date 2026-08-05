@@ -1,0 +1,130 @@
+{
+  "data": [
+    {
+      "agencyTrackingId": "87ce24ba42694f588240e",
+      "paygovTrackingId": null,
+      "feeName": "Petition Filing Fee",
+      "fee": "PETITION_FILING_FEE",
+      "transactionAmount": 60,
+      "clientName": "efile-portal",
+      "transactionReferenceId": "45227008-2463-4cbf-b821-4f68d944e1da",
+      "paymentStatus": "success",
+      "transactionStatus": "processed",
+      "paymentMethod": "Credit/Debit Card",
+      "paygovToken": null,
+      "metadata": {
+        "agencyId": "USTC",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/101.0",
+        "isHighValue": "false",
+        "accountHolder": "Brandi Hintz"
+      },
+      "createdAt": "2026-08-03T18:36:15.246Z",
+      "lastUpdatedAt": "2026-08-08T18:54:18.246Z",
+      "returnCode": null,
+      "returnDetail": null
+    },
+    {
+      "agencyTrackingId": "7a173f34b09147e5bee0e",
+      "paygovTrackingId": "EXLBGJLQG963PGS98P63",
+      "feeName": "Petition Filing Fee",
+      "fee": "PETITION_FILING_FEE",
+      "transactionAmount": 60,
+      "clientName": "payment-portal",
+      "transactionReferenceId": "844ba05f-17dd-444a-bc3a-6a7c6e42c85a",
+      "paymentStatus": "success",
+      "transactionStatus": "processed",
+      "paymentMethod": "PayPal",
+      "paygovToken": null,
+      "metadata": {
+        "agencyId": "USTC",
+        "userAgent": "Mozilla/5.0 (Linux; Android 12; SM-G998N) AppleWebKit/597.8 (KHTML, like Gecko) Chrome/97.4.3.10 Mobile Safari/576.72",
+        "isHighValue": "true",
+        "accountHolder": "Homer Schaefer"
+      },
+      "createdAt": "2026-08-04T16:51:20.242Z",
+      "lastUpdatedAt": "2026-08-07T17:30:55.242Z",
+      "returnCode": null,
+      "returnDetail": null
+    },
+    {
+      "agencyTrackingId": "a53c1311ea9f478b8bcfb",
+      "paygovTrackingId": null,
+      "feeName": "Petition Filing Fee",
+      "fee": "PETITION_FILING_FEE",
+      "transactionAmount": 60,
+      "clientName": "efile-portal",
+      "transactionReferenceId": "58f2774e-313b-45e1-b158-ba5e1eebe0de",
+      "paymentStatus": "failed",
+      "transactionStatus": "failed",
+      "paymentMethod": "PayPal",
+      "paygovToken": null,
+      "metadata": {
+        "agencyId": "IRS",
+        "userAgent": "Mozilla/5.0 (Windows NT 6.0; Win64; x64) AppleWebKit/550.67 (KHTML, like Gecko) Chrome/61.3.7.16 Safari/576.4 Edg/110.4.19.7",
+        "isHighValue": "true",
+        "accountHolder": "Dr. Roosevelt Grady"
+      },
+      "createdAt": "2026-08-04T16:27:36.247Z",
+      "lastUpdatedAt": "2026-08-07T16:55:43.247Z",
+      "returnCode": 5000,
+      "returnDetail": "The card has been declined, the transaction will not be processed."
+    },
+    {
+      "agencyTrackingId": "0e820b82d7e146ecbf251",
+      "paygovTrackingId": "OMQ39YGFF40RBQVCGER0",
+      "feeName": "Non-Attorney Exam Registration Fee",
+      "fee": "NONATTORNEY_EXAM_REGISTRATION_FEE",
+      "transactionAmount": 250,
+      "clientName": "payment-portal",
+      "transactionReferenceId": "9e8c4bb1-ea85-4d0b-a16f-3af87f534af8",
+      "paymentStatus": "pending",
+      "transactionStatus": "initiated",
+      "paymentMethod": "ACH",
+      "paygovToken": "cf027ae1068a4b3a98e549d84063f59f",
+      "metadata": {
+        "agencyId": "USTC",
+        "userAgent": "FakerBot/6.7.17",
+        "isHighValue": "false",
+        "accountHolder": "Nyasia Bins"
+      },
+      "createdAt": "2026-08-04T12:27:31.249Z",
+      "lastUpdatedAt": "2026-08-07T13:15:04.249Z",
+      "returnCode": null,
+      "returnDetail": null
+    },
+    {
+      "agencyTrackingId": "5fda22babd364631ba3a4",
+      "paygovTrackingId": "RCKQS6F84DCOCOG35DJA",
+      "feeName": "Non-Attorney Exam Registration Fee",
+      "fee": "NONATTORNEY_EXAM_REGISTRATION_FEE",
+      "transactionAmount": 250,
+      "clientName": "efile-portal",
+      "transactionReferenceId": "6bd923fb-26d0-4622-8574-a5e529cf5134",
+      "paymentStatus": "failed",
+      "transactionStatus": "failed",
+      "paymentMethod": "Credit/Debit Card",
+      "paygovToken": null,
+      "metadata": {
+        "agencyId": "USTC",
+        "userAgent": "Googlebot/2.1 (+http://www.google.com/bot.html)",
+        "isHighValue": "true",
+        "accountHolder": "Vicky Schneider"
+      },
+      "createdAt": "2026-08-02T04:23:18.248Z",
+      "lastUpdatedAt": "2026-08-07T05:04:25.248Z",
+      "returnCode": 5000,
+      "returnDetail": "Invalid card number."
+    }
+  ],
+  "counts": {
+    "all": 290,
+    "success": 210,
+    "failed": 60,
+    "pending": 20
+  },
+  "from": "2026-01-01T00:00:00.000Z",
+  "to": "2027-01-01T00:00:00.000Z",
+  "page": 1,
+  "pageSize": 5,
+  "total": 290
+}
