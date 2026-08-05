@@ -6,17 +6,13 @@ interface AzureProfile extends Profile {
   preferred_username: string;
 }
 
-const SECRET_NAMES = [
+const ENVIRONMENT_VARIABLES = [
   "AUTH_MICROSOFT_ENTRA_ID_ID",
   "AUTH_MICROSOFT_ENTRA_ID_SECRET",
   "AUTH_MICROSOFT_ENTRA_ID_ISSUER",
   "NEXTAUTH_SECRET",
   "NEXTAUTH_URL",
 ] as const;
-
-const INLINED: Record<string, string | undefined> = {
-  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-};
 
 const authCallbacks: NextAuthOptions["callbacks"] = {
   async jwt({
@@ -73,21 +69,11 @@ const pagesConfig = {
   signIn: "/login",
 };
 
-function loadSecrets(): Record<string, string> {
+function loadEnv(): Record<string, string> {
   const resolved: Record<string, string> = {};
 
-  let injected: Record<string, string> = {};
-  const blob = process.env.secrets;
-  if (blob) {
-    try {
-      injected = JSON.parse(blob) as Record<string, string>;
-    } catch {
-      injected = {};
-    }
-  }
-
-  for (const name of SECRET_NAMES) {
-    const value = INLINED[name] ?? process.env[name] ?? injected[name];
+  for (const name of ENVIRONMENT_VARIABLES) {
+    const value = process.env[name];
     if (value) resolved[name] = value;
   }
 
@@ -98,7 +84,7 @@ let cached: NextAuthOptions | undefined;
 
 /**
  * Resolved lazily. `next build` imports every route to collect page data, so
- * reading configuration at module scope would make the build require secrets.
+ * reading configuration at module scope would make the build require env vars.
  */
 export function getAuthOptions(): NextAuthOptions {
   cached ??= buildAuthOptions();
@@ -109,10 +95,10 @@ export function getSessionAuthOptions(): Pick<
   NextAuthOptions,
   "callbacks" | "secret" | "session"
 > {
-  const secrets = loadSecrets();
+  const env = loadEnv();
 
   return {
-    secret: secrets.NEXTAUTH_SECRET,
+    secret: env.NEXTAUTH_SECRET,
     session: sessionConfig,
     callbacks: authCallbacks,
   };
@@ -121,9 +107,9 @@ export function getSessionAuthOptions(): Pick<
 export function getFederatedLogoutUrl(
   postLogoutPath = "/login",
 ): string | null {
-  const secrets = loadSecrets();
-  const issuer = secrets.AUTH_MICROSOFT_ENTRA_ID_ISSUER;
-  const baseUrl = secrets.NEXTAUTH_URL;
+  const env = loadEnv();
+  const issuer = env.AUTH_MICROSOFT_ENTRA_ID_ISSUER;
+  const baseUrl = env.NEXTAUTH_URL;
 
   if (!issuer || !baseUrl) {
     return null;
@@ -143,16 +129,16 @@ export function getFederatedLogoutUrl(
 }
 
 function buildAuthOptions(): NextAuthOptions {
-  const secrets = loadSecrets();
+  const env = loadEnv();
 
-  const missing = SECRET_NAMES.filter((name) => !secrets[name]);
+  const missing = ENVIRONMENT_VARIABLES.filter((name) => !env[name]);
   if (missing.length > 0) {
     throw new Error(
-      `Missing Entra configuration: ${missing.join(", ")}. Expected these values in the Next.js server runtime environment. For Amplify SSR, provide them via Amplify environment variables/secrets; the build can write non-public values to .env.production but NEXTAUTH_URL must be exported in the build environment.`,
+      `Missing Entra configuration: ${missing.join(", ")}. Expected these values in the Next.js server runtime environment. For Amplify SSR, provide them via environment variables; the build can write non-public values to .env.production but NEXTAUTH_URL must be exported in the build environment.`,
     );
   }
 
-  const tenantId = secrets.AUTH_MICROSOFT_ENTRA_ID_ISSUER.replace(
+  const tenantId = env.AUTH_MICROSOFT_ENTRA_ID_ISSUER.replace(
     /^https:\/\/login\.microsoftonline\.com\//,
     "",
   )
@@ -160,13 +146,13 @@ function buildAuthOptions(): NextAuthOptions {
     .replace(/\/$/, "");
 
   return {
-    secret: secrets.NEXTAUTH_SECRET,
+    secret: env.NEXTAUTH_SECRET,
     session: sessionConfig,
     pages: pagesConfig,
     providers: [
       AzureADProvider({
-        clientId: secrets.AUTH_MICROSOFT_ENTRA_ID_ID,
-        clientSecret: secrets.AUTH_MICROSOFT_ENTRA_ID_SECRET,
+        clientId: env.AUTH_MICROSOFT_ENTRA_ID_ID,
+        clientSecret: env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
         tenantId,
         authorization: {
           params: { scope: "openid profile User.Read" },
