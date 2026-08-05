@@ -13,6 +13,13 @@ frontend:
         export AUTH_MICROSOFT_ENTRA_ID_ISSUER=$(aws ssm get-parameter --name "/amplify/shared/$APP_ID/AUTH_MICROSOFT_ENTRA_ID_ISSUER" --with-decryption --query "Parameter.Value" --output text)
         export NEXTAUTH_SECRET=$(aws ssm get-parameter --name "/amplify/shared/$APP_ID/NEXTAUTH_SECRET" --with-decryption --query "Parameter.Value" --output text)
 
+        rm -f .env.production
+        printf 'AUTH_MICROSOFT_ENTRA_ID_ID=%s\n' "$AUTH_MICROSOFT_ENTRA_ID_ID" >> .env.production
+        printf 'AUTH_MICROSOFT_ENTRA_ID_SECRET=%s\n' "$AUTH_MICROSOFT_ENTRA_ID_SECRET" >> .env.production
+        printf 'AUTH_MICROSOFT_ENTRA_ID_ISSUER=%s\n' "$AUTH_MICROSOFT_ENTRA_ID_ISSUER" >> .env.production
+        printf 'NEXTAUTH_SECRET=%s\n' "$NEXTAUTH_SECRET" >> .env.production
+        printf 'NEXTAUTH_URL=%s\n' "$NEXTAUTH_URL" >> .env.production
+
         npm run build
   artifacts:
     baseDirectory: .next
