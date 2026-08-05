@@ -1,6 +1,7 @@
 import type { Account, NextAuthOptions, Profile, User } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import AzureADProvider from "next-auth/providers/azure-ad";
+import { SESSION_MAX_AGE_SECONDS } from "./session";
 
 interface AzureProfile extends Profile {
   preferred_username: string;
@@ -62,7 +63,7 @@ const authCallbacks: NextAuthOptions["callbacks"] = {
 };
 
 const sessionConfig: NextAuthOptions["session"] = {
-  maxAge: 60 * 60,
+  maxAge: SESSION_MAX_AGE_SECONDS,
 };
 
 const pagesConfig = {
