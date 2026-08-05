@@ -3,11 +3,16 @@
 import { useQuery } from "@tanstack/react-query";
 import type { PaymentStatus, TransactionLogResponse } from "./types";
 
+const PAGE_SIZE = 100;
+
 const fetchTransactionLog = async (
   status: PaymentStatus,
   signal?: AbortSignal,
 ): Promise<TransactionLogResponse> => {
-  const response = await fetch(`/api/transactions?status=${status}`, { signal });
+  const response = await fetch(
+    `/api/transactions?status=${status}&pageSize=${PAGE_SIZE}`,
+    { signal },
+  );
 
   if (!response.ok) {
     throw new Error(`Request failed with ${response.status}`);
