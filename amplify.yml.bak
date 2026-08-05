@@ -1,0 +1,86 @@
+version: 1
+
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+
+    build:
+      commands:
+        - rm -f .env.production .nextauth-url
+        - |
+          node <<'EOF'
+          const fs = require("fs");
+
+          const PRODUCTION_BRANCH = "main";
+
+          const required = [
+            "AUTH_MICROSOFT_ENTRA_ID_ID",
+            "AUTH_MICROSOFT_ENTRA_ID_SECRET",
+            "AUTH_MICROSOFT_ENTRA_ID_ISSUER",
+            "NEXTAUTH_SECRET",
+          ];
+
+          let injected = {};
+          if (process.env.secrets) {
+            try {
+              injected = JSON.parse(process.env.secrets);
+            } catch (error) {
+              console.error("Unable to parse Amplify secrets payload.");
+              throw error;
+            }
+          }
+
+          const lines = [];
+          for (const name of required) {
+            const value = process.env[name] ?? injected[name];
+            if (!value) {
+              console.error(`Missing required Amplify secret: ${name}`);
+              process.exit(1);
+            }
+            lines.push(`${name}=${value}`);
+          }
+
+          // Previews serve on their own amplifyapp.com subdomain, so the configured
+          // NEXTAUTH_URL — the custom domain — would hand Entra the wrong redirect_uri.
+          const branch = process.env.AWS_BRANCH;
+          let nextAuthUrl = process.env.NEXTAUTH_URL ?? injected.NEXTAUTH_URL;
+
+          if (branch && branch !== PRODUCTION_BRANCH) {
+            if (!process.env.AWS_APP_ID) {
+              console.error("AWS_APP_ID is unset; cannot derive the preview NEXTAUTH_URL.");
+              process.exit(1);
+            }
+            const subdomain = branch.toLowerCase().replace(/[^a-z0-9]/g, "-");
+            nextAuthUrl = `https://${subdomain}.${process.env.AWS_APP_ID}.amplifyapp.com`;
+          }
+
+          if (!nextAuthUrl) {
+            console.error("Missing required Amplify secret: NEXTAUTH_URL");
+            process.exit(1);
+          }
+
+          nextAuthUrl = nextAuthUrl.replace(/\/+$/, "");
+
+          // Deliberately not written to .env.production: Amplify already has
+          // NEXTAUTH_URL in the build environment, and Next will not let a .env
+          // file override a variable that is set. The build step exports this.
+          fs.writeFileSync(".nextauth-url", nextAuthUrl);
+
+          // Not a secret, and the value Entra must have registered.
+          console.log(`Resolved NEXTAUTH_URL=${nextAuthUrl}`);
+
+          fs.writeFileSync(".env.production", `${lines.join("\n")}\n`);
+          EOF
+        # One command, so the export cannot be lost between build steps.
+        - export NEXTAUTH_URL="$(cat .nextauth-url)" && npm run build
+
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+
+  cache:
+    paths:
+      - node_modules/**/*

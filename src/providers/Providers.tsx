@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SessionProvider } from "next-auth/react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useState } from "react";
 
@@ -17,8 +18,12 @@ export default function Providers({
   );
 
   return (
-    <NuqsAdapter>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </NuqsAdapter>
+    <SessionProvider>
+      <NuqsAdapter>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </NuqsAdapter>
+    </SessionProvider>
   );
 }
