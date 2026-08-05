@@ -18,6 +18,21 @@ const date = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
+const stampDate = new Intl.DateTimeFormat("en-CA", {
+  timeZone: COURT_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const stampTime = new Intl.DateTimeFormat("en-GB", {
+  timeZone: COURT_TIME_ZONE,
+  hourCycle: "h23",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
+
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -28,6 +43,13 @@ export const formatCourtDateTime = (iso: string | null | undefined): string =>
 
 export const formatCourtDate = (iso: string | null | undefined): string =>
   iso ? date.format(new Date(iso)) : "—";
+
+export const formatCourtStamp = (
+  iso: string | null | undefined,
+): { date: string; time: string } =>
+  iso
+    ? { date: stampDate.format(new Date(iso)), time: stampTime.format(new Date(iso)) }
+    : { date: "—", time: "" };
 
 export const formatCurrency = (amount: number | null | undefined): string =>
   typeof amount === "number" ? currency.format(amount) : "—";

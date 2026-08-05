@@ -1,6 +1,10 @@
 "use client";
 
-import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { useMemo } from "react";
 import {
   Table,
@@ -11,19 +15,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getColumns } from "./columns";
-import type { PaymentStatus, TransactionLogEntry } from "./types";
+import type { TransactionLogEntry, TransactionTab } from "./types";
 
 // Core model only: the server owns sorting, filtering and pagination.
 export default function TransactionTable({
   rows,
-  status,
+  tab,
   emptyMessage,
 }: {
   rows: TransactionLogEntry[];
-  status: PaymentStatus;
+  tab: TransactionTab;
   emptyMessage: string;
 }) {
-  const columns = useMemo(() => getColumns(status), [status]);
+  const columns = useMemo(() => getColumns(tab), [tab]);
 
   const table = useReactTable({
     data: rows,
@@ -32,13 +36,16 @@ export default function TransactionTable({
   });
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="overflow-x-auto rounded-b-md border border-t-0">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-green-50">
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="whitespace-nowrap">
+            <TableRow key={headerGroup.id} className="hover:bg-transparent">
+              {headerGroup.headers.map((header, index) => (
+                <TableHead
+                  key={header.id}
+                  className={cellBorder(index, headerGroup.headers.length)}
+                >
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -61,8 +68,11 @@ export default function TransactionTable({
           ) : (
             table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="whitespace-nowrap">
+                {row.getVisibleCells().map((cell, index) => (
+                  <TableCell
+                    key={cell.id}
+                    className={cellBorder(index, row.getVisibleCells().length)}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
@@ -74,3 +84,6 @@ export default function TransactionTable({
     </div>
   );
 }
+
+const cellBorder = (index: number, total: number) =>
+  index === total - 1 ? "whitespace-nowrap" : "whitespace-nowrap border-r";

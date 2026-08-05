@@ -1,40 +1,35 @@
 "use client";
 
 import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { formatCourtDate } from "@/lib/format";
 import StatusFilter from "./StatusFilter";
 import TransactionTable from "./TransactionTable";
-import { PAYMENT_STATUSES } from "./types";
+import { TRANSACTION_TABS } from "./types";
 import { useTransactionLog } from "./useTransactionLog";
-import { formatCourtDate } from "@/lib/format";
 
 export default function TransactionLog() {
-  // URL-as-state, so the view is shareable and survives refresh.
-  const [status, setStatus] = useQueryState(
+  const [tab, setTab] = useQueryState(
     "status",
-    parseAsStringLiteral(PAYMENT_STATUSES).withDefault("success"),
+    parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
   );
 
-  const { data, isPending, isError, error, refetch } = useTransactionLog(status);
+  const { data, isPending, isError, error, refetch } = useTransactionLog(tab);
 
   return (
-    <section className="flex w-full flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Transaction log</h1>
-        <p className="text-sm text-muted-foreground">
-          {data ? formatCourtDate(data.from) : "Today's transactions"}
-        </p>
-      </header>
+    <section className="flex w-full flex-col gap-3">
+      {/* Placeholder for the timeframe selector. */}
+      <p className="text-sm font-medium">
+        {data ? formatCourtDate(data.from) : "Today"}
+      </p>
 
-      <StatusFilter
-        selected={status}
-        counts={data?.counts}
-        onSelect={setStatus}
-      />
+      <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
 
       {isError ? (
         <div className="rounded-md border border-destructive/50 p-6 text-sm">
           <p className="font-medium">Could not load the transaction log.</p>
-          <p className="mt-1 text-muted-foreground">{(error as Error).message}</p>
+          <p className="mt-1 text-muted-foreground">
+            {(error as Error).message}
+          </p>
           <button
             type="button"
             onClick={() => refetch()}
@@ -44,13 +39,26 @@ export default function TransactionLog() {
           </button>
         </div>
       ) : (
-        <TransactionTable
-          rows={data?.data ?? []}
-          status={status}
-          emptyMessage={
-            isPending ? "Loading transactions…" : "No transactions to show."
-          }
-        />
+        <div>
+          <StatusFilter
+            selected={tab}
+            counts={data?.counts}
+            onSelect={setTab}
+          />
+          <TransactionTable
+            rows={data?.data ?? []}
+            tab={tab}
+            emptyMessage={
+              isPending ? "Loading transactions…" : "No transactions to show."
+            }
+          />
+          {data ? (
+            <p className="mt-2 text-right text-sm text-muted-foreground">
+              {data.data.length}{" "}
+              {data.data.length === 1 ? "transaction" : "transactions"}
+            </p>
+          ) : null}
+        </div>
       )}
     </section>
   );

@@ -48,19 +48,24 @@ IAM, so neither the session nor the AWS credential reaches the client.
 
 Amplify supplies the AWS credentials itself through the app's compute role — no
 keys are configured anywhere. `PAYMENT_PORTAL_API_URL` must reach the **server**
-runtime, which reads `.env.production`; an Amplify console variable alone is
-build-time only and will not be visible to the route.
+runtime, which reads `.env.production`; a console variable alone is build-time
+only. `amplify.yml` writes it there, and fails the build if it is unset.
+
+Set it as a plain Amplify environment variable (not a secret — it is a public
+URL) per environment.
 
 ## Not yet set up
 
 These are deliberate gaps, not oversights — see ADR 0001's open questions:
 
-- **Auth.** No next-auth / Entra SSO yet; that is PAY-331. Until it lands,
-  `hasDashboardSession` in `src/lib/session.ts` denies everyone, so
-  `/api/transactions` returns 401. Fail-closed on purpose — the data behind it
-  is live financial activity. That file documents the change PAY-331 makes.
-- **Route protection.** No `middleware.ts`. Each protected route checks the
-  session itself, which is opt-in per route and easy to forget. Worth adding
-  once next-auth exists, as ADR 0001 specifies.
-- **Test harness.** No test runner is configured. The backend uses Jest; that
-  choice should be made when there is logic worth testing.
+- **Access is tenant-wide.** Entra sign-in works, but the app requests only
+  `openid profile User.Read` and checks no group or role claim, so any user in
+  the Court's Microsoft tenant can sign in and read live financial data.
+  ADR 0001 calls for restricting to a subset of users.
+- **Test harness.** No test runner is configured. The backend uses Jest, and
+  `next/jest` handles the App Router config when it is added. The auth guard and
+  parameter whitelist in `/api/transactions` have no coverage.
+- **No paging controls.** The log fetches every transaction for the day across
+  as many API pages as it takes. That is bounded by a single Court day; a
+  future date-range picker would need real pagination, since ADR 0001 rejects
+  pulling unbounded history into the browser.

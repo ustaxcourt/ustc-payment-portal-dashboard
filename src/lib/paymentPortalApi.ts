@@ -5,7 +5,7 @@ import { SignatureV4 } from "@smithy/signature-v4";
 
 const REGION = process.env.AWS_REGION ?? "us-east-1";
 
-// Memoises and refreshes on expiry; reading the env vars once would pin stale keys.
+// Memoised and refreshed on expiry; reading the env vars once would pin stale keys.
 const credentials = fromNodeProviderChain();
 
 const signer = new SignatureV4({
@@ -23,8 +23,7 @@ const baseUrl = (): string => {
   return url.replace(/\/$/, "");
 };
 
-/** GETs a payment-portal endpoint signed as the Amplify compute role.
- *  Guard the route before calling: anything reaching here is already trusted. */
+/** Signed as the compute role, so guard the route before calling. */
 export const getSigned = async (
   path: string,
   search: URLSearchParams,

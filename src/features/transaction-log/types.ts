@@ -2,6 +2,10 @@ export const PAYMENT_STATUSES = ["success", "failed", "pending"] as const;
 
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
+export const TRANSACTION_TABS = ["all", ...PAYMENT_STATUSES] as const;
+
+export type TransactionTab = (typeof TRANSACTION_TABS)[number];
+
 export type TransactionLogEntry = {
   agencyTrackingId: string;
   paygovTrackingId?: string | null;

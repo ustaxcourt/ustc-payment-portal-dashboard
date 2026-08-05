@@ -42,6 +42,16 @@ frontend:
             lines.push(`${name}=${value}`);
           }
 
+          // Not a secret, so it is a plain Amplify environment variable rather
+          // than part of the secrets payload. The dashboard cannot serve the
+          // transaction log without it.
+          const apiUrl = process.env.PAYMENT_PORTAL_API_URL;
+          if (!apiUrl) {
+            console.error("Missing required Amplify variable: PAYMENT_PORTAL_API_URL");
+            process.exit(1);
+          }
+          lines.push(`PAYMENT_PORTAL_API_URL=${apiUrl.replace(/\/+$/, "")}`);
+
           // Previews serve on their own amplifyapp.com subdomain, so the configured
           // NEXTAUTH_URL — the custom domain — would hand Entra the wrong redirect_uri.
           const branch = process.env.AWS_BRANCH;

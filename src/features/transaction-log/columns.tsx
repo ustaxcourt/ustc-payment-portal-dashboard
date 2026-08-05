@@ -2,21 +2,36 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { formatCourtDateTime, formatCurrency, formatLabel } from "@/lib/format";
-import { STATUS_LABEL, STATUS_TONE } from "./statusStyles";
-import type { PaymentStatus, TransactionLogEntry } from "./types";
+import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
+import { TAB_LABEL, TAB_TONE } from "./statusStyles";
+import type { TransactionLogEntry, TransactionTab } from "./types";
 
-/** Headers are labels only — sorting is fixed server-side on lastUpdatedAt. */
 const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   {
     accessorKey: "createdAt",
     header: "Created",
-    cell: ({ row }) => formatCourtDateTime(row.original.createdAt),
+    cell: ({ row }) => {
+      const stamp = formatCourtStamp(row.original.createdAt);
+      return (
+        <div className="leading-tight">
+          <div>{stamp.date}</div>
+          <div className="text-muted-foreground">{stamp.time}</div>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "lastUpdatedAt",
     header: "Last updated",
-    cell: ({ row }) => formatCourtDateTime(row.original.lastUpdatedAt),
+    cell: ({ row }) => {
+      const stamp = formatCourtStamp(row.original.lastUpdatedAt);
+      return (
+        <div className="leading-tight">
+          <div>{stamp.date}</div>
+          <div className="text-muted-foreground">{stamp.time}</div>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "feeName",
@@ -42,8 +57,8 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     cell: ({ row }) => {
       const status = row.original.paymentStatus;
       return (
-        <Badge variant="secondary" className={STATUS_TONE[status]}>
-          {STATUS_LABEL[status]}
+        <Badge variant="secondary" className={TAB_TONE[status]}>
+          {TAB_LABEL[status]}
         </Badge>
       );
     },
@@ -75,8 +90,8 @@ const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
 };
 
 export const getColumns = (
-  status: PaymentStatus,
+  tab: TransactionTab,
 ): ColumnDef<TransactionLogEntry>[] =>
-  status === "failed"
+  tab === "failed" || tab === "all"
     ? [...BASE_COLUMNS.slice(0, 6), FAILURE_REASON, ...BASE_COLUMNS.slice(6)]
     : BASE_COLUMNS;

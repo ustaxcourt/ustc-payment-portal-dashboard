@@ -82,8 +82,7 @@ resource "aws_iam_role_policy" "amplify_ssm" {
   })
 }
 
-# Credentials for the SSR runtime. The service role above covers build and log
-# delivery only; compute does not inherit it.
+# Credentials for the SSR runtime; the service role above is build and logs only.
 resource "aws_iam_role" "amplify_compute" {
   name = "${local.name}-amplify-compute"
 
@@ -99,8 +98,7 @@ resource "aws_iam_role" "amplify_compute" {
   })
 }
 
-# The other half of the API's AWS_IAM check: its resource policy admits this
-# account, and this admits the endpoints. Both must allow.
+# The identity half of the API's AWS_IAM check; its resource policy is the other.
 resource "aws_iam_role_policy" "amplify_compute_api" {
   count = length(var.api_invoke_arns) > 0 ? 1 : 0
   name  = "${local.name}-amplify-compute-api"
