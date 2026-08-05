@@ -14,6 +14,17 @@ const ENVIRONMENT_VARIABLES = [
   "NEXTAUTH_URL",
 ] as const;
 
+const ENVIRONMENT_VALUES: Record<
+  (typeof ENVIRONMENT_VARIABLES)[number],
+  string | undefined
+> = {
+  AUTH_MICROSOFT_ENTRA_ID_ID: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
+  AUTH_MICROSOFT_ENTRA_ID_SECRET: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
+  AUTH_MICROSOFT_ENTRA_ID_ISSUER: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+};
+
 const authCallbacks: NextAuthOptions["callbacks"] = {
   async jwt({
     profile,
@@ -73,7 +84,7 @@ function loadEnv(): Record<string, string> {
   const resolved: Record<string, string> = {};
 
   for (const name of ENVIRONMENT_VARIABLES) {
-    const value = process.env[name];
+    const value = ENVIRONMENT_VALUES[name];
     if (value) resolved[name] = value;
   }
 
