@@ -1,3 +1,6 @@
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 locals {
   name = "${var.project_name}-${var.environment}"
 }
@@ -39,6 +42,41 @@ resource "aws_iam_role_policy" "amplify_logs" {
           "logs:PutLogEvents",
         ]
         Resource = "arn:aws:logs:*:*:log-group:/aws/amplify/*:*"
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "amplify_ssm" {
+  name = "${local.name}-amplify-ssm"
+  role = aws_iam_role.amplify.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath",
+        ]
+        Resource = [
+          "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter/amplify/${aws_amplify_app.payment_portal_dashboard.id}/*",
+          "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter/amplify/shared/${aws_amplify_app.payment_portal_dashboard.id}/*",
+        ]
+      },
+      {
+        # SecureString values use the aws/ssm managed key; scope to SSM only.
+        Effect   = "Allow"
+        Action   = ["kms:Decrypt"]
+        Resource = "arn:aws:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm"
+        Condition = {
+          StringEquals = {
+            "kms:ViaService"    = "ssm.${data.aws_region.current.region}.amazonaws.com"
+            "kms:CallerAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
       },
     ]
   })
@@ -86,6 +124,10 @@ resource "aws_amplify_branch" "production" {
   stage       = lookup({ prod = "PRODUCTION", stg = "BETA" }, var.environment, "DEVELOPMENT")
 
   enable_auto_build = true
+
+  environment_variables = {
+    NEXTAUTH_URL = "https://${var.dashboard_domain}"
+  }
 }
 
 # Issues the ACM certificate and writes the ALIAS into the hosted zone. Only the
