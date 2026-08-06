@@ -12,37 +12,41 @@ frontend:
         APP_ID="${AWS_APP_ID}"
         echo "NEXTAUTH_URL: $NEXTAUTH_URL"
 
-        export AUTH_MICROSOFT_ENTRA_ID_ID="$(
+        AUTH_MICROSOFT_ENTRA_ID_ID="$(
           aws ssm get-parameter \
             --name "/amplify/shared/${APP_ID}/AUTH_MICROSOFT_ENTRA_ID_ID" \
             --with-decryption \
             --query "Parameter.Value" \
             --output text
         )"
+        export AUTH_MICROSOFT_ENTRA_ID_ID
 
-        export AUTH_MICROSOFT_ENTRA_ID_SECRET="$(
+        AUTH_MICROSOFT_ENTRA_ID_SECRET="$(
           aws ssm get-parameter \
             --name "/amplify/shared/${APP_ID}/AUTH_MICROSOFT_ENTRA_ID_SECRET" \
             --with-decryption \
             --query "Parameter.Value" \
             --output text
         )"
+        export AUTH_MICROSOFT_ENTRA_ID_SECRET
 
-        export AUTH_MICROSOFT_ENTRA_ID_ISSUER="$(
+        AUTH_MICROSOFT_ENTRA_ID_ISSUER="$(
           aws ssm get-parameter \
             --name "/amplify/shared/${APP_ID}/AUTH_MICROSOFT_ENTRA_ID_ISSUER" \
             --with-decryption \
             --query "Parameter.Value" \
             --output text
         )"
+        export AUTH_MICROSOFT_ENTRA_ID_ISSUER
 
-        export NEXTAUTH_SECRET="$(
+        NEXTAUTH_SECRET="$(
           aws ssm get-parameter \
             --name "/amplify/shared/${APP_ID}/NEXTAUTH_SECRET" \
             --with-decryption \
             --query "Parameter.Value" \
             --output text
         )"
+        export NEXTAUTH_SECRET
 
         rm -f .env.production
         printf 'AUTH_MICROSOFT_ENTRA_ID_ID=%s\n' "$AUTH_MICROSOFT_ENTRA_ID_ID" >> .env.production
