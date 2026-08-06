@@ -6,7 +6,7 @@ import { TRANSACTION_TABS } from "./types";
 import type { TransactionCounts, TransactionTab } from "./types";
 
 // Counts cover the whole timeframe, so they hold steady as the selection changes.
-export default function StatusFilter({
+export default function StatusTabs({
   selected,
   counts,
   onSelect,

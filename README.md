@@ -35,6 +35,32 @@ The app runs at http://localhost:3000.
 - Tailwind CSS v4 + shadcn/ui
 - Biome for linting (matching `ustc-payment-portal`)
 
+## Local development
+
+The dashboard needs a payment-portal API to talk to, and a signed-in Court user.
+
+```bash
+cp .env.local.example .env.local
+```
+
+Fill in the four Entra values from SSM, then choose what to point at:
+
+**Local payment portal** — run `npm run start:portal` in `ustc-payment-portal`
+first. The placeholder `AWS_*` values in the example file are enough, because
+the local dev server never verifies the SigV4 signature.
+
+**A deployed environment** — set `PAYMENT_PORTAL_API_URL` to that stage's API
+Gateway URL and **delete the three `AWS_*` lines**, so the signer uses your own
+credentials from `aws sso login`. Placeholder keys are rejected by real API
+Gateway.
+
+```bash
+npm run dev
+```
+
+Then sign in at http://localhost:3000. Note `npm run build` and `npm run dev`
+share `.next`, so running a build while the dev server is up will break it.
+
 ## Talking to the payment portal
 
 The browser never calls the payment-portal API. `/api/transactions` runs on the

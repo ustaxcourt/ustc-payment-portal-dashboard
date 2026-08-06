@@ -2,7 +2,7 @@
 
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { formatCourtDate } from "@/lib/format";
-import StatusFilter from "./StatusFilter";
+import StatusTabs from "./StatusTabs";
 import TransactionTable from "./TransactionTable";
 import { TRANSACTION_TABS } from "./types";
 import { useTransactionLog } from "./useTransactionLog";
@@ -40,7 +40,7 @@ export default function TransactionLog() {
         </div>
       ) : (
         <div>
-          <StatusFilter
+          <StatusTabs
             selected={tab}
             counts={data?.counts}
             onSelect={setTab}
