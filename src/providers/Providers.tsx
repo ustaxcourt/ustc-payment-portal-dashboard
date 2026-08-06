@@ -3,11 +3,19 @@
 import { usePathname, useRouter } from "next/navigation";
 import { SessionProvider, signOut, useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
-import { IDLE_LOGOUT_TIMEOUT_MS } from "../lib/session";
+import {
+  IDLE_LOGOUT_TIMEOUT_MS,
+  LAST_ACTIVITY_STORAGE_KEY,
+  LOGOUT_SIGNAL_STORAGE_KEY,
+  SESSION_MAX_AGE_SECONDS,
+} from "../lib/session";
 
-const LAST_ACTIVITY_STORAGE_KEY = "ustc-payment-portal:last-activity";
 const IDLE_CHECK_INTERVAL_MS = 1000;
 const LOGIN_PATH = "/login";
+const SESSION_REFETCH_INTERVAL_SECONDS = Math.max(
+  1,
+  Math.floor(SESSION_MAX_AGE_SECONDS / 2),
+);
 
 function readLastActivity() {
   try {
@@ -42,11 +50,39 @@ function clearLastActivity() {
   }
 }
 
+function clearLogoutSignal() {
+  try {
+    window.localStorage.removeItem(LOGOUT_SIGNAL_STORAGE_KEY);
+  } catch {
+    return;
+  }
+}
+
+function hasLogoutSignal() {
+  try {
+    return window.localStorage.getItem(LOGOUT_SIGNAL_STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
+function broadcastLogout() {
+  try {
+    window.localStorage.setItem(
+      LOGOUT_SIGNAL_STORAGE_KEY,
+      Date.now().toString(),
+    );
+  } catch {
+    return;
+  }
+}
+
 function IdleLogout() {
   const { status, update } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const intervalRef = useRef<number | null>(null);
+  const previousStatusRef = useRef(status);
   const signOutStartedRef = useRef(false);
 
   useEffect(() => {
@@ -70,14 +106,35 @@ function IdleLogout() {
   }, [update]);
 
   useEffect(() => {
-    if (status === "authenticated" && pathname === LOGIN_PATH) {
+    const previousStatus = previousStatusRef.current;
+    const logoutInProgress = signOutStartedRef.current || hasLogoutSignal();
+
+    if (
+      status === "authenticated" &&
+      pathname === LOGIN_PATH &&
+      !logoutInProgress
+    ) {
+      clearLogoutSignal();
       router.replace("/");
-      return;
+    }
+
+    if (
+      previousStatus === "authenticated" &&
+      status === "unauthenticated"
+    ) {
+      clearLastActivity();
+      clearLogoutSignal();
     }
 
     if (status === "unauthenticated" && pathname !== LOGIN_PATH) {
       router.replace(LOGIN_PATH);
     }
+
+    if (status === "unauthenticated") {
+      signOutStartedRef.current = false;
+    }
+
+    previousStatusRef.current = status;
   }, [pathname, router, status]);
 
   useEffect(() => {
@@ -86,8 +143,6 @@ function IdleLogout() {
         window.clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-
-      signOutStartedRef.current = false;
       return;
     }
 
@@ -97,6 +152,7 @@ function IdleLogout() {
       }
 
       signOutStartedRef.current = true;
+      broadcastLogout();
       clearLastActivity();
       void signOut({ callbackUrl: "/api/auth/federated-logout" });
     };
@@ -110,7 +166,6 @@ function IdleLogout() {
       const lastActivity = readLastActivity();
 
       if (lastActivity === null) {
-        markActivity();
         return false;
       }
 
@@ -124,28 +179,25 @@ function IdleLogout() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        if (!checkForInactivity()) {
-          markActivity();
-        }
+        checkForInactivity();
       }
     };
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key !== LAST_ACTIVITY_STORAGE_KEY) {
-        return;
-      }
-
-      if (event.newValue === null) {
-        void update();
-
-        if (pathname !== LOGIN_PATH) {
-          router.replace(LOGIN_PATH);
-        }
+      if (
+        event.key === LOGOUT_SIGNAL_STORAGE_KEY &&
+        event.newValue !== null
+      ) {
+        signOutStartedRef.current = true;
+        clearLastActivity();
+        void signOut({ redirect: false });
 
         return;
       }
 
-      checkForInactivity();
+      if (event.key === LAST_ACTIVITY_STORAGE_KEY && event.newValue !== null) {
+        checkForInactivity();
+      }
     };
 
     const activityEvents: Array<keyof WindowEventMap> = [
@@ -155,9 +207,10 @@ function IdleLogout() {
       "mousemove",
     ];
 
-    if (!checkForInactivity()) {
+    if (readLastActivity() === null) {
       markActivity();
     }
+    checkForInactivity();
     intervalRef.current = window.setInterval(
       checkForInactivity,
       IDLE_CHECK_INTERVAL_MS,
@@ -181,7 +234,7 @@ function IdleLogout() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [pathname, router, status, update]);
+  }, [status, update]);
 
   return null;
 }
@@ -192,7 +245,10 @@ export default function Providers({
   children: React.ReactNode;
 }) {
   return (
-    <SessionProvider>
+    <SessionProvider
+      refetchInterval={SESSION_REFETCH_INTERVAL_SECONDS}
+      refetchOnWindowFocus
+    >
       <IdleLogout />
       {children}
     </SessionProvider>
