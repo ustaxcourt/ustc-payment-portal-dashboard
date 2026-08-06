@@ -10,6 +10,7 @@ frontend:
         set -euo pipefail
 
         APP_ID="${AWS_APP_ID}"
+        echo "NEXTAUTH_URL: $NEXTAUTH_URL"
 
         export AUTH_MICROSOFT_ENTRA_ID_ID="$(
           aws ssm get-parameter \
