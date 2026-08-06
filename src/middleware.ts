@@ -4,5 +4,5 @@ export { default } from "next-auth/middleware";
 // can perform a plain server redirect to /login without NextAuth appending a
 // callbackUrl query parameter.
 export const config = {
-  matcher: ["/((?!$|login|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!$|login(?:/|$)|_next/static|_next/image|favicon[.]ico$).*)"],
 };
