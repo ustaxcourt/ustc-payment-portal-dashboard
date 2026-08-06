@@ -1,11 +1,13 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
 import { SessionProvider, signOut, useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
 import { IDLE_LOGOUT_TIMEOUT_MS } from "../lib/session";
 
 const LAST_ACTIVITY_STORAGE_KEY = "ustc-payment-portal:last-activity";
 const IDLE_CHECK_INTERVAL_MS = 1000;
+const LOGIN_PATH = "/login";
 
 function readLastActivity() {
   try {
@@ -32,8 +34,18 @@ function writeLastActivity(timestamp: number) {
   }
 }
 
+function clearLastActivity() {
+  try {
+    window.localStorage.removeItem(LAST_ACTIVITY_STORAGE_KEY);
+  } catch {
+    return;
+  }
+}
+
 function IdleLogout() {
   const { status } = useSession();
+  const pathname = usePathname();
+  const router = useRouter();
   const intervalRef = useRef<number | null>(null);
   const signOutStartedRef = useRef(false);
 
@@ -43,6 +55,13 @@ function IdleLogout() {
         window.clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+
+      clearLastActivity();
+
+      if (status === "unauthenticated" && pathname !== LOGIN_PATH) {
+        router.replace(LOGIN_PATH);
+      }
+
       signOutStartedRef.current = false;
       return;
     }
@@ -53,6 +72,7 @@ function IdleLogout() {
       }
 
       signOutStartedRef.current = true;
+      clearLastActivity();
       void signOut({ callbackUrl: "/api/auth/federated-logout" });
     };
 
@@ -66,18 +86,22 @@ function IdleLogout() {
 
       if (lastActivity === null) {
         markActivity();
-        return;
+        return false;
       }
 
       if (Date.now() - lastActivity >= IDLE_LOGOUT_TIMEOUT_MS) {
         signOutForInactivity();
+        return true;
       }
+
+      return false;
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        markActivity();
-        checkForInactivity();
+        if (!checkForInactivity()) {
+          markActivity();
+        }
       }
     };
 
@@ -94,8 +118,9 @@ function IdleLogout() {
       "mousemove",
     ];
 
-    markActivity();
-    checkForInactivity();
+    if (!checkForInactivity()) {
+      markActivity();
+    }
     intervalRef.current = window.setInterval(
       checkForInactivity,
       IDLE_CHECK_INTERVAL_MS,
@@ -119,7 +144,7 @@ function IdleLogout() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [status]);
+  }, [pathname, router, status]);
 
   return null;
 }
