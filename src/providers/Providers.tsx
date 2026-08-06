@@ -87,8 +87,6 @@ function IdleLogout() {
         intervalRef.current = null;
       }
 
-      clearLastActivity();
-
       signOutStartedRef.current = false;
       return;
     }
@@ -133,9 +131,21 @@ function IdleLogout() {
     };
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === LAST_ACTIVITY_STORAGE_KEY) {
-        checkForInactivity();
+      if (event.key !== LAST_ACTIVITY_STORAGE_KEY) {
+        return;
       }
+
+      if (event.newValue === null) {
+        void update();
+
+        if (pathname !== LOGIN_PATH) {
+          router.replace(LOGIN_PATH);
+        }
+
+        return;
+      }
+
+      checkForInactivity();
     };
 
     const activityEvents: Array<keyof WindowEventMap> = [
@@ -171,7 +181,7 @@ function IdleLogout() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [status]);
+  }, [pathname, router, status, update]);
 
   return null;
 }
