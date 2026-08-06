@@ -43,11 +43,42 @@ function clearLastActivity() {
 }
 
 function IdleLogout() {
-  const { status } = useSession();
+  const { status, update } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const intervalRef = useRef<number | null>(null);
   const signOutStartedRef = useRef(false);
+
+  useEffect(() => {
+    const syncSession = () => {
+      void update();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncSession();
+      }
+    };
+
+    window.addEventListener("focus", syncSession);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", syncSession);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [update]);
+
+  useEffect(() => {
+    if (status === "authenticated" && pathname === LOGIN_PATH) {
+      router.replace("/");
+      return;
+    }
+
+    if (status === "unauthenticated" && pathname !== LOGIN_PATH) {
+      router.replace(LOGIN_PATH);
+    }
+  }, [pathname, router, status]);
 
   useEffect(() => {
     if (status !== "authenticated") {
@@ -57,10 +88,6 @@ function IdleLogout() {
       }
 
       clearLastActivity();
-
-      if (status === "unauthenticated" && pathname !== LOGIN_PATH) {
-        router.replace(LOGIN_PATH);
-      }
 
       signOutStartedRef.current = false;
       return;
@@ -144,7 +171,7 @@ function IdleLogout() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [pathname, router, status]);
+  }, [status]);
 
   return null;
 }
