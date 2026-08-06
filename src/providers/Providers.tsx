@@ -109,6 +109,15 @@ function IdleLogout() {
     const previousStatus = previousStatusRef.current;
     const logoutInProgress = signOutStartedRef.current || hasLogoutSignal();
 
+    if (previousStatus !== "authenticated" && status === "authenticated") {
+      clearLogoutSignal();
+      signOutStartedRef.current = false;
+
+      if (readLastActivity() === null) {
+        writeLastActivity(Date.now());
+      }
+    }
+
     if (
       status === "authenticated" &&
       pathname === LOGIN_PATH &&
@@ -234,7 +243,7 @@ function IdleLogout() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [status, update]);
+  }, [status]);
 
   return null;
 }
