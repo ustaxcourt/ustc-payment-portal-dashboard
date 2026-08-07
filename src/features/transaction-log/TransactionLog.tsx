@@ -54,8 +54,9 @@ export default function TransactionLog() {
           />
           {data ? (
             <p className="mt-2 text-right text-sm text-muted-foreground">
-              {data.data.length}{" "}
-              {data.data.length === 1 ? "transaction" : "transactions"}
+              {data.data.length < data.total
+                ? `Showing ${data.data.length} of ${data.total} transactions`
+                : `${data.data.length} ${data.data.length === 1 ? "transaction" : "transactions"}`}
             </p>
           ) : null}
         </div>
