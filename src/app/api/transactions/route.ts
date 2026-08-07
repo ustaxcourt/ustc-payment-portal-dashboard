@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSigned } from "@/lib/paymentPortalApi";
-import { hasDashboardSession } from "@/lib/session";
+import { hasDashboardSession } from "@/lib/serverSession";
 
 // Per-request: a cached response would serve one user's timeframe to another.
 export const dynamic = "force-dynamic";

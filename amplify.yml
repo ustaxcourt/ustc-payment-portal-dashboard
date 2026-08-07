@@ -1,112 +1,80 @@
 version: 1
-
 frontend:
   phases:
     preBuild:
       commands:
         - npm ci
-
     build:
       commands:
-        - rm -f .env.production .nextauth-url
-        - |
-          node <<'EOF'
-          const fs = require("fs");
+      - |
+        set -euo pipefail
 
-          const PRODUCTION_BRANCH = "main";
+        APP_ID="${AWS_APP_ID}"
 
-          const required = [
-            "AUTH_MICROSOFT_ENTRA_ID_ID",
-            "AUTH_MICROSOFT_ENTRA_ID_SECRET",
-            "AUTH_MICROSOFT_ENTRA_ID_ISSUER",
-            "NEXTAUTH_SECRET",
-          ];
+        # Previews serve on their own subdomain, so the configured custom domain
+        # would hand Entra the wrong redirect_uri.
+        if [ "${AWS_BRANCH}" != "main" ]; then
+          SUBDOMAIN="$(printf '%s' "${AWS_BRANCH}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')"
+          NEXTAUTH_URL="https://${SUBDOMAIN}.${APP_ID}.amplifyapp.com"
+        fi
+        NEXTAUTH_URL="${NEXTAUTH_URL%/}"
+        export NEXTAUTH_URL
+        echo "NEXTAUTH_URL: $NEXTAUTH_URL"
 
-          let injected = {};
-          if (process.env.secrets) {
-            try {
-              injected = JSON.parse(process.env.secrets);
-            } catch (error) {
-              console.error("Unable to parse Amplify secrets payload.");
-              throw error;
-            }
-          }
+        if [ -z "${PAYMENT_PORTAL_API_URL:-}" ]; then
+          echo "Missing required Amplify variable: PAYMENT_PORTAL_API_URL" >&2
+          exit 1
+        fi
 
-          // Amplify only auto-injects from the branch's own SSM path; fall back
-          // to the shared one so previews need no copies of their own.
-          const prefix = process.env.SSM_SECRET_PREFIX;
-          const fromSsm = (name) => {
-            if (!prefix) return undefined;
-            try {
-              return require("node:child_process")
-                .execFileSync("aws", [
-                  "ssm", "get-parameter",
-                  "--name", `${prefix.replace(/\/*$/, "/")}${name}`,
-                  "--with-decryption",
-                  "--query", "Parameter.Value",
-                  "--output", "text",
-                ], { encoding: "utf8" })
-                .trim();
-            } catch {
-              return undefined;
-            }
-          };
+        AUTH_MICROSOFT_ENTRA_ID_ID="$(
+          aws ssm get-parameter \
+            --name "/amplify/shared/${APP_ID}/AUTH_MICROSOFT_ENTRA_ID_ID" \
+            --with-decryption \
+            --query "Parameter.Value" \
+            --output text
+        )"
+        export AUTH_MICROSOFT_ENTRA_ID_ID
 
-          const lines = [];
-          for (const name of required) {
-            const value = process.env[name] ?? injected[name] ?? fromSsm(name);
-            if (!value) {
-              console.error(`Missing required Amplify secret: ${name}`);
-              process.exit(1);
-            }
-            lines.push(`${name}=${value}`);
-          }
+        AUTH_MICROSOFT_ENTRA_ID_SECRET="$(
+          aws ssm get-parameter \
+            --name "/amplify/shared/${APP_ID}/AUTH_MICROSOFT_ENTRA_ID_SECRET" \
+            --with-decryption \
+            --query "Parameter.Value" \
+            --output text
+        )"
+        export AUTH_MICROSOFT_ENTRA_ID_SECRET
 
-          // A plain Amplify variable, not a secret.
-          const apiUrl = process.env.PAYMENT_PORTAL_API_URL;
-          if (!apiUrl) {
-            console.error("Missing required Amplify variable: PAYMENT_PORTAL_API_URL");
-            process.exit(1);
-          }
-          lines.push(`PAYMENT_PORTAL_API_URL=${apiUrl.replace(/\/+$/, "")}`);
+        AUTH_MICROSOFT_ENTRA_ID_ISSUER="$(
+          aws ssm get-parameter \
+            --name "/amplify/shared/${APP_ID}/AUTH_MICROSOFT_ENTRA_ID_ISSUER" \
+            --with-decryption \
+            --query "Parameter.Value" \
+            --output text
+        )"
+        export AUTH_MICROSOFT_ENTRA_ID_ISSUER
 
-          // Previews serve on their own subdomain, so the custom domain would
-          // hand Entra the wrong redirect_uri.
-          const branch = process.env.AWS_BRANCH;
-          let nextAuthUrl = process.env.NEXTAUTH_URL ?? injected.NEXTAUTH_URL;
+        NEXTAUTH_SECRET="$(
+          aws ssm get-parameter \
+            --name "/amplify/shared/${APP_ID}/NEXTAUTH_SECRET" \
+            --with-decryption \
+            --query "Parameter.Value" \
+            --output text
+        )"
+        export NEXTAUTH_SECRET
 
-          if (branch && branch !== PRODUCTION_BRANCH) {
-            if (!process.env.AWS_APP_ID) {
-              console.error("AWS_APP_ID is unset; cannot derive the preview NEXTAUTH_URL.");
-              process.exit(1);
-            }
-            const subdomain = branch.toLowerCase().replace(/[^a-z0-9]/g, "-");
-            nextAuthUrl = `https://${subdomain}.${process.env.AWS_APP_ID}.amplifyapp.com`;
-          }
+        rm -f .env.production
+        printf 'AUTH_MICROSOFT_ENTRA_ID_ID=%s\n' "$AUTH_MICROSOFT_ENTRA_ID_ID" >> .env.production
+        printf 'AUTH_MICROSOFT_ENTRA_ID_SECRET=%s\n' "$AUTH_MICROSOFT_ENTRA_ID_SECRET" >> .env.production
+        printf 'AUTH_MICROSOFT_ENTRA_ID_ISSUER=%s\n' "$AUTH_MICROSOFT_ENTRA_ID_ISSUER" >> .env.production
+        printf 'NEXTAUTH_SECRET=%s\n' "$NEXTAUTH_SECRET" >> .env.production
+        printf 'NEXTAUTH_URL=%s\n' "$NEXTAUTH_URL" >> .env.production
+        printf 'PAYMENT_PORTAL_API_URL=%s\n' "${PAYMENT_PORTAL_API_URL%/}" >> .env.production
 
-          if (!nextAuthUrl) {
-            console.error("Missing required Amplify secret: NEXTAUTH_URL");
-            process.exit(1);
-          }
-
-          nextAuthUrl = nextAuthUrl.replace(/\/+$/, "");
-
-          // Not in .env.production: Next will not let a .env file override a
-          // variable already set in the environment. The build step exports it.
-          fs.writeFileSync(".nextauth-url", nextAuthUrl);
-
-          console.log(`Resolved NEXTAUTH_URL=${nextAuthUrl}`);
-
-          fs.writeFileSync(".env.production", `${lines.join("\n")}\n`);
-          EOF
-        # One command, so the export cannot be lost between build steps.
-        - export NEXTAUTH_URL="$(cat .nextauth-url)" && npm run build
-
+        npm run build
   artifacts:
     baseDirectory: .next
     files:
       - '**/*'
-
   cache:
     paths:
       - node_modules/**/*
