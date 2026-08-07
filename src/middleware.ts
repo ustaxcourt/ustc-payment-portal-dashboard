@@ -1,7 +1,8 @@
 export { default } from "next-auth/middleware";
 
-// The matcher defines the public routes. Any route that does not match one of
-// these exclusions is treated as private and requires an authenticated session.
+// The matcher defines the private routes. Leave the landing page public so it
+// can perform a plain server redirect to /login without NextAuth appending a
+// callbackUrl query parameter.
 export const config = {
-  matcher: ["/((?!login|api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!$|login(?:/|$)|_next/static|_next/image|favicon[.]ico$).*)"],
 };
