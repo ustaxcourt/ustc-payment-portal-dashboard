@@ -1,26 +1,49 @@
 "use client";
 
-import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { formatCourtDate } from "@/lib/format";
+import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import StatusTabs from "./StatusTabs";
+import {
+  DATE_RANGE_PRESETS,
+  resolveAppliedDateRange,
+} from "./dateRange";
+import TimeframeControls from "./TimeframeControls";
 import TransactionTable from "./TransactionTable";
 import { TRANSACTION_TABS } from "./types";
 import { useTransactionLog } from "./useTransactionLog";
 
 export default function TransactionLog() {
-  const [tab, setTab] = useQueryState(
-    "status",
-    parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
+  const [filters, setFilters] = useQueryStates(
+    {
+      from: parseAsString,
+      range: parseAsStringLiteral(DATE_RANGE_PRESETS).withDefault("today"),
+      status: parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
+      to: parseAsString,
+    },
+    {
+      clearOnDefault: true,
+    },
   );
 
-  const { data, isPending, isError, error, refetch } = useTransactionLog(tab);
+  const appliedRange = resolveAppliedDateRange(
+    filters.range,
+    filters.from,
+    filters.to,
+  );
+
+  const { data, isPending, isError, error, refetch } = useTransactionLog(
+    filters.status,
+    appliedRange,
+  );
 
   return (
     <section className="flex w-full flex-col gap-3">
-      {/* Placeholder for the timeframe selector. */}
-      <p className="text-sm font-medium">
-        {data ? formatCourtDate(data.from) : "Today"}
-      </p>
+      <TimeframeControls
+        appliedRange={appliedRange}
+        onSelectPreset={(preset) =>
+          setFilters({ from: null, range: preset, to: null })
+        }
+        onApplyCustom={(from, to) => setFilters({ from, range: "custom", to })}
+      />
 
       <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
 
@@ -41,13 +64,13 @@ export default function TransactionLog() {
       ) : (
         <div>
           <StatusTabs
-            selected={tab}
+            selected={filters.status}
             counts={data?.counts}
-            onSelect={setTab}
+            onSelect={(status) => setFilters({ status })}
           />
           <TransactionTable
             rows={data?.data ?? []}
-            tab={tab}
+            tab={filters.status}
             emptyMessage={
               isPending ? "Loading transactions…" : "No transactions to show."
             }
