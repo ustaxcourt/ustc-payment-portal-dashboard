@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  DATE_RANGE_PRESETS,
-  formatDateInput,
-  parseInputDate,
   type AppliedDateRange,
+  DATE_RANGE_PRESETS,
   type DateRangePreset,
+  fromDatePickerValue,
+  parseInputDate,
+  toDatePickerValue,
 } from "./dateRange";
 
 const PRESET_COPY: Record<DateRangePreset, string> = {
@@ -30,23 +31,23 @@ export default function TimeframeControls({
   onApplyCustom,
 }: Props) {
   const [isCustomOpen, setIsCustomOpen] = useState(appliedRange.preset === "custom");
-  const [draftFrom, setDraftFrom] = useState(appliedRange.from);
-  const [draftTo, setDraftTo] = useState(appliedRange.to);
+  const [draftFrom, setDraftFrom] = useState(toDatePickerValue(appliedRange.from));
+  const [draftTo, setDraftTo] = useState(toDatePickerValue(appliedRange.to));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (appliedRange.preset === "custom") {
       setIsCustomOpen(true);
-      setDraftFrom(appliedRange.from);
-      setDraftTo(appliedRange.to);
+      setDraftFrom(toDatePickerValue(appliedRange.from));
+      setDraftTo(toDatePickerValue(appliedRange.to));
       setError(null);
     }
   }, [appliedRange.from, appliedRange.preset, appliedRange.to]);
 
   const openCustomEditor = () => {
     setIsCustomOpen(true);
-    setDraftFrom(appliedRange.from);
-    setDraftTo(appliedRange.to);
+    setDraftFrom(toDatePickerValue(appliedRange.from));
+    setDraftTo(toDatePickerValue(appliedRange.to));
     setError(null);
   };
 
@@ -56,11 +57,19 @@ export default function TimeframeControls({
       return;
     }
 
-    const parsedFrom = parseInputDate(draftFrom);
-    const parsedTo = parseInputDate(draftTo);
+    const formattedFrom = fromDatePickerValue(draftFrom);
+    const formattedTo = fromDatePickerValue(draftTo);
+
+    if (!formattedFrom || !formattedTo) {
+      setError("Dates must be valid.");
+      return;
+    }
+
+    const parsedFrom = parseInputDate(formattedFrom);
+    const parsedTo = parseInputDate(formattedTo);
 
     if (!parsedFrom || !parsedTo) {
-      setError("Dates must be valid and use MM/DD/YYYY.");
+      setError("Dates must be valid.");
       return;
     }
 
@@ -70,7 +79,7 @@ export default function TimeframeControls({
     }
 
     setError(null);
-    onApplyCustom(draftFrom, draftTo);
+    onApplyCustom(formattedFrom, formattedTo);
   };
 
   return (
@@ -83,7 +92,9 @@ export default function TimeframeControls({
         <div className="flex flex-wrap gap-2">
           {DATE_RANGE_PRESETS.map((preset) => {
             const isCustom = preset === "custom";
-            const isSelected = appliedRange.preset === preset;
+            const isSelected = isCustom
+              ? isCustomOpen
+              : appliedRange.preset === preset;
 
             return (
               <Button
@@ -114,12 +125,10 @@ export default function TimeframeControls({
           <label className="flex flex-col gap-1 text-sm font-medium">
             <span>From</span>
             <input
-              type="text"
-              inputMode="numeric"
-              placeholder="MM/DD/YYYY"
+              type="date"
               value={draftFrom}
               onChange={(event) => {
-                setDraftFrom(formatDateInput(event.target.value));
+                setDraftFrom(event.target.value);
                 setError(null);
               }}
               className={cn(
@@ -133,12 +142,10 @@ export default function TimeframeControls({
           <label className="flex flex-col gap-1 text-sm font-medium">
             <span>To</span>
             <input
-              type="text"
-              inputMode="numeric"
-              placeholder="MM/DD/YYYY"
+              type="date"
               value={draftTo}
               onChange={(event) => {
-                setDraftTo(formatDateInput(event.target.value));
+                setDraftTo(event.target.value);
                 setError(null);
               }}
               className={cn(

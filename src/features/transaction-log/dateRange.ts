@@ -113,6 +113,42 @@ export const parseInputDate = (value: string): Date | null => {
   return candidate;
 };
 
+export const toDatePickerValue = (value: string): string => {
+  const parsed = parseInputDate(value);
+
+  if (!parsed) {
+    return "";
+  }
+
+  const month = pad(parsed.getUTCMonth() + 1);
+  const day = pad(parsed.getUTCDate());
+  const year = parsed.getUTCFullYear();
+
+  return `${year}-${month}-${day}`;
+};
+
+export const fromDatePickerValue = (value: string): string | null => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const [yearText, monthText, dayText] = value.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    candidate.getUTCFullYear() !== year ||
+    candidate.getUTCMonth() !== month - 1 ||
+    candidate.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return `${monthText}/${dayText}/${yearText}`;
+};
+
 export const resolveAppliedDateRange = (
   preset: DateRangePreset,
   from: string | null,
