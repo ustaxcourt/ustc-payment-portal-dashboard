@@ -36,7 +36,7 @@ export default function TransactionLog() {
   );
 
   return (
-    <section className="flex w-full flex-col gap-3">
+    <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
       <TimeframeControls
         appliedRange={appliedRange}
         onSelectPreset={(preset) =>
@@ -62,7 +62,7 @@ export default function TransactionLog() {
           </button>
         </div>
       ) : (
-        <div>
+        <div className="flex min-h-0 flex-1 flex-col">
           <StatusTabs
             selected={filters.status}
             counts={data?.counts}
