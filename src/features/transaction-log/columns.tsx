@@ -7,8 +7,6 @@ import SortableHeader from "./SortableHeader";
 import { TAB_LABEL, TAB_TONE } from "./statusStyles";
 import type { TransactionLogEntry, TransactionTab } from "./types";
 
-/** Adapts the table's column API to the presentational header, so adding a
- *  sortable column stays a one-liner. */
 const sortable =
   (label: string) =>
   ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (

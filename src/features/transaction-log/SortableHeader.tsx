@@ -10,14 +10,6 @@ const DIRECTION_ICON = {
   desc: ArrowDown,
 } as const;
 
-/**
- * A column header that can be sorted. Presentational on purpose — it takes the
- * current direction and a callback rather than reaching into a table instance,
- * so it works for any table and can be exercised without one.
- *
- * The sorted state is carried by `aria-sort` on the enclosing `<th>`, which is
- * where assistive technology looks for it; this renders the visible affordance.
- */
 export default function SortableHeader({
   label,
   sorted,
@@ -29,7 +21,6 @@ export default function SortableHeader({
   onToggle: () => void;
   className?: string;
 }) {
-  // Shape carries the state, not just weight, so it survives a greyscale print.
   const Icon = sorted ? DIRECTION_ICON[sorted] : ChevronsUpDown;
 
   return (
@@ -39,7 +30,6 @@ export default function SortableHeader({
       className={cn(
         "flex w-full items-center gap-1.5 rounded-sm py-1 text-left font-medium",
         "outline-none transition-colors",
-        // Tinted rather than a fixed colour, so it reads on every header tone.
         "hover:bg-black/5",
         "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
         className,

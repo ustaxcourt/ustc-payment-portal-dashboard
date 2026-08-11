@@ -1,10 +1,16 @@
 "use client";
 
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsStringLiteral, useQueryState, useQueryStates } from "nuqs";
 import { formatCourtDate } from "@/lib/format";
 import StatusTabs from "./StatusTabs";
 import TransactionTable from "./TransactionTable";
-import { TRANSACTION_TABS } from "./types";
+import {
+  DEFAULT_ORDER,
+  DEFAULT_SORT,
+  SORT_ORDERS,
+  TRANSACTION_SORT_FIELDS,
+  TRANSACTION_TABS,
+} from "./types";
 import { useTransactionLog } from "./useTransactionLog";
 
 export default function TransactionLog() {
@@ -13,7 +19,17 @@ export default function TransactionLog() {
     parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
   );
 
-  const { data, isPending, isError, error, refetch } = useTransactionLog(tab);
+  const [sorting, setSorting] = useQueryStates({
+    sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(
+      DEFAULT_SORT,
+    ),
+    order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
+  });
+
+  const { data, isPending, isError, error, refetch } = useTransactionLog(
+    tab,
+    sorting,
+  );
 
   return (
     <section className="flex w-full flex-col gap-3">
@@ -48,6 +64,8 @@ export default function TransactionLog() {
           <TransactionTable
             rows={data?.data ?? []}
             tab={tab}
+            sorting={sorting}
+            onSortingChange={setSorting}
             emptyMessage={
               isPending ? "Loading transactions…" : "No transactions to show."
             }

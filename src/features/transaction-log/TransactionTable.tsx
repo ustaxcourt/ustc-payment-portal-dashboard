@@ -3,6 +3,7 @@
 import {
   flexRender,
   getCoreRowModel,
+  type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import { useMemo } from "react";
@@ -17,30 +18,52 @@ import {
 import { cn } from "@/lib/utils";
 import { getColumns } from "./columns";
 import { TAB_HEADER_TONE } from "./statusStyles";
-import type { TransactionLogEntry, TransactionTab } from "./types";
+import type {
+  TransactionLogEntry,
+  TransactionSortField,
+  TransactionSorting,
+  TransactionTab,
+} from "./types";
 
 // Core model only: the server owns sorting, filtering and pagination.
 export default function TransactionTable({
   rows,
   tab,
+  sorting,
+  onSortingChange,
   emptyMessage,
 }: {
   rows: TransactionLogEntry[];
   tab: TransactionTab;
+  sorting: TransactionSorting;
+  onSortingChange: (next: TransactionSorting) => void;
   emptyMessage: string;
 }) {
   const columns = useMemo(() => getColumns(tab), [tab]);
+
+  const sortingState: SortingState = useMemo(
+    () => [{ id: sorting.sort, desc: sorting.order === "desc" }],
+    [sorting.sort, sorting.order],
+  );
 
   const table = useReactTable({
     data: rows,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    // The server orders the rows; the table only renders the indicator.
     manualSorting: true,
-    // The log is never unsorted: it opens on the newest transactions, and a
-    // third click flips back to ascending rather than clearing the order.
     enableSortingRemoval: false,
-    initialState: { sorting: [{ id: DEFAULT_SORT, desc: true }] },
+    state: { sorting: sortingState },
+    onSortingChange: (updater) => {
+      const next =
+        typeof updater === "function" ? updater(sortingState) : updater;
+      const [column] = next;
+      if (!column) return;
+
+      onSortingChange({
+        sort: column.id as TransactionSortField,
+        order: column.desc ? "desc" : "asc",
+      });
+    },
   });
 
   return (
@@ -96,15 +119,9 @@ export default function TransactionTable({
   );
 }
 
-/** The log opens on the newest transactions by creation time. Named here so the
- *  URL state and the request in the next layer can share one definition. */
-export const DEFAULT_SORT = "createdAt";
-
 const cellBorder = (index: number, total: number) =>
   index === total - 1 ? "whitespace-nowrap" : "whitespace-nowrap border-r";
 
-/** Every sortable column carries `aria-sort`; only the active one reports a
- *  direction. This is where assistive technology reads the sort state from. */
 const ariaSort = (
   sorted: false | "asc" | "desc",
 ): "ascending" | "descending" | "none" => {
