@@ -94,7 +94,7 @@ export default function TimeframeControls({
             const isCustom = preset === "custom";
             const isSelected = isCustom
               ? isCustomOpen
-              : appliedRange.preset === preset;
+              : !isCustomOpen && appliedRange.preset === preset;
 
             return (
               <Button
