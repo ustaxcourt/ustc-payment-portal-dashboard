@@ -60,7 +60,7 @@ const fetchTransactionLog = async (
     ...firstPage,
     data,
     page: 1,
-    pageSize: data.length,
+    pageSize: firstPage.pageSize,
   };
 };
 
