@@ -14,7 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { getColumns } from "./columns";
+import { TAB_HEADER_TONE } from "./statusStyles";
 import type { TransactionLogEntry, TransactionTab } from "./types";
 
 // Core model only: the server owns sorting, filtering and pagination.
@@ -38,7 +40,9 @@ export default function TransactionTable({
   return (
     <div className="max-h-[60vh] overflow-auto rounded-b-md border border-t-0">
       <Table>
-        <TableHeader className="sticky top-0 z-10 bg-green-50">
+        <TableHeader
+          className={cn("sticky top-0 z-10", TAB_HEADER_TONE[tab])}
+        >
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header, index) => (
