@@ -1,15 +1,28 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, HeaderContext } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
+import SortableHeader from "./SortableHeader";
 import { TAB_LABEL, TAB_TONE } from "./statusStyles";
 import type { TransactionLogEntry, TransactionTab } from "./types";
+
+/** Adapts the table's column API to the presentational header, so adding a
+ *  sortable column stays a one-liner. */
+const sortable =
+  (label: string) =>
+  ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
+    <SortableHeader
+      label={label}
+      sorted={column.getIsSorted()}
+      onToggle={() => column.toggleSorting()}
+    />
+  );
 
 const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   {
     accessorKey: "createdAt",
-    header: "Created",
+    header: sortable("Created"),
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.createdAt);
       return (
@@ -22,7 +35,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "lastUpdatedAt",
-    header: "Last updated",
+    header: sortable("Last updated"),
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.lastUpdatedAt);
       return (
@@ -35,11 +48,11 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "feeName",
-    header: "Fee type",
+    header: sortable("Fee type"),
   },
   {
     accessorKey: "transactionAmount",
-    header: "Amount",
+    header: sortable("Amount"),
     cell: ({ row }) => (
       <span className="tabular-nums">
         {formatCurrency(row.original.transactionAmount)}
@@ -48,12 +61,12 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "paymentMethod",
-    header: "Payment method",
+    header: sortable("Payment method"),
     cell: ({ row }) => formatLabel(row.original.paymentMethod),
   },
   {
     accessorKey: "paymentStatus",
-    header: "Payment status",
+    header: sortable("Payment status"),
     cell: ({ row }) => {
       const status = row.original.paymentStatus;
       return (
@@ -65,16 +78,16 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "transactionStatus",
-    header: "Transaction status",
+    header: sortable("Transaction status"),
     cell: ({ row }) => formatLabel(row.original.transactionStatus),
   },
   {
     accessorKey: "clientName",
-    header: "Client",
+    header: sortable("Client"),
   },
   {
     accessorKey: "transactionReferenceId",
-    header: "Reference ID",
+    header: sortable("Reference ID"),
     cell: ({ row }) => (
       <span className="font-mono text-xs">
         {row.original.transactionReferenceId}
@@ -85,7 +98,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
 
 const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
   accessorKey: "returnDetail",
-  header: "Failure reason",
+  header: sortable("Failure reason"),
   cell: ({ row }) => row.original.returnDetail ?? "—",
 };
 

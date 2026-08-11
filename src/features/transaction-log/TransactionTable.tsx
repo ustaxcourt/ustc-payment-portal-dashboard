@@ -35,6 +35,12 @@ export default function TransactionTable({
     data: rows,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    // The server orders the rows; the table only renders the indicator.
+    manualSorting: true,
+    // The log is never unsorted: it opens on the newest transactions, and a
+    // third click flips back to ascending rather than clearing the order.
+    enableSortingRemoval: false,
+    initialState: { sorting: [{ id: DEFAULT_SORT, desc: true }] },
   });
 
   return (
@@ -48,6 +54,7 @@ export default function TransactionTable({
               {headerGroup.headers.map((header, index) => (
                 <TableHead
                   key={header.id}
+                  aria-sort={ariaSort(header.column.getIsSorted())}
                   className={cellBorder(index, headerGroup.headers.length)}
                 >
                   {flexRender(
@@ -89,5 +96,19 @@ export default function TransactionTable({
   );
 }
 
+/** The log opens on the newest transactions by creation time. Named here so the
+ *  URL state and the request in the next layer can share one definition. */
+export const DEFAULT_SORT = "createdAt";
+
 const cellBorder = (index: number, total: number) =>
   index === total - 1 ? "whitespace-nowrap" : "whitespace-nowrap border-r";
+
+/** Every sortable column carries `aria-sort`; only the active one reports a
+ *  direction. This is where assistive technology reads the sort state from. */
+const ariaSort = (
+  sorted: false | "asc" | "desc",
+): "ascending" | "descending" | "none" => {
+  if (sorted === "asc") return "ascending";
+  if (sorted === "desc") return "descending";
+  return "none";
+};
