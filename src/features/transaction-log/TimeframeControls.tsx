@@ -75,8 +75,15 @@ export default function TimeframeControls({
       return;
     }
 
-    if (parsedFrom > parsedTo) {
-      setError("The From date must be before the To date.");
+    const today = new Date();
+
+    if (parsedFrom > today || parsedTo > today) {
+      setError("Dates cannot be in the future.");
+      return;
+    }
+
+    if (parsedFrom.getFullYear() < 2000) {
+      setError("Please enter a valid date range.");
       return;
     }
 
