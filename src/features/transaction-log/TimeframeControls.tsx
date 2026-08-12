@@ -8,6 +8,8 @@ import {
   DATE_RANGE_PRESETS,
   type DateRangePreset,
   fromDatePickerValue,
+  getCourtCalendarDate,
+  MIN_CUSTOM_RANGE_YEAR,
   parseInputDate,
   toDatePickerValue,
 } from "./dateRange";
@@ -32,6 +34,10 @@ export default function TimeframeControls({
 }: Props) {
   const requestedFrom = appliedRange.requestedFrom ?? appliedRange.from;
   const requestedTo = appliedRange.requestedTo ?? appliedRange.to;
+  const courtToday = getCourtCalendarDate();
+  const maxDate = `${courtToday.getUTCFullYear()}-${String(
+    courtToday.getUTCMonth() + 1,
+  ).padStart(2, "0")}-${String(courtToday.getUTCDate()).padStart(2, "0")}`;
   const [isCustomOpen, setIsCustomOpen] = useState(appliedRange.preset === "custom");
   const [draftFrom, setDraftFrom] = useState(toDatePickerValue(requestedFrom));
   const [draftTo, setDraftTo] = useState(toDatePickerValue(requestedTo));
@@ -77,14 +83,22 @@ export default function TimeframeControls({
       return;
     }
 
-    const today = new Date();
+    if (parsedFrom >= parsedTo) {
+      setError("The From date must be before the To date.");
+      return;
+    }
+
+    const today = getCourtCalendarDate();
 
     if (parsedFrom > today || parsedTo > today) {
       setError("Dates cannot be in the future.");
       return;
     }
 
-    if (parsedFrom.getFullYear() < 2000) {
+    if (
+      parsedFrom.getUTCFullYear() < MIN_CUSTOM_RANGE_YEAR ||
+      parsedTo.getUTCFullYear() < MIN_CUSTOM_RANGE_YEAR
+    ) {
       setError("Please enter a valid date range.");
       return;
     }
@@ -138,6 +152,7 @@ export default function TimeframeControls({
             <input
               type="date"
               value={draftFrom}
+              max={maxDate}
               onChange={(event) => {
                 setDraftFrom(event.target.value);
                 setError(null);
@@ -156,6 +171,7 @@ export default function TimeframeControls({
             <input
               type="date"
               value={draftTo}
+              max={maxDate}
               onChange={(event) => {
                 setDraftTo(event.target.value);
                 setError(null);
@@ -176,13 +192,13 @@ export default function TimeframeControls({
       ) : null}
 
       {error ? (
-      <p
-        id={errorId}
-        role="alert"
-        className="mt-2 text-sm text-destructive"
-      >
-        {error}
-      </p>
+        <p
+          id={errorId}
+          role="alert"
+          className="mt-2 text-sm text-destructive"
+        >
+          {error}
+        </p>
       ) : null}
     </div>
   );

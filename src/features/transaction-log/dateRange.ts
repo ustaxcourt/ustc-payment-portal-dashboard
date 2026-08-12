@@ -18,6 +18,8 @@ export type AppliedDateRange = {
   requestedTo?: string | null;
 };
 
+export const MIN_CUSTOM_RANGE_YEAR = 2000;
+
 const courtDayParts = new Intl.DateTimeFormat("en-US", {
   timeZone: COURT_TIME_ZONE,
   year: "numeric",
@@ -33,7 +35,7 @@ const PRESET_LABEL: Record<Exclude<DateRangePreset, "custom">, string> = {
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
-const getCourtCalendarDate = (value = new Date()): Date => {
+export const getCourtCalendarDate = (value = new Date()): Date => {
   const parts = courtDayParts.formatToParts(value);
   const year = Number(parts.find((part) => part.type === "year")?.value);
   const month = Number(parts.find((part) => part.type === "month")?.value);
