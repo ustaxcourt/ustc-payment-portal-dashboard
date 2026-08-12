@@ -14,6 +14,8 @@ export type AppliedDateRange = {
   from: string;
   to: string;
   label: string;
+  requestedFrom?: string | null;
+  requestedTo?: string | null;
 };
 
 const courtDayParts = new Intl.DateTimeFormat("en-US", {
@@ -81,6 +83,25 @@ const buildPresetRange = (
     ),
     to: toInputDate(today),
     label: PRESET_LABEL[preset],
+  };
+};
+
+const buildInvalidCustomRange = (
+  from: string | null,
+  to: string | null,
+  now = new Date(),
+): AppliedDateRange => {
+  const fallback = buildPresetRange("today", now);
+  const requestedLabel = [from ?? "missing From", to ?? "missing To"].join(
+    " - ",
+  );
+
+  return {
+    ...fallback,
+    preset: "custom",
+    label: `Invalid custom range (${requestedLabel}); showing Today`,
+    requestedFrom: from,
+    requestedTo: to,
   };
 };
 
@@ -160,14 +181,14 @@ export const resolveAppliedDateRange = (
   }
 
   if (!from || !to) {
-    return buildPresetRange("today", now);
+    return buildInvalidCustomRange(from, to, now);
   }
 
   const parsedFrom = parseInputDate(from);
   const parsedTo = parseInputDate(to);
 
   if (!parsedFrom || !parsedTo || parsedFrom >= parsedTo) {
-    return buildPresetRange("today", now);
+    return buildInvalidCustomRange(from, to, now);
   }
 
   return {
@@ -175,5 +196,7 @@ export const resolveAppliedDateRange = (
     from,
     to,
     label: `${from} - ${to}`,
+    requestedFrom: from,
+    requestedTo: to,
   };
 };

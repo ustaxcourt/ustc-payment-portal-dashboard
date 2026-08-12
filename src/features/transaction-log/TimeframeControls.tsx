@@ -30,9 +30,11 @@ export default function TimeframeControls({
   onSelectPreset,
   onApplyCustom,
 }: Props) {
+  const requestedFrom = appliedRange.requestedFrom ?? appliedRange.from;
+  const requestedTo = appliedRange.requestedTo ?? appliedRange.to;
   const [isCustomOpen, setIsCustomOpen] = useState(appliedRange.preset === "custom");
-  const [draftFrom, setDraftFrom] = useState(toDatePickerValue(appliedRange.from));
-  const [draftTo, setDraftTo] = useState(toDatePickerValue(appliedRange.to));
+  const [draftFrom, setDraftFrom] = useState(toDatePickerValue(requestedFrom));
+  const [draftTo, setDraftTo] = useState(toDatePickerValue(requestedTo));
   const [error, setError] = useState<string | null>(null);
 
   const errorId = "timeframe-date-error";
@@ -40,16 +42,16 @@ export default function TimeframeControls({
   useEffect(() => {
     if (appliedRange.preset === "custom") {
       setIsCustomOpen(true);
-      setDraftFrom(toDatePickerValue(appliedRange.from));
-      setDraftTo(toDatePickerValue(appliedRange.to));
+      setDraftFrom(toDatePickerValue(requestedFrom));
+      setDraftTo(toDatePickerValue(requestedTo));
       setError(null);
     }
-  }, [appliedRange.from, appliedRange.preset, appliedRange.to]);
+  }, [appliedRange.preset, requestedFrom, requestedTo]);
 
   const openCustomEditor = () => {
     setIsCustomOpen(true);
-    setDraftFrom(toDatePickerValue(appliedRange.from));
-    setDraftTo(toDatePickerValue(appliedRange.to));
+    setDraftFrom(toDatePickerValue(requestedFrom));
+    setDraftTo(toDatePickerValue(requestedTo));
     setError(null);
   };
 
