@@ -2,6 +2,7 @@
 
 import { parseAsStringLiteral, useQueryState, useQueryStates } from "nuqs";
 import { formatCourtDate } from "@/lib/format";
+import { COLUMN_LABEL, isSortableOnTab } from "./columns";
 import StatusTabs from "./StatusTabs";
 import TransactionTable from "./TransactionTable";
 import {
@@ -26,9 +27,13 @@ export default function TransactionLog() {
     order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
   });
 
+  const activeSorting = isSortableOnTab(sorting.sort, tab)
+    ? sorting
+    : { sort: DEFAULT_SORT, order: DEFAULT_ORDER };
+
   const { data, isPending, isError, error, refetch } = useTransactionLog(
     tab,
-    sorting,
+    activeSorting,
   );
 
   return (
@@ -39,6 +44,14 @@ export default function TransactionLog() {
       </p>
 
       <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
+
+      <p aria-live="polite" className="sr-only">
+        {data
+          ? `Sorted by ${COLUMN_LABEL[data.sort]}, ${
+              data.order === "desc" ? "descending" : "ascending"
+            }`
+          : ""}
+      </p>
 
       {isError ? (
         <div className="rounded-md border border-destructive/50 p-6 text-sm">
@@ -64,7 +77,7 @@ export default function TransactionLog() {
           <TransactionTable
             rows={data?.data ?? []}
             tab={tab}
-            sorting={sorting}
+            sorting={activeSorting}
             onSortingChange={setSorting}
             emptyMessage={
               isPending ? "Loading transactions…" : "No transactions to show."

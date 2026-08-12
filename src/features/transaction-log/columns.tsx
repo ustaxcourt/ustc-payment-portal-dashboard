@@ -5,13 +5,30 @@ import { Badge } from "@/components/ui/badge";
 import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
 import SortableHeader from "./SortableHeader";
 import { TAB_LABEL, TAB_TONE } from "./statusStyles";
-import type { TransactionLogEntry, TransactionTab } from "./types";
+import type {
+  TransactionLogEntry,
+  TransactionSortField,
+  TransactionTab,
+} from "./types";
+
+export const COLUMN_LABEL: Record<TransactionSortField, string> = {
+  createdAt: "Created",
+  lastUpdatedAt: "Last updated",
+  feeName: "Fee type",
+  transactionAmount: "Amount",
+  paymentMethod: "Payment method",
+  paymentStatus: "Payment status",
+  returnDetail: "Failure reason",
+  transactionStatus: "Transaction status",
+  clientName: "Client",
+  transactionReferenceId: "Reference ID",
+};
 
 const sortable =
-  (label: string) =>
+  () =>
   ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
     <SortableHeader
-      label={label}
+      label={COLUMN_LABEL[column.id as TransactionSortField]}
       sorted={column.getIsSorted()}
       onToggle={() => column.toggleSorting()}
     />
@@ -20,7 +37,7 @@ const sortable =
 const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   {
     accessorKey: "createdAt",
-    header: sortable("Created"),
+    header: sortable(),
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.createdAt);
       return (
@@ -33,7 +50,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "lastUpdatedAt",
-    header: sortable("Last updated"),
+    header: sortable(),
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.lastUpdatedAt);
       return (
@@ -46,11 +63,11 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "feeName",
-    header: sortable("Fee type"),
+    header: sortable(),
   },
   {
     accessorKey: "transactionAmount",
-    header: sortable("Amount"),
+    header: sortable(),
     cell: ({ row }) => (
       <span className="tabular-nums">
         {formatCurrency(row.original.transactionAmount)}
@@ -59,12 +76,12 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "paymentMethod",
-    header: sortable("Payment method"),
+    header: sortable(),
     cell: ({ row }) => formatLabel(row.original.paymentMethod),
   },
   {
     accessorKey: "paymentStatus",
-    header: sortable("Payment status"),
+    header: sortable(),
     cell: ({ row }) => {
       const status = row.original.paymentStatus;
       return (
@@ -76,16 +93,16 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "transactionStatus",
-    header: sortable("Transaction status"),
+    header: sortable(),
     cell: ({ row }) => formatLabel(row.original.transactionStatus),
   },
   {
     accessorKey: "clientName",
-    header: sortable("Client"),
+    header: sortable(),
   },
   {
     accessorKey: "transactionReferenceId",
-    header: sortable("Reference ID"),
+    header: sortable(),
     cell: ({ row }) => (
       <span className="font-mono text-xs">
         {row.original.transactionReferenceId}
@@ -96,9 +113,17 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
 
 const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
   accessorKey: "returnDetail",
-  header: sortable("Failure reason"),
+  header: sortable(),
   cell: ({ row }) => row.original.returnDetail ?? "—",
 };
+
+export const isSortableOnTab = (
+  field: TransactionSortField,
+  tab: TransactionTab,
+): boolean =>
+  getColumns(tab).some(
+    (column) => (column as { accessorKey?: string }).accessorKey === field,
+  );
 
 export const getColumns = (
   tab: TransactionTab,

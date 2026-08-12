@@ -31,7 +31,7 @@ export default function SortableHeader({
         "flex w-full items-center gap-1.5 rounded-sm py-1 text-left font-medium",
         "outline-none transition-colors",
         "hover:bg-black/5",
-        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+        "focus-visible:ring-2 focus-visible:ring-foreground",
         className,
       )}
     >

@@ -10,6 +10,7 @@ import { useMemo } from "react";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { getColumns } from "./columns";
-import { TAB_HEADER_TONE } from "./statusStyles";
+import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
 import type {
   TransactionLogEntry,
   TransactionSortField,
@@ -69,6 +70,9 @@ export default function TransactionTable({
   return (
     <div className="max-h-[60vh] overflow-auto rounded-b-md border border-t-0">
       <Table>
+        <TableCaption className="sr-only">
+          Transaction log, {TAB_LABEL[tab]}
+        </TableCaption>
         <TableHeader
           className={cn("sticky top-0 z-10", TAB_HEADER_TONE[tab])}
         >
