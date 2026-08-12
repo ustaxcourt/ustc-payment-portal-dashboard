@@ -75,7 +75,7 @@ export default function TimeframeControls({
       return;
     }
 
-    if (parsedFrom >= parsedTo) {
+    if (parsedFrom > parsedTo) {
       setError("The From date must be before the To date.");
       return;
     }
