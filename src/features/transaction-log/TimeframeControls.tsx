@@ -35,6 +35,8 @@ export default function TimeframeControls({
   const [draftTo, setDraftTo] = useState(toDatePickerValue(appliedRange.to));
   const [error, setError] = useState<string | null>(null);
 
+  const errorId = "timeframe-date-error";
+
   useEffect(() => {
     if (appliedRange.preset === "custom") {
       setIsCustomOpen(true);
@@ -137,6 +139,7 @@ export default function TimeframeControls({
                 error ? "border-destructive" : "border-border",
               )}
               aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorId : undefined}
             />
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium">
@@ -154,6 +157,7 @@ export default function TimeframeControls({
                 error ? "border-destructive" : "border-border",
               )}
               aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorId : undefined}
             />
           </label>
           <Button type="button" onClick={applyCustomRange}>
@@ -162,7 +166,15 @@ export default function TimeframeControls({
         </div>
       ) : null}
 
-      {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
+      {error ? (
+      <p
+        id={errorId}
+        role="alert"
+        className="mt-2 text-sm text-destructive"
+      >
+        {error}
+      </p>
+      ) : null}
     </div>
   );
 }
