@@ -1,0 +1,36 @@
+import { describe, expect, it } from "vitest";
+import { COLUMN_LABEL, isSortableOnTab } from "./columns";
+import { TRANSACTION_SORT_FIELDS, TRANSACTION_TABS } from "./types";
+
+describe("isSortableOnTab", () => {
+  // Failure reason is the only column that comes and goes, so a sort chosen on
+  // one tab can point at a column another tab never renders.
+  it("reports Failure reason only where the column is rendered", () => {
+    expect(isSortableOnTab("returnDetail", "all")).toBe(true);
+    expect(isSortableOnTab("returnDetail", "failed")).toBe(true);
+    expect(isSortableOnTab("returnDetail", "success")).toBe(false);
+    expect(isSortableOnTab("returnDetail", "pending")).toBe(false);
+  });
+
+  it("reports every other column on every tab", () => {
+    const alwaysPresent = TRANSACTION_SORT_FIELDS.filter(
+      (field) => field !== "returnDetail",
+    );
+
+    for (const tab of TRANSACTION_TABS) {
+      for (const field of alwaysPresent) {
+        expect(isSortableOnTab(field, tab)).toBe(true);
+      }
+    }
+  });
+});
+
+describe("COLUMN_LABEL", () => {
+  // The header text and the sort announced to screen readers read from this
+  // map, so a missing entry would leave a column nameless in both places.
+  it("names every sortable column", () => {
+    for (const field of TRANSACTION_SORT_FIELDS) {
+      expect(COLUMN_LABEL[field]).toBeTruthy();
+    }
+  });
+});
