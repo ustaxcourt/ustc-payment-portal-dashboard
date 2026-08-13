@@ -23,17 +23,15 @@ export default async function Home() {
       </header>
 
       {/* nuqs reads search params, so the log renders inside a boundary. */}
-      <div className="flex min-h-0 flex-1 flex-col">
-        <Suspense
-          fallback={
-            <p className="text-sm text-muted-foreground">
-              Loading transaction log…
-            </p>
-          }
-        >
-          <TransactionLog />
-        </Suspense>
-      </div>
+      <Suspense
+        fallback={
+          <p className="text-sm text-muted-foreground">
+            Loading transaction log…
+          </p>
+        }
+      >
+        <TransactionLog />
+      </Suspense>
     </main>
   );
 }

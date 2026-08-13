@@ -36,7 +36,7 @@ export default function TransactionTable({
   });
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto rounded-b-md border border-t-0">
+    <div className="max-h-[60vh] overflow-auto rounded-b-md border border-t-0">
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-green-50">
           {table.getHeaderGroups().map((headerGroup) => (
