@@ -18,7 +18,7 @@ export type AppliedDateRange = {
   requestedTo?: string | null;
 };
 
-export const MIN_CUSTOM_RANGE_YEAR = 2000;
+export const MIN_CUSTOM_RANGE_YEAR = 2026;
 
 const courtDayParts = new Intl.DateTimeFormat("en-US", {
   timeZone: COURT_TIME_ZONE,
@@ -153,7 +153,7 @@ export const getCustomRangeValidationError = (
     parsedFrom.getUTCFullYear() < MIN_CUSTOM_RANGE_YEAR ||
     parsedTo.getUTCFullYear() < MIN_CUSTOM_RANGE_YEAR
   ) {
-    return "Please enter a valid date range.";
+    return `Please enter a date from January 1, ${MIN_CUSTOM_RANGE_YEAR} or later.`;
   }
 
   return null;
