@@ -40,7 +40,6 @@ const headerFor = (name: string) =>
   screen.getByRole("columnheader", { name: new RegExp(name) });
 
 describe("TransactionTable sort state", () => {
-  // Assistive technology reads the direction from the cell, not the button.
   it("marks only the sorted column with a direction", () => {
     renderTable();
 
@@ -55,9 +54,6 @@ describe("TransactionTable sort state", () => {
     expect(headerFor("Created")).toHaveAttribute("aria-sort", "none");
   });
 
-  // Numbers open largest-first and text opens A to Z, matching what people
-  // expect of a data grid. Asserted so the convention is deliberate rather than
-  // an accident of the table library's type inference.
   it("opens a numeric column descending", async () => {
     const onSortingChange = vi.fn();
     renderTable({ onSortingChange });
@@ -86,7 +82,6 @@ describe("TransactionTable sort state", () => {
     });
   });
 
-  // enableSortingRemoval is off, so the log is never left unsorted.
   it("flips direction rather than clearing the sort", async () => {
     const onSortingChange = vi.fn();
     renderTable({ onSortingChange });

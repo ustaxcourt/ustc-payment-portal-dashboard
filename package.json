@@ -13,7 +13,10 @@
     "lint:ci": "biome lint --reporter=github .",
     "tsc": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts --project=anonymous",
+    "test:e2e:auth": "playwright test --config e2e/playwright.config.ts --project=authenticated",
+    "test:e2e:login": "playwright test --config e2e/playwright.config.ts --project=setup --headed"
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
@@ -36,6 +39,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",

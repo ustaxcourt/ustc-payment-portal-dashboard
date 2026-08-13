@@ -19,7 +19,6 @@ describe("SortableHeader", () => {
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 
-  // Being a real button rather than a clickable cell is what buys this.
   it("sorts from the keyboard", async () => {
     const onToggle = vi.fn();
     render(<SortableHeader label="Amount" sorted={false} onToggle={onToggle} />);
@@ -33,8 +32,6 @@ describe("SortableHeader", () => {
     expect(onToggle).toHaveBeenCalledTimes(2);
   });
 
-  // The direction is carried by aria-sort on the cell, so the icon must not be
-  // announced as well.
   it("hides the indicator from assistive technology", () => {
     const { container } = render(
       <SortableHeader label="Amount" sorted="desc" onToggle={vi.fn()} />,

@@ -49,8 +49,6 @@ afterEach(() => {
 });
 
 describe("TransactionLog", () => {
-  // The rows reorder after a round trip, so without this the change is silent
-  // to anyone not watching the screen.
   it("announces the order the server confirms", async () => {
     mockFetch(response({ sort: "transactionAmount", order: "desc" }));
 
@@ -86,8 +84,6 @@ describe("TransactionLog", () => {
     expect(requested).toContain("status=failed");
   });
 
-  // Failure reason is not rendered on the Pending tab, so a sort held over from
-  // another tab would otherwise order the table by a column nobody can see.
   it("falls back when the sorted column is absent from the tab", async () => {
     const fetchMock = mockFetch(response());
 

@@ -30,7 +30,6 @@ export default async function Home({
   const session = await getServerSession(getSessionAuthOptions());
 
   if (!session) {
-    // Carry the filter and sort across sign-in, so a shared link survives it.
     const query = toQueryString(await searchParams);
     redirect(loginUrlReturningTo(query ? `/?${query}` : "/"));
   }
@@ -45,7 +44,6 @@ export default async function Home({
         </div>
       </header>
 
-      {/* nuqs reads search params, so the log renders inside a boundary. */}
       <Suspense
         fallback={
           <p className="text-sm text-muted-foreground">

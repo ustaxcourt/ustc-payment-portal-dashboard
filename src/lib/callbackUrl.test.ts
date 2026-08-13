@@ -8,8 +8,6 @@ describe("safeCallbackUrl", () => {
     );
   });
 
-  // Each of these would otherwise send a visitor off-site straight after they
-  // authenticated against a genuine Tax Court domain.
   it.each([
     ["an absolute url", "https://evil.example"],
     ["an http url", "http://evil.example/x"],

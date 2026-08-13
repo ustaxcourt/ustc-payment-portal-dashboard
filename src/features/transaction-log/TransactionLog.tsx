@@ -38,7 +38,6 @@ export default function TransactionLog() {
 
   return (
     <section className="flex w-full flex-col gap-3">
-      {/* Placeholder for the timeframe selector. */}
       <p className="text-sm font-medium">
         {data ? formatCourtDate(data.from) : "Today"}
       </p>
