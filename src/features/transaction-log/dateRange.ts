@@ -132,7 +132,7 @@ export const parseInputDate = (value: string): Date | null => {
 export const getCustomRangeValidationError = (
   from: string,
   to: string,
-  now = new Date(),
+  today = getCourtCalendarDate(),
 ): string | null => {
   const parsedFrom = parseInputDate(from);
   const parsedTo = parseInputDate(to);
@@ -144,8 +144,6 @@ export const getCustomRangeValidationError = (
   if (parsedFrom > parsedTo) {
     return "The From date must be on or before the To date.";
   }
-
-  const today = getCourtCalendarDate(now);
 
   if (parsedFrom > today || parsedTo > today) {
     return "Dates cannot be in the future.";
@@ -211,7 +209,7 @@ export const resolveAppliedDateRange = (
     return buildInvalidCustomRange(from, to, now);
   }
 
-  if (getCustomRangeValidationError(from, to, now)) {
+  if (getCustomRangeValidationError(from, to, getCourtCalendarDate(now))) {
     return buildInvalidCustomRange(from, to, now);
   }
 
