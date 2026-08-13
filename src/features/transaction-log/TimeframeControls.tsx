@@ -8,9 +8,8 @@ import {
   DATE_RANGE_PRESETS,
   type DateRangePreset,
   fromDatePickerValue,
+  getCustomRangeValidationError,
   getCourtCalendarDate,
-  MIN_CUSTOM_RANGE_YEAR,
-  parseInputDate,
   toDatePickerValue,
 } from "./dateRange";
 
@@ -46,12 +45,16 @@ export default function TimeframeControls({
   const errorId = "timeframe-date-error";
 
   useEffect(() => {
-    if (appliedRange.preset === "custom") {
-      setIsCustomOpen(true);
+    const isCustomPreset = appliedRange.preset === "custom";
+
+    setIsCustomOpen(isCustomPreset);
+
+    if (isCustomPreset) {
       setDraftFrom(toDatePickerValue(requestedFrom));
       setDraftTo(toDatePickerValue(requestedTo));
-      setError(null);
     }
+
+    setError(null);
   }, [appliedRange.preset, requestedFrom, requestedTo]);
 
   const openCustomEditor = () => {
@@ -75,31 +78,14 @@ export default function TimeframeControls({
       return;
     }
 
-    const parsedFrom = parseInputDate(formattedFrom);
-    const parsedTo = parseInputDate(formattedTo);
+    const validationError = getCustomRangeValidationError(
+      formattedFrom,
+      formattedTo,
+      getCourtCalendarDate(),
+    );
 
-    if (!parsedFrom || !parsedTo) {
-      setError("Dates must be valid.");
-      return;
-    }
-
-    if (parsedFrom >= parsedTo) {
-      setError("The From date must be before the To date.");
-      return;
-    }
-
-    const today = getCourtCalendarDate();
-
-    if (parsedFrom > today || parsedTo > today) {
-      setError("Dates cannot be in the future.");
-      return;
-    }
-
-    if (
-      parsedFrom.getUTCFullYear() < MIN_CUSTOM_RANGE_YEAR ||
-      parsedTo.getUTCFullYear() < MIN_CUSTOM_RANGE_YEAR
-    ) {
-      setError("Please enter a valid date range.");
+    if (validationError) {
+      setError(validationError);
       return;
     }
 

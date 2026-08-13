@@ -129,6 +129,38 @@ export const parseInputDate = (value: string): Date | null => {
   return candidate;
 };
 
+export const getCustomRangeValidationError = (
+  from: string,
+  to: string,
+  now = new Date(),
+): string | null => {
+  const parsedFrom = parseInputDate(from);
+  const parsedTo = parseInputDate(to);
+
+  if (!parsedFrom || !parsedTo) {
+    return "Dates must be valid.";
+  }
+
+  if (parsedFrom > parsedTo) {
+    return "The From date must be on or before the To date.";
+  }
+
+  const today = getCourtCalendarDate(now);
+
+  if (parsedFrom > today || parsedTo > today) {
+    return "Dates cannot be in the future.";
+  }
+
+  if (
+    parsedFrom.getUTCFullYear() < MIN_CUSTOM_RANGE_YEAR ||
+    parsedTo.getUTCFullYear() < MIN_CUSTOM_RANGE_YEAR
+  ) {
+    return "Please enter a valid date range.";
+  }
+
+  return null;
+};
+
 export const toDatePickerValue = (value: string): string => {
   const parsed = parseInputDate(value);
 
@@ -179,10 +211,7 @@ export const resolveAppliedDateRange = (
     return buildInvalidCustomRange(from, to, now);
   }
 
-  const parsedFrom = parseInputDate(from);
-  const parsedTo = parseInputDate(to);
-
-  if (!parsedFrom || !parsedTo || parsedFrom >= parsedTo) {
+  if (getCustomRangeValidationError(from, to, now)) {
     return buildInvalidCustomRange(from, to, now);
   }
 
