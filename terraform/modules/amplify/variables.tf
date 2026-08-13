@@ -31,3 +31,9 @@ variable "dashboard_domain" {
   description = "Custom domain served by the production branch"
   type        = string
 }
+
+variable "api_invoke_arns" {
+  description = "execute-api ARNs the SSR runtime may call. Empty grants nothing."
+  type        = list(string)
+  default     = []
+}

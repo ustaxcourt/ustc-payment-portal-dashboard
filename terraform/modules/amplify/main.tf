@@ -82,6 +82,40 @@ resource "aws_iam_role_policy" "amplify_ssm" {
   })
 }
 
+# Credentials for the SSR runtime; the service role above is build and logs only.
+resource "aws_iam_role" "amplify_compute" {
+  name = "${local.name}-amplify-compute"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Action    = "sts:AssumeRole"
+        Principal = { Service = "amplify.amazonaws.com" }
+      }
+    ]
+  })
+}
+
+# The identity half of the API's AWS_IAM check; its resource policy is the other.
+resource "aws_iam_role_policy" "amplify_compute_api" {
+  count = length(var.api_invoke_arns) > 0 ? 1 : 0
+  name  = "${local.name}-amplify-compute-api"
+  role  = aws_iam_role.amplify_compute.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["execute-api:Invoke"]
+        Resource = var.api_invoke_arns
+      }
+    ]
+  })
+}
+
 # Treat as unreplaceable: the repo connection is made once in the console and
 # imported, and Terraform holds no GitHub credential to rebuild it. This is also
 # why enable_performance_mode (ForceNew) is omitted.
@@ -90,6 +124,7 @@ resource "aws_amplify_app" "payment_portal_dashboard" {
   repository           = var.repository_url
   platform             = "WEB_COMPUTE"
   iam_service_role_arn = aws_iam_role.amplify.arn
+  compute_role_arn     = aws_iam_role.amplify_compute.arn
 
   enable_branch_auto_build = true
 

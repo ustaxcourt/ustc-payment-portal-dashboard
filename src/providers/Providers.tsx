@@ -1,8 +1,10 @@
 "use client";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { SessionProvider, signOut, useSession } from "next-auth/react";
-import { useEffect, useRef } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { useEffect, useRef, useState } from "react";
 import {
   IDLE_LOGOUT_TIMEOUT_MS,
   LAST_ACTIVITY_STORAGE_KEY,
@@ -253,13 +255,24 @@ export default function Providers({
 }: {
   children: React.ReactNode;
 }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { refetchOnWindowFocus: false } },
+      }),
+  );
+
   return (
     <SessionProvider
       refetchInterval={SESSION_REFETCH_INTERVAL_SECONDS}
       refetchOnWindowFocus
     >
       <IdleLogout />
-      {children}
+      <NuqsAdapter>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </NuqsAdapter>
     </SessionProvider>
   );
 }

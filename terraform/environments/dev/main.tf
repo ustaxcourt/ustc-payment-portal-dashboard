@@ -13,6 +13,11 @@ module "amplify" {
 
   # Previews are dev-only; stg and prod build their production branch alone.
   preview_branch_patterns = ["PAY-*", "feature/*"]
+
+  # Wildcarded on API id and stage; the method and path stay exact.
+  api_invoke_arns = [
+    "arn:aws:execute-api:${local.aws_region}:${local.account_id}:*/*/GET/transaction-log",
+  ]
 }
 
 # Resolves only once payments.ustaxcourt.gov delegates to these nameservers.

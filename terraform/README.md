@@ -107,17 +107,24 @@ than applying — `enable_performance_mode` is one attribute known to force it.
 | Environment | Bootstrap | CI roles | Zone + delegation | Amplify + domain |
 | --- | --- | --- | --- | --- |
 | dev | done | done | done | done |
-| stg | done | not started | zone only | not started |
-| prod | done | not started | zone only | not started |
+| stg | done | done | done | done |
+| prod | done | done | done | done |
 
-"Zone only" means the hosted zone exists but nothing resolves yet: the NS records
-that delegate to it live in `ustc-payment-portal` and are applied by that repo's
-manually-dispatched prod deploy.
+All three environments are fully applied, confirmed 2026-08-03 by
+`terraform state list` in each account plus `dig` against each hostname. Every
+hostname delegates to its own account's zone and resolves.
 
-All three roots now declare the same resources; the table tracks what has been
-applied. Staging and production cannot be applied straight through — the Amplify
-app must be created in the console and imported first, as in the setup above, or
-the apply produces an app with no working repo connection.
+The NS records producing that delegation live in `ustc-payment-portal`, not
+here, so this repo's state cannot show them — check with
+`dig +short NS <hostname>` rather than by reading a plan.
+
+Don't trust this table; re-derive it. `terraform state list` prints exactly what
+an environment manages, and it is cheap and read-only. This table was wrong for
+some time before anyone checked.
+
+Creating the Amplify app in the console and importing it, as in the setup above,
+is a first-time step and has been done for all three accounts. It only matters
+again if an app is ever destroyed.
 
 Preview branches are dev-only. Staging and production pass no
 `preview_branch_patterns`, so they build their production branch alone.

@@ -10,7 +10,21 @@ frontend:
         set -euo pipefail
 
         APP_ID="${AWS_APP_ID}"
+
+        # Previews serve on their own subdomain, so the configured custom domain
+        # would hand Entra the wrong redirect_uri.
+        if [ "${AWS_BRANCH}" != "main" ]; then
+          SUBDOMAIN="$(printf '%s' "${AWS_BRANCH}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')"
+          NEXTAUTH_URL="https://${SUBDOMAIN}.${APP_ID}.amplifyapp.com"
+        fi
+        NEXTAUTH_URL="${NEXTAUTH_URL%/}"
+        export NEXTAUTH_URL
         echo "NEXTAUTH_URL: $NEXTAUTH_URL"
+
+        if [ -z "${PAYMENT_PORTAL_API_URL:-}" ]; then
+          echo "Missing required Amplify variable: PAYMENT_PORTAL_API_URL" >&2
+          exit 1
+        fi
 
         AUTH_MICROSOFT_ENTRA_ID_ID="$(
           aws ssm get-parameter \
@@ -54,6 +68,7 @@ frontend:
         printf 'AUTH_MICROSOFT_ENTRA_ID_ISSUER=%s\n' "$AUTH_MICROSOFT_ENTRA_ID_ISSUER" >> .env.production
         printf 'NEXTAUTH_SECRET=%s\n' "$NEXTAUTH_SECRET" >> .env.production
         printf 'NEXTAUTH_URL=%s\n' "$NEXTAUTH_URL" >> .env.production
+        printf 'PAYMENT_PORTAL_API_URL=%s\n' "${PAYMENT_PORTAL_API_URL%/}" >> .env.production
 
         npm run build
   artifacts:
