@@ -81,7 +81,7 @@ export default function TimeframeControls({
     const validationError = getCustomRangeValidationError(
       formattedFrom,
       formattedTo,
-      getCourtCalendarDate(),
+      courtToday,
     );
 
     if (validationError) {
