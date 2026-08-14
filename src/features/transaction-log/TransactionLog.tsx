@@ -53,7 +53,7 @@ export default function TransactionLog() {
       <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
 
       <p aria-live="polite" className="sr-only">
-        {data
+        {data?.sort && COLUMN_LABEL[data.sort]
           ? `Sorted by ${COLUMN_LABEL[data.sort]}, ${
               data.order === "desc" ? "descending" : "ascending"
             }`
