@@ -58,7 +58,28 @@ test("the headers are reachable and operable from the keyboard", async ({
   await expect(created).toBeFocused();
 
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/sort=createdAt&order=asc|order=asc/);
+
+  await expect(
+    page.getByRole("columnheader", { name: /Created/ }),
+  ).toHaveAttribute("aria-sort", "ascending");
+
+  await expect(page).toHaveURL(/order=asc/);
+  await expect(page).not.toHaveURL(/sort=/);
+});
+
+test("leaving a tab drops a sort that tab cannot offer", async ({ page }) => {
+  await page.goto("/?status=failed&sort=returnDetail&order=asc");
+
+  await expect(
+    page.getByRole("columnheader", { name: /Failure reason/ }),
+  ).toHaveAttribute("aria-sort", "ascending");
+
+  await page.getByRole("tab", { name: /Successful/ }).click();
+
+  await expect(page).not.toHaveURL(/returnDetail/);
+  await expect(
+    page.getByRole("columnheader", { name: /Created/ }),
+  ).toHaveAttribute("aria-sort", "descending");
 });
 
 test("a shared sorted link reproduces the same view", async ({ page }) => {

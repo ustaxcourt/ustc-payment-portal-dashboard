@@ -68,6 +68,26 @@ describe("TransactionTable sort state", () => {
     });
   });
 
+  it.each([
+    ["Created", "createdAt"],
+    ["Last updated", "lastUpdatedAt"],
+  ])("opens %s descending when it is not the active sort", async (
+    label,
+    field,
+  ) => {
+    const onSortingChange = vi.fn();
+    renderTable({
+      sorting: { sort: "transactionAmount", order: "asc" },
+      onSortingChange,
+    });
+
+    await userEvent.click(
+      within(headerFor(label)).getByRole("button", { name: label }),
+    );
+
+    expect(onSortingChange).toHaveBeenCalledWith({ sort: field, order: "desc" });
+  });
+
   it("opens a text column ascending", async () => {
     const onSortingChange = vi.fn();
     renderTable({ onSortingChange });

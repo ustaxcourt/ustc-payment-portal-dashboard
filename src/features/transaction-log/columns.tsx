@@ -38,6 +38,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   {
     accessorKey: "createdAt",
     header: sortable(),
+    sortDescFirst: true,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.createdAt);
       return (
@@ -51,6 +52,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   {
     accessorKey: "lastUpdatedAt",
     header: sortable(),
+    sortDescFirst: true,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.lastUpdatedAt);
       return (

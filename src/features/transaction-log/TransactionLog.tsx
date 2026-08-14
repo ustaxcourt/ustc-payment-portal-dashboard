@@ -1,6 +1,6 @@
 "use client";
 
-import { parseAsStringLiteral, useQueryState, useQueryStates } from "nuqs";
+import { parseAsStringLiteral, useQueryStates } from "nuqs";
 import { formatCourtDate } from "@/lib/format";
 import { COLUMN_LABEL, isSortableOnTab } from "./columns";
 import StatusTabs from "./StatusTabs";
@@ -11,25 +11,33 @@ import {
   SORT_ORDERS,
   TRANSACTION_SORT_FIELDS,
   TRANSACTION_TABS,
+  type TransactionTab,
 } from "./types";
 import { useTransactionLog } from "./useTransactionLog";
 
 export default function TransactionLog() {
-  const [tab, setTab] = useQueryState(
-    "status",
-    parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
-  );
-
-  const [sorting, setSorting] = useQueryStates({
+  const [params, setParams] = useQueryStates({
+    status: parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
     sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(
       DEFAULT_SORT,
     ),
     order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
   });
 
+  const tab = params.status;
+  const sorting = { sort: params.sort, order: params.order };
+
   const activeSorting = isSortableOnTab(sorting.sort, tab)
     ? sorting
     : { sort: DEFAULT_SORT, order: DEFAULT_ORDER };
+
+  const selectTab = (next: TransactionTab) => {
+    setParams(
+      isSortableOnTab(params.sort, next)
+        ? { status: next }
+        : { status: next, sort: DEFAULT_SORT, order: DEFAULT_ORDER },
+    );
+  };
 
   const { data, isPending, isError, error, refetch } = useTransactionLog(
     tab,
@@ -71,13 +79,13 @@ export default function TransactionLog() {
           <StatusTabs
             selected={tab}
             counts={data?.counts}
-            onSelect={setTab}
+            onSelect={selectTab}
           />
           <TransactionTable
             rows={data?.data ?? []}
             tab={tab}
             sorting={activeSorting}
-            onSortingChange={setSorting}
+            onSortingChange={setParams}
             emptyMessage={
               isPending ? "Loading transactions…" : "No transactions to show."
             }

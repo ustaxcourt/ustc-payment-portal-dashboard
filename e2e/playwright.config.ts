@@ -18,7 +18,7 @@ export default defineConfig({
   webServer: {
     command: "npm run build && npm run start",
     url: BASE_URL,
-    reuseExistingServer: true,
+    reuseExistingServer: process.env.E2E_REUSE_SERVER === "true",
     timeout: 180_000,
   },
 
