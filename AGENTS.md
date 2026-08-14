@@ -2,7 +2,7 @@
 
 **Instructions here should only be updated through `AGENTS.md`. `copilot-instructions.md` and `CLAUDE.md` are symlinks to `AGENTS.md`**
 
-This is the USTC Payment Portal Dashboard. A NextJS App using TanStack Table to deliver auditable transaction records from USTC-Payment-Portal to the US Tax Court's Finance Team.
+This is the USTC Payment Portal Dashboard. A Next.js App using TanStack Table to deliver auditable transaction records from USTC-Payment-Portal to the US Tax Court's Finance Team.
 
 ## Agent Expectations
 
