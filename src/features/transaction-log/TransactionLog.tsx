@@ -3,6 +3,7 @@
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { COLUMN_LABEL, isSortableOnTab } from "./columns";
 import { DATE_RANGE_PRESETS, resolveAppliedDateRange } from "./dateRange";
+import ExportButton from "./ExportButton";
 import StatusTabs from "./StatusTabs";
 import TimeframeControls from "./TimeframeControls";
 import TransactionTable from "./TransactionTable";
@@ -61,13 +62,21 @@ export default function TransactionLog() {
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
-      <TimeframeControls
-        appliedRange={appliedRange}
-        onSelectPreset={(preset) =>
-          setParams({ from: null, range: preset, to: null })
-        }
-        onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <TimeframeControls
+          appliedRange={appliedRange}
+          onSelectPreset={(preset) =>
+            setParams({ from: null, range: preset, to: null })
+          }
+          onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
+        />
+        <ExportButton
+          tab={tab}
+          range={appliedRange}
+          sorting={activeSorting}
+          disabled={!data || data.data.length === 0}
+        />
+      </div>
 
       <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
 
