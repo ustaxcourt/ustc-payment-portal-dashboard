@@ -22,6 +22,11 @@ export const TRANSACTION_SORT_FIELDS = [
 
 export type TransactionSortField = (typeof TRANSACTION_SORT_FIELDS)[number];
 
+export const isTransactionSortField = (
+  value: string,
+): value is TransactionSortField =>
+  (TRANSACTION_SORT_FIELDS as readonly string[]).includes(value);
+
 export const SORT_ORDERS = ["asc", "desc"] as const;
 
 export type SortOrder = (typeof SORT_ORDERS)[number];

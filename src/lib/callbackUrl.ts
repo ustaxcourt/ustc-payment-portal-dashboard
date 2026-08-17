@@ -3,7 +3,7 @@ const HOME = "/";
 const hasControlCharacter = (value: string): boolean =>
   Array.from(value).some((character) => {
     const code = character.charCodeAt(0);
-    return code < 0x20 || code === 0x7f;
+    return code < 0x20 || (code >= 0x7f && code <= 0x9f);
   });
 
 /** Guards against `?callbackUrl=https://evil.example` turning the Court's

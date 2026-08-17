@@ -14,6 +14,7 @@ describe("safeCallbackUrl", () => {
     ["a protocol-relative host", "//evil.example"],
     ["a backslash host some browsers normalise", "/\\evil.example"],
     ["a newline smuggling a second value", "/\nhttps://evil.example"],
+    ["a C1 control character", "/\u0085https://evil.example"],
   ])("refuses %s", (_label, value) => {
     expect(safeCallbackUrl(value)).toBe("/");
   });
