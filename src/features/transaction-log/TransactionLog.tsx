@@ -111,8 +111,8 @@ export default function TransactionLog() {
           />
           {data ? (
             <p className="mt-2 text-right text-sm text-muted-foreground">
-              {data.data.length < data.total
-                ? `Showing ${data.data.length} of ${data.total} transactions`
+              {typeof data.total === "number" && data.data.length < data.total
+                ? `Showing ${data.data.length} of ${data.total} transactions — export to get the full set`
                 : `${data.data.length} ${data.data.length === 1 ? "transaction" : "transactions"}`}
             </p>
           ) : null}
