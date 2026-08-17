@@ -19,11 +19,11 @@ import {
 import { cn } from "@/lib/utils";
 import { getColumns } from "./columns";
 import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
-import type {
-  TransactionLogEntry,
-  TransactionSortField,
-  TransactionSorting,
-  TransactionTab,
+import {
+  isTransactionSortField,
+  type TransactionLogEntry,
+  type TransactionSorting,
+  type TransactionTab,
 } from "./types";
 
 // Core model only: the server owns sorting, filtering and pagination.
@@ -58,10 +58,10 @@ export default function TransactionTable({
       const next =
         typeof updater === "function" ? updater(sortingState) : updater;
       const [column] = next;
-      if (!column) return;
+      if (!column || !isTransactionSortField(column.id)) return;
 
       onSortingChange({
-        sort: column.id as TransactionSortField,
+        sort: column.id,
         order: column.desc ? "desc" : "asc",
       });
     },
