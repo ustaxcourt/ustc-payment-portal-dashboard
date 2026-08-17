@@ -3,47 +3,85 @@
 import {
   flexRender,
   getCoreRowModel,
+  type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import { useMemo } from "react";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { getColumns } from "./columns";
-import type { TransactionLogEntry, TransactionTab } from "./types";
+import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
+import type {
+  TransactionLogEntry,
+  TransactionSortField,
+  TransactionSorting,
+  TransactionTab,
+} from "./types";
 
 // Core model only: the server owns sorting, filtering and pagination.
 export default function TransactionTable({
   rows,
   tab,
+  sorting,
+  onSortingChange,
   emptyMessage,
 }: {
   rows: TransactionLogEntry[];
   tab: TransactionTab;
+  sorting: TransactionSorting;
+  onSortingChange: (next: TransactionSorting) => void;
   emptyMessage: string;
 }) {
   const columns = useMemo(() => getColumns(tab), [tab]);
+
+  const sortingState: SortingState = useMemo(
+    () => [{ id: sorting.sort, desc: sorting.order === "desc" }],
+    [sorting.sort, sorting.order],
+  );
 
   const table = useReactTable({
     data: rows,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    manualSorting: true,
+    enableSortingRemoval: false,
+    state: { sorting: sortingState },
+    onSortingChange: (updater) => {
+      const next =
+        typeof updater === "function" ? updater(sortingState) : updater;
+      const [column] = next;
+      if (!column) return;
+
+      onSortingChange({
+        sort: column.id as TransactionSortField,
+        order: column.desc ? "desc" : "asc",
+      });
+    },
   });
 
   return (
     <div className="max-h-[60vh] overflow-auto rounded-b-md border border-t-0">
       <Table>
-        <TableHeader className="sticky top-0 z-10 bg-green-50">
+        <TableCaption className="sr-only">
+          Transaction log, {TAB_LABEL[tab]}
+        </TableCaption>
+        <TableHeader
+          className={cn("sticky top-0 z-10", TAB_HEADER_TONE[tab])}
+        >
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header, index) => (
                 <TableHead
                   key={header.id}
+                  aria-sort={ariaSort(header.column.getIsSorted())}
                   className={cellBorder(index, headerGroup.headers.length)}
                 >
                   {flexRender(
@@ -87,3 +125,11 @@ export default function TransactionTable({
 
 const cellBorder = (index: number, total: number) =>
   index === total - 1 ? "whitespace-nowrap" : "whitespace-nowrap border-r";
+
+const ariaSort = (
+  sorted: false | "asc" | "desc",
+): "ascending" | "descending" | "none" => {
+  if (sorted === "asc") return "ascending";
+  if (sorted === "desc") return "descending";
+  return "none";
+};
