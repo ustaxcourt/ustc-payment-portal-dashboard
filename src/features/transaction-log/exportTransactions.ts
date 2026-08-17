@@ -63,8 +63,26 @@ const withRetry = async <T>(fn: () => Promise<T>): Promise<T> => {
   }
 };
 
-/** Fetches every row of the current view, `CONCURRENCY` pages at a time. */
+/** Fetches every row of the current view, `CONCURRENCY` pages at a time.
+ *
+ *  Offset paging is not a snapshot: a row updated mid-export re-sorts and can
+ *  shift page boundaries. When the assembled rows disagree with page 1's
+ *  total, the set moved underneath us — refetch once from the top. */
 export const fetchAllTransactions = async (
+  tab: TransactionTab,
+  range: AppliedDateRange,
+  sorting: TransactionSorting,
+  options: {
+    signal?: AbortSignal;
+    onProgress?: (progress: ExportProgress) => void;
+  } = {},
+): Promise<{ rows: TransactionLogEntry[]; total: number }> => {
+  const first = await fetchAllOnce(tab, range, sorting, options);
+  if (first.rows.length === first.total) return first;
+  return fetchAllOnce(tab, range, sorting, options);
+};
+
+const fetchAllOnce = async (
   tab: TransactionTab,
   range: AppliedDateRange,
   sorting: TransactionSorting,

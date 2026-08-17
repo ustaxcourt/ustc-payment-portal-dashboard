@@ -29,6 +29,9 @@ const row = (id: number): TransactionLogEntry => ({
   lastUpdatedAt: "2026-08-17T13:00:00.000Z",
 });
 
+const ids = (start: number, count: number) =>
+  Array.from({ length: count }, (_, i) => start + i);
+
 const pageResponse = (ids: number[], total?: number) => ({
   ok: true,
   json: async () => ({
@@ -88,21 +91,25 @@ describe("fetchAllTransactions", () => {
       if (page === 2) {
         // Hold page 2 back so page 3 lands first.
         await new Promise((resolve) => setTimeout(resolve, 20));
-        return pageResponse([2]);
+        return pageResponse(ids(EXPORT_PAGE_SIZE + 1, EXPORT_PAGE_SIZE));
       }
-      if (page === 3) return pageResponse([3]);
-      return pageResponse([1], total);
+      if (page === 3) return pageResponse(ids(EXPORT_PAGE_SIZE * 2 + 1, 1));
+      return pageResponse(ids(1, EXPORT_PAGE_SIZE), total);
     });
     vi.stubGlobal("fetch", fetch);
 
     const result = await fetchAllTransactions("all", range, sorting);
 
     expect(fetch).toHaveBeenCalledTimes(3);
-    expect(result.rows.map((r) => r.agencyTrackingId)).toEqual([
-      "agency-1",
-      "agency-2",
-      "agency-3",
-    ]);
+    expect(result.rows).toHaveLength(total);
+    // The page-2 rows sit between page 1's last and page 3's row.
+    expect(result.rows[EXPORT_PAGE_SIZE - 1].agencyTrackingId).toBe(
+      `agency-${EXPORT_PAGE_SIZE}`,
+    );
+    expect(result.rows[EXPORT_PAGE_SIZE].agencyTrackingId).toBe(
+      `agency-${EXPORT_PAGE_SIZE + 1}`,
+    );
+    expect(result.rows.at(-1)?.agencyTrackingId).toBe(`agency-${total}`);
     expect(result.total).toBe(total);
   });
 
@@ -129,14 +136,40 @@ describe("fetchAllTransactions", () => {
         failures += 1;
         return { ok: false, status: 502 };
       }
-      return page === 1 ? pageResponse([1], total) : pageResponse([2]);
+      return page === 1
+        ? pageResponse(ids(1, EXPORT_PAGE_SIZE), total)
+        : pageResponse(ids(EXPORT_PAGE_SIZE + 1, 1));
     });
     vi.stubGlobal("fetch", fetch);
 
     const result = await fetchAllTransactions("all", range, sorting);
 
-    expect(result.rows).toHaveLength(2);
+    expect(result.rows).toHaveLength(total);
     expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("refetches once when the row set shifts mid-export", async () => {
+    const total = EXPORT_PAGE_SIZE + 2;
+    let attempt = 0;
+    const fetch = vi.fn().mockImplementation(async (input: string) => {
+      const page = Number(
+        new URL(input, "http://localhost").searchParams.get("page"),
+      );
+      if (page === 1) {
+        attempt += 1;
+        return pageResponse(ids(1, EXPORT_PAGE_SIZE), total);
+      }
+      // First attempt: page 2 comes up one row short (a row moved).
+      return attempt === 1
+        ? pageResponse(ids(EXPORT_PAGE_SIZE + 1, 1))
+        : pageResponse(ids(EXPORT_PAGE_SIZE + 1, 2));
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await fetchAllTransactions("all", range, sorting);
+
+    expect(result.rows).toHaveLength(total);
+    expect(fetch).toHaveBeenCalledTimes(4);
   });
 
   it("reports progress as pages land", async () => {
@@ -145,7 +178,9 @@ describe("fetchAllTransactions", () => {
       const page = Number(
         new URL(input, "http://localhost").searchParams.get("page"),
       );
-      return page === 1 ? pageResponse([1], total) : pageResponse([2]);
+      return page === 1
+        ? pageResponse(ids(1, EXPORT_PAGE_SIZE), total)
+        : pageResponse(ids(EXPORT_PAGE_SIZE + 1, 1));
     });
     vi.stubGlobal("fetch", fetch);
     const onProgress = vi.fn();
@@ -153,6 +188,9 @@ describe("fetchAllTransactions", () => {
     await fetchAllTransactions("all", range, sorting, { onProgress });
 
     expect(onProgress).toHaveBeenCalledTimes(2);
-    expect(onProgress.mock.calls.at(-1)?.[0]).toEqual({ fetched: 2, total });
+    expect(onProgress.mock.calls.at(-1)?.[0]).toEqual({
+      fetched: total,
+      total,
+    });
   });
 });
