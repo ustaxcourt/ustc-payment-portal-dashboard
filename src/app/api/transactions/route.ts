@@ -5,7 +5,15 @@ import { hasDashboardSession } from "@/lib/serverSession";
 // Per-request: a cached response would serve one user's timeframe to another.
 export const dynamic = "force-dynamic";
 
-const FORWARDED = ["from", "to", "status", "page", "pageSize"] as const;
+const FORWARDED = [
+  "from",
+  "to",
+  "status",
+  "page",
+  "pageSize",
+  "sort",
+  "order",
+] as const;
 
 export async function GET(request: Request) {
   if (!(await hasDashboardSession())) {

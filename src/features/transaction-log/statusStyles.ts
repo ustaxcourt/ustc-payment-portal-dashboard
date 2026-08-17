@@ -13,3 +13,10 @@ export const TAB_TONE: Record<TransactionTab, string> = {
   failed: "bg-red-200 text-red-900",
   pending: "bg-amber-200 text-amber-900",
 };
+
+export const TAB_HEADER_TONE: Record<TransactionTab, string> = {
+  all: "bg-slate-50",
+  success: "bg-green-50",
+  failed: "bg-red-50",
+  pending: "bg-amber-50",
+};
