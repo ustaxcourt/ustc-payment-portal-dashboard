@@ -11,11 +11,16 @@ vi.mock("./exportTransactions", async (importOriginal) => ({
 }));
 vi.mock("./exportWorkbook", () => ({
   buildWorkbookInWorker: vi.fn(),
-  downloadWorkbook: vi.fn(),
+  pickSaveDestination: vi.fn(),
+  saveWorkbook: vi.fn(),
 }));
 
 import { fetchAllTransactions } from "./exportTransactions";
-import { buildWorkbookInWorker, downloadWorkbook } from "./exportWorkbook";
+import {
+  buildWorkbookInWorker,
+  pickSaveDestination,
+  saveWorkbook,
+} from "./exportWorkbook";
 
 const range: AppliedDateRange = {
   preset: "today",
@@ -35,10 +40,13 @@ describe("ExportButton", () => {
   beforeEach(() => {
     vi.mocked(fetchAllTransactions).mockReset();
     vi.mocked(buildWorkbookInWorker).mockReset();
-    vi.mocked(downloadWorkbook).mockReset();
+    vi.mocked(pickSaveDestination)
+      .mockReset()
+      .mockResolvedValue({ kind: "download" });
+    vi.mocked(saveWorkbook).mockReset().mockResolvedValue();
   });
 
-  it("fetches, builds, and downloads with the range-based filename", async () => {
+  it("fetches, builds, and saves with the range-based filename", async () => {
     const rows = [{ agencyTrackingId: "a" }] as never[];
     vi.mocked(fetchAllTransactions).mockResolvedValue({ rows, total: 1 });
     const buffer = new ArrayBuffer(8);
@@ -48,16 +56,35 @@ describe("ExportButton", () => {
     await userEvent.click(screen.getByRole("button", { name: "Export" }));
 
     await waitFor(() =>
-      expect(downloadWorkbook).toHaveBeenCalledWith(
+      expect(saveWorkbook).toHaveBeenCalledWith(
+        { kind: "download" },
         buffer,
         "2026-08-17 - USTC Fee Payment Summary.xlsx",
       ),
+    );
+    expect(vi.mocked(pickSaveDestination).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(fetchAllTransactions).mock.invocationCallOrder[0],
     );
     expect(buildWorkbookInWorker).toHaveBeenCalledWith(
       rows,
       "all",
       expect.any(AbortSignal),
     );
+  });
+
+  it("abandons the export quietly when the save dialog is cancelled", async () => {
+    vi.mocked(pickSaveDestination).mockRejectedValue(
+      new DOMException("cancelled", "AbortError"),
+    );
+
+    renderButton();
+    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Export" })).toBeEnabled(),
+    );
+    expect(fetchAllTransactions).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows the too-large guidance instead of downloading", async () => {
@@ -71,7 +98,7 @@ describe("ExportButton", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /60,000.*Narrow the timeframe/,
     );
-    expect(downloadWorkbook).not.toHaveBeenCalled();
+    expect(saveWorkbook).not.toHaveBeenCalled();
   });
 
   it("shows a retryable error when the export fails", async () => {

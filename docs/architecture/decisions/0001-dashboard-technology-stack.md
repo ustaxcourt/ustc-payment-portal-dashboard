@@ -147,6 +147,32 @@ framework.
 5. **Repo scaffolding** — which ticket lays down the Next.js app skeleton on top of
    this ADR.
 
+## Amendment: export is client-side .xlsx (2026-08-17, PAY-388)
+
+This ADR prescribed server-side CSV streaming for export ("the same query
+minus the row limit, streamed as `text/csv` … never loads a large blob into
+browser memory"). That prescription is **superseded**: export is implemented
+client-side as an `.xlsx` workbook built in a Web Worker.
+
+Two facts changed the calculus after this ADR was written:
+
+1. The timeframe work already assembles the full filtered set in the
+   browser to render the table, so "never load it into browser memory" was no
+   longer being upheld by the rendering path this ADR approved.
+2. All display formatting lives client-side (`src/lib/format.ts`); a server
+   CSV would duplicate it in a second runtime and drift. Client-side
+   generation makes file-matches-screen true by construction, and `.xlsx`
+   (PO-approved over CSV) gives typed cells — amounts that sum, dates that
+   sort — which CSV cannot.
+
+A spike (2026-08-17) established the worker builds a 50k-row workbook in
+~1.4s in Edge with no main-thread jank. Exports are capped at 50k rows
+(`EXPORT_ROW_LIMIT`); the table itself now fetches a single page, making
+export the sole full-set path. **Fallback trigger:** if export scale ever
+exceeds what the browser handles (~10x today's ceiling), the documented
+plan-B is server-side generation to S3 behind a presigned URL, as an async
+job due to the 29s API Gateway timeout.
+
 ## References
 
 - Spike ticket: PAY-349 (dashboard technology spike)

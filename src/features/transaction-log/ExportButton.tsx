@@ -8,7 +8,11 @@ import {
   ExportTooLargeError,
   fetchAllTransactions,
 } from "./exportTransactions";
-import { buildWorkbookInWorker, downloadWorkbook } from "./exportWorkbook";
+import {
+  buildWorkbookInWorker,
+  pickSaveDestination,
+  saveWorkbook,
+} from "./exportWorkbook";
 import type { TransactionSorting, TransactionTab } from "./types";
 
 type ExportPhase =
@@ -39,16 +43,19 @@ export default function ExportButton({
   const startExport = async () => {
     const controller = new AbortController();
     abortRef.current = controller;
-    setPhase({ step: "fetching", fetched: 0, total: 0 });
 
     try {
+      const filename = exportFilename(range, tab);
+      const destination = await pickSaveDestination(filename);
+
+      setPhase({ step: "fetching", fetched: 0, total: 0 });
       const { rows } = await fetchAllTransactions(tab, range, sorting, {
         signal: controller.signal,
         onProgress: (progress) => setPhase({ step: "fetching", ...progress }),
       });
       setPhase({ step: "building" });
       const buffer = await buildWorkbookInWorker(rows, tab, controller.signal);
-      downloadWorkbook(buffer, exportFilename(range, tab));
+      await saveWorkbook(destination, buffer, filename);
       setPhase({ step: "idle" });
     } catch (err) {
       if (isAbort(err)) {
