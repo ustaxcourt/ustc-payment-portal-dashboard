@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { pickSaveDestination, saveWorkbook } from "./exportWorkbook";
+import {
+  buildWorkbookInWorker,
+  pickSaveDestination,
+  saveWorkbook,
+} from "./exportWorkbook";
 
 const stubPicker = (impl: unknown) => {
   Object.defineProperty(window, "showSaveFilePicker", {
@@ -51,6 +55,19 @@ describe("pickSaveDestination", () => {
     await expect(pickSaveDestination("file.xlsx")).resolves.toEqual({
       kind: "download",
     });
+  });
+});
+
+describe("buildWorkbookInWorker", () => {
+  // jsdom has no Worker: this passing also proves the early return fires
+  // before the worker would be constructed.
+  it("rejects an already-aborted signal without starting a worker", async () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      buildWorkbookInWorker([], "all", controller.signal),
+    ).rejects.toMatchObject({ name: "AbortError" });
   });
 });
 

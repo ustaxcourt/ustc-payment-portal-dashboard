@@ -7,6 +7,10 @@ export const buildWorkbookInWorker = (
   signal?: AbortSignal,
 ): Promise<ArrayBuffer> =>
   new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Export cancelled", "AbortError"));
+      return;
+    }
     const worker = new Worker(
       new URL("./exportWorkbook.worker.ts", import.meta.url),
     );
@@ -99,6 +103,10 @@ export const downloadWorkbook = (buffer: ArrayBuffer, filename: string) => {
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  // Revoke on a later task so the browser can start the download first.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 };
