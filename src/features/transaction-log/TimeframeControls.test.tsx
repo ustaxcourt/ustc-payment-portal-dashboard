@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import TimeframeControls from "./TimeframeControls";
 import type { AppliedDateRange } from "./dateRange";
@@ -55,8 +54,7 @@ describe("TimeframeControls", () => {
     expect(to).toHaveAttribute("max", "2026-08-18");
   });
 
-  it("submits a valid custom range in MM/DD/YYYY format", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  it("submits a valid custom range in MM/DD/YYYY format", () => {
     const { onApplyCustom } = renderControls();
 
     fireEvent.change(screen.getByLabelText("From"), {
@@ -65,13 +63,12 @@ describe("TimeframeControls", () => {
     fireEvent.change(screen.getByLabelText("To"), {
       target: { value: "2026-08-12" },
     });
-    await user.click(screen.getByRole("button", { name: "Apply" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
 
     expect(onApplyCustom).toHaveBeenCalledWith("08/05/2026", "08/12/2026");
   });
 
-  it("shows an inline error for a reversed range", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  it("shows an inline error for a reversed range", () => {
     const { onApplyCustom } = renderControls();
 
     fireEvent.change(screen.getByLabelText("From"), {
@@ -80,7 +77,7 @@ describe("TimeframeControls", () => {
     fireEvent.change(screen.getByLabelText("To"), {
       target: { value: "2026-08-01" },
     });
-    await user.click(screen.getByRole("button", { name: "Apply" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "The From date must be on or before the To date.",
@@ -88,11 +85,10 @@ describe("TimeframeControls", () => {
     expect(onApplyCustom).not.toHaveBeenCalled();
   });
 
-  it("lets the user switch to a preset and closes custom-only selection", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  it("lets the user switch to a preset and closes custom-only selection", () => {
     const { onSelectPreset } = renderControls();
 
-    await user.click(screen.getByRole("button", { name: "Today" }));
+    fireEvent.click(screen.getByRole("button", { name: "Today" }));
 
     expect(onSelectPreset).toHaveBeenCalledWith("today");
     expect(screen.queryByLabelText("From")).not.toBeInTheDocument();
