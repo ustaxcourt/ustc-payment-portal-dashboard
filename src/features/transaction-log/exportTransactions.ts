@@ -10,7 +10,8 @@ import type {
 export const EXPORT_PAGE_SIZE = 5000;
 /** Product ceiling: above this the user is asked to narrow the timeframe. */
 export const EXPORT_ROW_LIMIT = 50_000;
-const CONCURRENCY = 5;
+const CONCURRENCY = 3;
+const PAGE_TIMEOUT_MS = 45_000;
 
 export class ExportTooLargeError extends Error {
   readonly total: number;
@@ -44,7 +45,10 @@ const fetchExportPage = async (
   });
   if (tab !== "all") params.set("status", tab);
 
-  const response = await fetch(`/api/transactions?${params}`, { signal });
+  const timeout = AbortSignal.timeout(PAGE_TIMEOUT_MS);
+  const response = await fetch(`/api/transactions?${params}`, {
+    signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+  });
 
   if (!response.ok) {
     throw new Error(`Export request failed with ${response.status}`);
