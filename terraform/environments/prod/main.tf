@@ -13,7 +13,7 @@ module "amplify" {
 
   # No preview_branch_patterns: only the production branch builds here.
   api_invoke_arns = [
-    "arn:aws:execute-api:${local.aws_region}:${local.account_id}:*/${local.environment}/GET/transaction-log",
+    "arn:aws:execute-api:${local.aws_region}:${local.account_id}:${local.payment_portal_api_id}/${local.environment}/GET/transaction-log",
   ]
 }
 
