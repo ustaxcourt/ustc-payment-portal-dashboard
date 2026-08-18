@@ -1,6 +1,8 @@
 "use client";
 
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
+import { formatCourtDate } from "@/lib/format";
+import { COLUMN_LABEL, isSortableOnTab } from "./columns";
 import StatusTabs from "./StatusTabs";
 import {
   DATE_RANGE_PRESETS,
@@ -8,14 +10,23 @@ import {
 } from "./dateRange";
 import TimeframeControls from "./TimeframeControls";
 import TransactionTable from "./TransactionTable";
-import { TRANSACTION_TABS } from "./types";
+import {
+  DEFAULT_ORDER,
+  DEFAULT_SORT,
+  SORT_ORDERS,
+  TRANSACTION_SORT_FIELDS,
+  TRANSACTION_TABS,
+  type TransactionTab,
+} from "./types";
 import { useTransactionLog } from "./useTransactionLog";
 
 export default function TransactionLog() {
-  const [filters, setFilters] = useQueryStates(
+  const [params, setParams] = useQueryStates(
     {
       from: parseAsString,
+      order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
       range: parseAsStringLiteral(DATE_RANGE_PRESETS).withDefault("today"),
+      sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(DEFAULT_SORT),
       status: parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
       to: parseAsString,
     },
@@ -24,15 +35,30 @@ export default function TransactionLog() {
     },
   );
 
+  const tab = params.status;
+  const sorting = { sort: params.sort, order: params.order };
   const appliedRange = resolveAppliedDateRange(
-    filters.range,
-    filters.from,
-    filters.to,
+    params.range,
+    params.from,
+    params.to,
   );
 
+  const activeSorting = isSortableOnTab(sorting.sort, tab)
+    ? sorting
+    : { sort: DEFAULT_SORT, order: DEFAULT_ORDER };
+
+  const selectTab = (next: TransactionTab) => {
+    setParams(
+      isSortableOnTab(params.sort, next)
+        ? { status: next }
+        : { status: next, sort: DEFAULT_SORT, order: DEFAULT_ORDER },
+    );
+  };
+
   const { data, isPending, isError, error, refetch } = useTransactionLog(
-    filters.status,
+    tab,
     appliedRange,
+    activeSorting,
   );
 
   return (
@@ -40,12 +66,23 @@ export default function TransactionLog() {
       <TimeframeControls
         appliedRange={appliedRange}
         onSelectPreset={(preset) =>
-          setFilters({ from: null, range: preset, to: null })
+          setParams({ from: null, range: preset, to: null })
         }
-        onApplyCustom={(from, to) => setFilters({ from, range: "custom", to })}
+        onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
       />
+      <p className="text-sm font-medium">
+        {data ? formatCourtDate(data.from) : "Today"}
+      </p>
 
       <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
+
+      <p aria-live="polite" className="sr-only">
+        {data?.sort && COLUMN_LABEL[data.sort]
+          ? `Sorted by ${COLUMN_LABEL[data.sort]}, ${
+              data.order === "desc" ? "descending" : "ascending"
+            }`
+          : ""}
+      </p>
 
       {isError ? (
         <div className="rounded-md border border-destructive/50 p-6 text-sm">
@@ -64,13 +101,15 @@ export default function TransactionLog() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
           <StatusTabs
-            selected={filters.status}
+            selected={tab}
             counts={data?.counts}
-            onSelect={(status) => setFilters({ status })}
+            onSelect={selectTab}
           />
           <TransactionTable
             rows={data?.data ?? []}
-            tab={filters.status}
+            tab={tab}
+            sorting={activeSorting}
+            onSortingChange={setParams}
             emptyMessage={
               isPending ? "Loading transactions…" : "No transactions to show."
             }
