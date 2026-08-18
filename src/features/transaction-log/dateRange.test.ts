@@ -70,7 +70,7 @@ describe("getCustomRangeValidationError", () => {
 
     expect(
       getCustomRangeValidationError(
-        "01/01/2026",
+        `01/01/${MIN_CUSTOM_RANGE_YEAR - 1}`,
         `${String(12).padStart(2, "0")}/31/${MIN_CUSTOM_RANGE_YEAR - 1}`,
         today,
       ),
