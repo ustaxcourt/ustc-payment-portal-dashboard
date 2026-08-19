@@ -10,6 +10,7 @@ import {
   fromDatePickerValue,
   getCustomRangeValidationError,
   getCourtCalendarDate,
+  MIN_CUSTOM_RANGE_YEAR,
   toDatePickerValue,
 } from "./dateRange";
 
@@ -34,6 +35,7 @@ export default function TimeframeControls({
   const requestedFrom = appliedRange.requestedFrom ?? appliedRange.from;
   const requestedTo = appliedRange.requestedTo ?? appliedRange.to;
   const courtToday = getCourtCalendarDate();
+  const minDate = `${MIN_CUSTOM_RANGE_YEAR}-01-01`;
   const maxDate = `${courtToday.getUTCFullYear()}-${String(
     courtToday.getUTCMonth() + 1,
   ).padStart(2, "0")}-${String(courtToday.getUTCDate()).padStart(2, "0")}`;
@@ -138,6 +140,7 @@ export default function TimeframeControls({
             <input
               type="date"
               value={draftFrom}
+              min={minDate}
               max={maxDate}
               onChange={(event) => {
                 setDraftFrom(event.target.value);
@@ -157,6 +160,7 @@ export default function TimeframeControls({
             <input
               type="date"
               value={draftTo}
+              min={minDate}
               max={maxDate}
               onChange={(event) => {
                 setDraftTo(event.target.value);

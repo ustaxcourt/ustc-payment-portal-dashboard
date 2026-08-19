@@ -15,7 +15,7 @@ module "amplify" {
   preview_branch_patterns = ["PAY-*", "feature/*"]
 
   api_invoke_arns = [
-    "arn:aws:execute-api:${local.aws_region}:${local.account_id}:*/${local.environment}/GET/transaction-log",
+    "arn:aws:execute-api:${local.aws_region}:${local.account_id}:${local.payment_portal_api_id}/${local.environment}/GET/transaction-log",
   ]
 }
 

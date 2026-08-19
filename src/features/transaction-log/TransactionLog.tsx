@@ -1,6 +1,7 @@
 "use client";
 
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
+import { formatCourtDate } from "@/lib/format";
 import { COLUMN_LABEL, isSortableOnTab } from "./columns";
 import { DATE_RANGE_PRESETS, resolveAppliedDateRange } from "./dateRange";
 import ExportButton from "./ExportButton";
@@ -21,13 +22,11 @@ export default function TransactionLog() {
   const [params, setParams] = useQueryStates(
     {
       from: parseAsString,
+      order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
       range: parseAsStringLiteral(DATE_RANGE_PRESETS).withDefault("today"),
+      sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(DEFAULT_SORT),
       status: parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
       to: parseAsString,
-      sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(
-        DEFAULT_SORT,
-      ),
-      order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
     },
     {
       clearOnDefault: true,
@@ -77,6 +76,9 @@ export default function TransactionLog() {
           disabled={!data || data.data.length === 0}
         />
       </div>
+      <p className="text-sm font-medium">
+        {data ? formatCourtDate(data.from) : "Today"}
+      </p>
 
       <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
 
