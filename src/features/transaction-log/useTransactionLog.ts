@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import type { AppliedDateRange } from "./dateRange";
 import type {
   TransactionLogResponse,
+  TransactionSearchFilters,
   TransactionSorting,
-  TransactionTab,
+  ViewTab,
 } from "./types";
 
 // The UI still scrolls one assembled table rather than exposing paging controls,
@@ -13,9 +14,10 @@ import type {
 const PAGE_SIZE = 200;
 
 const fetchTransactionLogPage = async (
-  tab: TransactionTab,
+  tab: ViewTab,
   range: AppliedDateRange,
   sorting: TransactionSorting,
+  filters: TransactionSearchFilters | undefined,
   page: number,
   signal?: AbortSignal,
 ): Promise<TransactionLogResponse> => {
@@ -27,7 +29,14 @@ const fetchTransactionLogPage = async (
     sort: sorting.sort,
     to: range.to,
   });
-  if (tab !== "all") params.set("status", tab);
+  if (tab !== "all" && tab !== "search") params.set("status", tab);
+
+  if (filters?.feeType) params.set("fee", filters.feeType);
+  if (filters?.payType) params.set("paymentMethod", filters.payType);
+  if (filters?.lookupValue) {
+    params.set("lookupType", filters.lookupType);
+    params.set("lookupValue", filters.lookupValue);
+  }
 
   const response = await fetch(`/api/transactions?${params}`, { signal });
 
@@ -39,15 +48,17 @@ const fetchTransactionLogPage = async (
 };
 
 const fetchTransactionLog = async (
-  tab: TransactionTab,
+  tab: ViewTab,
   range: AppliedDateRange,
   sorting: TransactionSorting,
+  filters: TransactionSearchFilters | undefined,
   signal?: AbortSignal,
 ): Promise<TransactionLogResponse> => {
   const firstPage = await fetchTransactionLogPage(
     tab,
     range,
     sorting,
+    filters,
     1,
     signal,
   );
@@ -70,6 +81,7 @@ const fetchTransactionLog = async (
       tab,
       range,
       sorting,
+      filters,
       page,
       signal,
     );
@@ -85,9 +97,10 @@ const fetchTransactionLog = async (
 };
 
 export const useTransactionLog = (
-  tab: TransactionTab,
+  tab: ViewTab,
   range: AppliedDateRange,
   sorting: TransactionSorting,
+  filters?: TransactionSearchFilters,
 ) =>
   useQuery({
     queryKey: [
@@ -97,7 +110,12 @@ export const useTransactionLog = (
       range.to,
       sorting.sort,
       sorting.order,
+      filters?.feeType,
+      filters?.payType,
+      filters?.lookupType,
+      filters?.lookupValue,
     ],
-    queryFn: ({ signal }) => fetchTransactionLog(tab, range, sorting, signal),
+    queryFn: ({ signal }) =>
+      fetchTransactionLog(tab, range, sorting, filters, signal),
     placeholderData: (previous) => previous,
   });

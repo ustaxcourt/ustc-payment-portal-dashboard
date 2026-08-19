@@ -96,4 +96,45 @@ describe("TransactionLog", () => {
     expect(requested).toContain("order=desc");
     expect(requested).not.toContain("returnDetail");
   });
+
+  it("renders the Search Transactions tab", async () => {
+    mockFetch(response());
+
+    renderLog("");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("tab", { name: "Search Transactions" }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("forwards fee, pay type, and lookup filters when searching", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=PETITION_FILING_FEE&payType=ACH&lookupType=agencyId&lookupValue=26PHF07R",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = String(fetchMock.mock.calls[0][0]);
+    expect(requested).toContain("fee=PETITION_FILING_FEE");
+    expect(requested).toContain("paymentMethod=ACH");
+    expect(requested).toContain("lookupType=agencyId");
+    expect(requested).toContain("lookupValue=26PHF07R");
+    expect(requested).not.toContain("status=search");
+  });
+
+  it("falls back to the default sort when switching to search with an unsupported field", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog("?status=search&sort=clientName&order=asc");
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = String(fetchMock.mock.calls[0][0]);
+    expect(requested).toContain("sort=createdAt");
+    expect(requested).toContain("order=desc");
+  });
 });

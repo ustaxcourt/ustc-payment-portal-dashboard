@@ -2,8 +2,10 @@
 
 import { cn } from "@/lib/utils";
 import { TAB_LABEL, TAB_TONE } from "./statusStyles";
-import { TRANSACTION_TABS } from "./types";
-import type { TransactionCounts, TransactionTab } from "./types";
+import { VIEW_TABS } from "./types";
+import type { TransactionCounts, TransactionTab, ViewTab } from "./types";
+
+const isStatusTab = (tab: ViewTab): tab is TransactionTab => tab !== "search";
 
 // Counts cover the whole timeframe, so they hold steady as the selection changes.
 export default function StatusTabs({
@@ -11,9 +13,9 @@ export default function StatusTabs({
   counts,
   onSelect,
 }: {
-  selected: TransactionTab;
+  selected: ViewTab;
   counts?: TransactionCounts;
-  onSelect: (tab: TransactionTab) => void;
+  onSelect: (tab: ViewTab) => void;
 }) {
   return (
     <div
@@ -21,7 +23,7 @@ export default function StatusTabs({
       role="tablist"
       aria-label="Filter by payment status"
     >
-      {TRANSACTION_TABS.map((option) => {
+      {VIEW_TABS.map((option) => {
         const isSelected = option === selected;
 
         return (
@@ -39,15 +41,19 @@ export default function StatusTabs({
                 : "border border-transparent bg-muted text-muted-foreground underline hover:bg-muted/70",
             )}
           >
-            <span>{TAB_LABEL[option]}</span>
-            <span
-              className={cn(
-                "rounded px-2 py-0.5 text-sm font-semibold tabular-nums",
-                TAB_TONE[option],
-              )}
-            >
-              {counts ? counts[option] : "—"}
+            <span>
+              {isStatusTab(option) ? TAB_LABEL[option] : "Search Transactions"}
             </span>
+            {isStatusTab(option) ? (
+              <span
+                className={cn(
+                  "rounded px-2 py-0.5 text-sm font-semibold tabular-nums",
+                  TAB_TONE[option],
+                )}
+              >
+                {counts ? counts[option] : "—"}
+              </span>
+            ) : null}
           </button>
         );
       })}

@@ -1,39 +1,33 @@
 "use client";
 
 import { useMemo } from "react";
-import { getColumns } from "./columns";
+import { getSearchColumns } from "./columns";
 import DataTable from "./DataTable";
-import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
-import type {
-  TransactionLogEntry,
-  TransactionSorting,
-  TransactionTab,
-} from "./types";
+import type { TransactionLogEntry, TransactionSorting } from "./types";
 
-export default function TransactionTable({
+export default function TransactionSearchTable({
   rows,
-  tab,
   sorting,
   onSortingChange,
   emptyMessage,
 }: {
   rows: TransactionLogEntry[];
-  tab: TransactionTab;
   sorting: TransactionSorting;
   onSortingChange: (next: TransactionSorting) => void;
   emptyMessage: string;
 }) {
-  const columns = useMemo(() => getColumns(tab), [tab]);
+  const columns = useMemo(() => getSearchColumns(), []);
 
   return (
     <DataTable
       rows={rows}
       columns={columns}
-      caption={`Transaction log, ${TAB_LABEL[tab]}`}
-      headerTone={TAB_HEADER_TONE[tab]}
+      caption="Transaction log, Search results"
+      headerTone="bg-slate-50"
       sorting={sorting}
       onSortingChange={onSortingChange}
       emptyMessage={emptyMessage}
+      wrapperClassName="max-h-[60vh] overflow-auto rounded-md border"
     />
   );
 }
