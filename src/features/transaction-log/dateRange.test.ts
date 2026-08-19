@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  MIN_CUSTOM_RANGE_YEAR,
+  courtDayIsoBounds,
   fromDatePickerValue,
   getCourtCalendarDate,
   getCustomRangeValidationError,
+  MIN_CUSTOM_RANGE_YEAR,
   parseInputDate,
   resolveAppliedDateRange,
   toDatePickerValue,
@@ -159,6 +160,62 @@ describe("resolveAppliedDateRange", () => {
       label: "Invalid custom range (08/18/2026 - 08/05/2026); showing Today",
       requestedFrom: "08/18/2026",
       requestedTo: "08/05/2026",
+    });
+  });
+});
+
+describe("courtDayIsoBounds", () => {
+  it("bounds a summer (EDT) day at 04:00Z, end exclusive on the next day", () => {
+    expect(courtDayIsoBounds({ from: "08/19/2026", to: "08/19/2026" })).toEqual(
+      {
+        from: "2026-08-19T04:00:00.000Z",
+        to: "2026-08-20T04:00:00.000Z",
+      },
+    );
+  });
+
+  it("bounds a winter (EST) day at 05:00Z", () => {
+    expect(courtDayIsoBounds({ from: "01/15/2026", to: "01/15/2026" })).toEqual(
+      {
+        from: "2026-01-15T05:00:00.000Z",
+        to: "2026-01-16T05:00:00.000Z",
+      },
+    );
+  });
+
+  it("spans the fall-back day as 25 hours", () => {
+    // DST ends 2026-11-01: midnight is still EDT, next midnight is EST.
+    expect(courtDayIsoBounds({ from: "11/01/2026", to: "11/01/2026" })).toEqual(
+      {
+        from: "2026-11-01T04:00:00.000Z",
+        to: "2026-11-02T05:00:00.000Z",
+      },
+    );
+  });
+
+  it("spans the spring-forward day as 23 hours", () => {
+    // DST starts 2026-03-08: midnight is EST, next midnight is EDT.
+    expect(courtDayIsoBounds({ from: "03/08/2026", to: "03/08/2026" })).toEqual(
+      {
+        from: "2026-03-08T05:00:00.000Z",
+        to: "2026-03-09T04:00:00.000Z",
+      },
+    );
+  });
+
+  it("covers a multi-day range from first midnight to the exclusive end", () => {
+    expect(courtDayIsoBounds({ from: "07/01/2026", to: "08/18/2026" })).toEqual(
+      {
+        from: "2026-07-01T04:00:00.000Z",
+        to: "2026-08-19T04:00:00.000Z",
+      },
+    );
+  });
+
+  it("passes unparseable values through unchanged", () => {
+    expect(courtDayIsoBounds({ from: "garbage", to: "08/19/2026" })).toEqual({
+      from: "garbage",
+      to: "08/19/2026",
     });
   });
 });

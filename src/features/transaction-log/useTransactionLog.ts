@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { AppliedDateRange } from "./dateRange";
+import { type AppliedDateRange, courtDayIsoBounds } from "./dateRange";
 import type {
   TransactionLogResponse,
   TransactionSorting,
@@ -20,13 +20,14 @@ export const fetchTransactionLogPage = async (
   pageSize: number,
   signal?: AbortSignal,
 ): Promise<TransactionLogResponse> => {
+  const bounds = courtDayIsoBounds(range);
   const params = new URLSearchParams({
-    from: range.from,
+    from: bounds.from,
     order: sorting.order,
     page: String(page),
     pageSize: String(pageSize),
     sort: sorting.sort,
-    to: range.to,
+    to: bounds.to,
   });
   if (tab !== "all") params.set("status", tab);
 

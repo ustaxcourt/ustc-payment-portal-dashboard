@@ -1,4 +1,4 @@
-import type { AppliedDateRange } from "./dateRange";
+import { type AppliedDateRange, courtDayIsoBounds } from "./dateRange";
 import type {
   TransactionLogEntry,
   TransactionLogResponse,
@@ -34,14 +34,15 @@ const fetchExportPage = async (
   page: number,
   signal?: AbortSignal,
 ): Promise<TransactionLogResponse> => {
+  const bounds = courtDayIsoBounds(range);
   const params = new URLSearchParams({
     export: "true",
-    from: range.from,
+    from: bounds.from,
     order: sorting.order,
     page: String(page),
     pageSize: String(EXPORT_PAGE_SIZE),
     sort: sorting.sort,
-    to: range.to,
+    to: bounds.to,
   });
   if (tab !== "all") params.set("status", tab);
 
