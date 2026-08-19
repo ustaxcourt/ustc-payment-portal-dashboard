@@ -5,12 +5,34 @@ import LogoutButton from "@/components/ui/LogoutButton";
 import RevenueTotals from "@/features/revenue-totals/RevenueTotals";
 import TransactionLog from "@/features/transaction-log/TransactionLog";
 import { getSessionAuthOptions } from "@/lib/auth";
+import { loginUrlReturningTo } from "@/lib/callbackUrl";
 
-export default async function Home() {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+const toQueryString = (params: SearchParams): string => {
+  const query = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) {
+      for (const entry of value) query.append(key, entry);
+    } else if (typeof value === "string") {
+      query.set(key, value);
+    }
+  }
+
+  return query.toString();
+};
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   const session = await getServerSession(getSessionAuthOptions());
 
   if (!session) {
-    redirect("/login");
+    const query = toQueryString(await searchParams);
+    redirect(loginUrlReturningTo(query ? `/?${query}` : "/"));
   }
 
   return (
