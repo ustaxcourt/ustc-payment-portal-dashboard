@@ -101,7 +101,12 @@ const fetchAllOnce = async (
   const first = await withRetry(() =>
     fetchExportPage(tab, range, sorting, 1, signal),
   );
-  const total = first.total ?? first.data.length;
+  // Page 1 must carry the total; guessing from one page would silently
+  // truncate the file and blind the consistency check.
+  if (typeof first.total !== "number") {
+    throw new Error("The export response is missing its total row count");
+  }
+  const total = first.total;
   if (total > EXPORT_ROW_LIMIT) throw new ExportTooLargeError(total);
   onProgress?.({ fetched: first.data.length, total });
 

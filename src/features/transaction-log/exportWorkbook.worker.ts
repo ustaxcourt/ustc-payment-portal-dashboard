@@ -1,5 +1,7 @@
-import { buildWorkbook } from "./workbookBuilder";
+/// <reference lib="webworker" />
+
 import type { TransactionLogEntry, TransactionTab } from "./types";
+import { buildWorkbook } from "./workbookBuilder";
 
 export type WorkbookRequest = {
   rows: TransactionLogEntry[];

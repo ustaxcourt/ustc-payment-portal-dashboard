@@ -113,6 +113,15 @@ describe("fetchAllTransactions", () => {
     expect(result.total).toBe(total);
   });
 
+  it("fails loudly when page 1 omits the total instead of truncating", async () => {
+    const fetch = vi.fn().mockResolvedValue(pageResponse([1, 2, 3]));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(fetchAllTransactions("all", range, sorting)).rejects.toThrow(
+      "missing its total row count",
+    );
+  });
+
   it("refuses an export above the row limit before fetching further pages", async () => {
     const fetch = vi
       .fn()
