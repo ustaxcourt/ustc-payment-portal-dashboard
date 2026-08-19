@@ -21,9 +21,10 @@ export async function GET() {
     );
 
     if (!upstream.ok) {
+      // Status only: the body is not ours to log, and 403/400/500 already
+      // separate an IAM problem from a bad parameter from an upstream fault.
       console.error(
         `[dashboard] totals upstream responded ${upstream.status}`,
-        await upstream.text(),
       );
       return NextResponse.json(
         { message: "Unable to load the totals" },

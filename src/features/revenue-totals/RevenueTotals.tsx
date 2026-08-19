@@ -1,7 +1,7 @@
 "use client";
 
 import { formatCurrency } from "@/lib/format";
-import { PERIOD_LABEL, periodSubtitle, TOTAL_PERIODS } from "./types";
+import { PERIOD_LABEL, periodRange, periodSubtitle, TOTAL_PERIODS } from "./types";
 import { useTotals } from "./useTotals";
 
 const CELL = "border px-4 py-2";
@@ -39,6 +39,9 @@ export default function RevenueTotals() {
               <th key={period} scope="col" className={`${CELL} text-sm font-normal`}>
                 <span className="font-bold">{PERIOD_LABEL[period]}</span>
                 {data ? ` - ${periodSubtitle(data[period], period)}` : null}
+                {data ? (
+                  <span className="sr-only">, {periodRange(data[period])}</span>
+                ) : null}
               </th>
             ))}
           </tr>

@@ -41,8 +41,17 @@ const monthName = new Intl.DateTimeFormat("en-US", {
   month: "long",
 });
 
-/** Fiscal quarters open in Oct, Jan, Apr, Jul — the year opens on Oct 1. */
-const FISCAL_QUARTER: Record<number, number> = { 10: 1, 1: 2, 4: 3, 7: 4 };
+/**
+ * Fiscal quarters open in Oct, Jan, Apr, Jul, because the year opens on Oct 1.
+ * Shifting by two months puts October at index 0. Total over all twelve months,
+ * so an unexpected value cannot render "Qundefined".
+ */
+const fiscalQuarter = (month: number): number =>
+  Math.floor(((month + 2) % 12) / 3) + 1;
+
+
+export const periodRange = ({ from, to }: TotalPeriod): string =>
+  `${formatCourtDate(from)} to ${formatCourtDate(to)}`;
 
 /** Labels the instants the server reported; no boundary is recomputed here. */
 export const periodSubtitle = ({ from, to }: TotalPeriod, period: TotalPeriodName): string => {
@@ -59,7 +68,7 @@ export const periodSubtitle = ({ from, to }: TotalPeriod, period: TotalPeriodNam
     case "month":
       return monthName.format(opened);
     case "quarter":
-      return `Q${FISCAL_QUARTER[month]}`;
+      return `Q${fiscalQuarter(month)}`;
     default:
       // The year opens in October, so it belongs to the next fiscal year.
       return `FY${String(year + 1).slice(-2)}`;
