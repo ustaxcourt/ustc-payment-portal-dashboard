@@ -58,8 +58,8 @@ export default function TransactionSearch({
 }: Props) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-6 rounded-md border bg-background p-4 lg:grid-cols-2 lg:divide-x">
-        <div>
+      <div className="grid gap-y-6 rounded-md border bg-background p-4 lg:grid-cols-2 lg:gap-y-0 lg:divide-x">
+        <div className="lg:pr-6">
           <h3 className="text-sm font-semibold">Filter by Type</h3>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
             <div className="flex flex-1 flex-col gap-1.5">

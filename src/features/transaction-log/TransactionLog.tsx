@@ -74,6 +74,10 @@ export default function TransactionLog() {
         }
       : undefined;
 
+  const hasSearchCriteria = Boolean(
+    searchFilters?.feeType || searchFilters?.payType || searchFilters?.lookupValue,
+  );
+
   const clearSearch = () =>
     setParams({
       feeType: null,
@@ -87,6 +91,7 @@ export default function TransactionLog() {
     appliedRange,
     activeSorting,
     searchFilters,
+    tab !== "search" || hasSearchCriteria,
   );
 
   return (
@@ -146,11 +151,15 @@ export default function TransactionLog() {
                 setParams({ lookupValue })
               }
               onClear={clearSearch}
-              rows={data?.data ?? []}
+              rows={hasSearchCriteria ? (data?.data ?? []) : []}
               sorting={activeSorting}
               onSortingChange={setParams}
               emptyMessage={
-                isPending ? "Loading transactions…" : "No transactions to show."
+                !hasSearchCriteria
+                  ? "Choose a fee type, pay type, or lookup value to search transactions."
+                  : isPending
+                    ? "Searching…"
+                    : "No transactions match your search."
               }
             />
           ) : (

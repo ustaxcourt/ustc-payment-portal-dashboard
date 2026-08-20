@@ -129,12 +129,41 @@ describe("TransactionLog", () => {
   it("falls back to the default sort when switching to search with an unsupported field", async () => {
     const fetchMock = mockFetch(response());
 
-    renderLog("?status=search&sort=clientName&order=asc");
+    renderLog(
+      "?status=search&sort=clientName&order=asc&lookupValue=Inez",
+    );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
     const requested = String(fetchMock.mock.calls[0][0]);
     expect(requested).toContain("sort=createdAt");
     expect(requested).toContain("order=desc");
+  });
+
+  it("does not query when the search tab has no filter or lookup value yet", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog("?status=search");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Choose a fee type, pay type, or lookup value to search transactions.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("starts querying as soon as a lookup value is entered", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog("?status=search&lookupValue=26PHF07R");
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = String(fetchMock.mock.calls[0][0]);
+    expect(requested).toContain("lookupValue=26PHF07R");
   });
 });

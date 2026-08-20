@@ -101,6 +101,7 @@ export const useTransactionLog = (
   range: AppliedDateRange,
   sorting: TransactionSorting,
   filters?: TransactionSearchFilters,
+  enabled = true,
 ) =>
   useQuery({
     queryKey: [
@@ -118,4 +119,5 @@ export const useTransactionLog = (
     queryFn: ({ signal }) =>
       fetchTransactionLog(tab, range, sorting, filters, signal),
     placeholderData: (previous) => previous,
+    enabled,
   });
