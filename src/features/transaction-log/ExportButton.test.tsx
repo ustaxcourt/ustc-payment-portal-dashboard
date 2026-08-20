@@ -11,6 +11,7 @@ vi.mock("./exportTransactions", async (importOriginal) => ({
 }));
 vi.mock("./exportWorkbook", () => ({
   buildWorkbookInWorker: vi.fn(),
+  discardSaveDestination: vi.fn(),
   pickSaveDestination: vi.fn(),
   saveWorkbook: vi.fn(),
 }));
@@ -18,6 +19,7 @@ vi.mock("./exportWorkbook", () => ({
 import { fetchAllTransactions } from "./exportTransactions";
 import {
   buildWorkbookInWorker,
+  discardSaveDestination,
   pickSaveDestination,
   saveWorkbook,
 } from "./exportWorkbook";
@@ -43,6 +45,7 @@ describe("ExportButton", () => {
     vi.mocked(pickSaveDestination)
       .mockReset()
       .mockResolvedValue({ kind: "download" });
+    vi.mocked(discardSaveDestination).mockReset().mockResolvedValue();
     vi.mocked(saveWorkbook).mockReset().mockResolvedValue();
   });
 
@@ -127,6 +130,57 @@ describe("ExportButton", () => {
       expect(screen.getByRole("button", { name: "Export" })).toBeEnabled(),
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("deletes the picked file when the export is cancelled", async () => {
+    const destination = {
+      kind: "picker",
+      handle: { createWritable: vi.fn(), remove: vi.fn() },
+    } as const;
+    vi.mocked(pickSaveDestination).mockResolvedValue(destination);
+    vi.mocked(fetchAllTransactions).mockRejectedValue(
+      new DOMException("Export cancelled", "AbortError"),
+    );
+
+    renderButton();
+    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+
+    await waitFor(() =>
+      expect(discardSaveDestination).toHaveBeenCalledWith(destination),
+    );
+    expect(saveWorkbook).not.toHaveBeenCalled();
+  });
+
+  it("deletes the picked file when the export fails", async () => {
+    const destination = {
+      kind: "picker",
+      handle: { createWritable: vi.fn(), remove: vi.fn() },
+    } as const;
+    vi.mocked(pickSaveDestination).mockResolvedValue(destination);
+    vi.mocked(fetchAllTransactions).mockRejectedValue(
+      new ExportTooLargeError(60_000),
+    );
+
+    renderButton();
+    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+
+    await waitFor(() =>
+      expect(discardSaveDestination).toHaveBeenCalledWith(destination),
+    );
+  });
+
+  it("keeps the file on a successful export", async () => {
+    vi.mocked(fetchAllTransactions).mockResolvedValue({
+      rows: [] as never[],
+      total: 0,
+    });
+    vi.mocked(buildWorkbookInWorker).mockResolvedValue(new ArrayBuffer(8));
+
+    renderButton();
+    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+
+    await waitFor(() => expect(saveWorkbook).toHaveBeenCalled());
+    expect(discardSaveDestination).not.toHaveBeenCalled();
   });
 
   it("offers Cancel while an export is running", async () => {

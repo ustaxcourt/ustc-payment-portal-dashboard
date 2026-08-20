@@ -84,7 +84,14 @@ export const fetchAllTransactions = async (
 ): Promise<{ rows: TransactionLogEntry[]; total: number }> => {
   const first = await fetchAllOnce(tab, range, sorting, options);
   if (first.rows.length === first.total) return first;
+  throwIfAborted(options.signal);
   return fetchAllOnce(tab, range, sorting, options);
+};
+
+const throwIfAborted = (signal?: AbortSignal) => {
+  if (signal?.aborted) {
+    throw new DOMException("Export cancelled", "AbortError");
+  }
 };
 
 const fetchAllOnce = async (
@@ -120,6 +127,7 @@ const fetchAllOnce = async (
     { length: Math.min(CONCURRENCY, Math.max(0, lastPage - 1)) },
     async () => {
       while (nextPage <= lastPage) {
+        throwIfAborted(signal);
         const page = nextPage;
         nextPage += 1;
         const result = await withRetry(() =>

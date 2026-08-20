@@ -50,6 +50,7 @@ type WritableFileHandle = {
     write: (data: ArrayBuffer | Blob) => Promise<void>;
     close: () => Promise<void>;
   }>;
+  remove?: () => Promise<void>;
 };
 
 type PickerWindow = Window & {
@@ -80,6 +81,20 @@ export const pickSaveDestination = async (
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err;
     return { kind: "download" };
+  }
+};
+
+/** The picker creates a zero-byte file the moment a location is chosen, so a
+ *  cancelled or failed export must delete it or the user finds an empty
+ *  workbook where they pointed us. Best effort: never throws. */
+export const discardSaveDestination = async (
+  destination: SaveDestination,
+): Promise<void> => {
+  if (destination.kind !== "picker" || !destination.handle.remove) return;
+  try {
+    await destination.handle.remove();
+  } catch {
+    // The empty file survives; not worth surfacing over the real outcome.
   }
 };
 

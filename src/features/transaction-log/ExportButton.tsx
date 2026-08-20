@@ -10,7 +10,9 @@ import {
 } from "./exportTransactions";
 import {
   buildWorkbookInWorker,
+  discardSaveDestination,
   pickSaveDestination,
+  type SaveDestination,
   saveWorkbook,
 } from "./exportWorkbook";
 import type { TransactionSorting, TransactionTab } from "./types";
@@ -43,10 +45,11 @@ export default function ExportButton({
   const startExport = async () => {
     const controller = new AbortController();
     abortRef.current = controller;
+    let destination: SaveDestination | null = null;
 
     try {
       const filename = exportFilename(range, tab);
-      const destination = await pickSaveDestination(filename);
+      destination = await pickSaveDestination(filename);
 
       setPhase({ step: "fetching", fetched: 0, total: 0 });
       const { rows } = await fetchAllTransactions(tab, range, sorting, {
@@ -55,9 +58,16 @@ export default function ExportButton({
       });
       setPhase({ step: "building" });
       const buffer = await buildWorkbookInWorker(rows, tab, controller.signal);
+      // A cancel landing after the build resolves must not write the file.
+      if (controller.signal.aborted) {
+        throw new DOMException("Export cancelled", "AbortError");
+      }
       await saveWorkbook(destination, buffer, filename);
       setPhase({ step: "idle" });
     } catch (err) {
+      // The picker creates an empty file at pick time; clean it up on any
+      // outcome that never wrote it.
+      if (destination) void discardSaveDestination(destination);
       if (isAbort(err)) {
         setPhase({ step: "idle" });
       } else {

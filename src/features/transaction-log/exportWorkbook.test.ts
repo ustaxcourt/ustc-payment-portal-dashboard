@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildWorkbookInWorker,
+  discardSaveDestination,
   pickSaveDestination,
   saveWorkbook,
 } from "./exportWorkbook";
@@ -68,6 +69,42 @@ describe("buildWorkbookInWorker", () => {
     await expect(
       buildWorkbookInWorker([], "all", controller.signal),
     ).rejects.toMatchObject({ name: "AbortError" });
+  });
+});
+
+describe("discardSaveDestination", () => {
+  it("removes the picked file", async () => {
+    const remove = vi.fn().mockResolvedValue(undefined);
+    await discardSaveDestination({
+      kind: "picker",
+      handle: { createWritable: vi.fn(), remove },
+    });
+
+    expect(remove).toHaveBeenCalled();
+  });
+
+  it("swallows a failed removal", async () => {
+    await expect(
+      discardSaveDestination({
+        kind: "picker",
+        handle: {
+          createWritable: vi.fn(),
+          remove: vi.fn().mockRejectedValue(new Error("locked")),
+        },
+      }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("is a no-op for downloads and handles without remove", async () => {
+    await expect(
+      discardSaveDestination({ kind: "download" }),
+    ).resolves.toBeUndefined();
+    await expect(
+      discardSaveDestination({
+        kind: "picker",
+        handle: { createWritable: vi.fn() },
+      }),
+    ).resolves.toBeUndefined();
   });
 });
 
