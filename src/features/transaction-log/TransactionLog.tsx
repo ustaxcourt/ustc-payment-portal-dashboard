@@ -1,10 +1,15 @@
 "use client";
 
-import { parseAsStringLiteral, useQueryStates } from "nuqs";
 import ErrorPanel from "@/components/ui/ErrorPanel";
+import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { formatCourtDate } from "@/lib/format";
 import { COLUMN_LABEL, isSortableOnTab } from "./columns";
 import StatusTabs from "./StatusTabs";
+import {
+  DATE_RANGE_PRESETS,
+  resolveAppliedDateRange,
+} from "./dateRange";
+import TimeframeControls from "./TimeframeControls";
 import TransactionTable from "./TransactionTable";
 import {
   DEFAULT_ORDER,
@@ -17,16 +22,27 @@ import {
 import { useTransactionLog } from "./useTransactionLog";
 
 export default function TransactionLog() {
-  const [params, setParams] = useQueryStates({
-    status: parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
-    sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(
-      DEFAULT_SORT,
-    ),
-    order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
-  });
+  const [params, setParams] = useQueryStates(
+    {
+      from: parseAsString,
+      order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
+      range: parseAsStringLiteral(DATE_RANGE_PRESETS).withDefault("today"),
+      sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(DEFAULT_SORT),
+      status: parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
+      to: parseAsString,
+    },
+    {
+      clearOnDefault: true,
+    },
+  );
 
   const tab = params.status;
   const sorting = { sort: params.sort, order: params.order };
+  const appliedRange = resolveAppliedDateRange(
+    params.range,
+    params.from,
+    params.to,
+  );
 
   const activeSorting = isSortableOnTab(sorting.sort, tab)
     ? sorting
@@ -42,11 +58,19 @@ export default function TransactionLog() {
 
   const { data, isPending, isError, error, refetch } = useTransactionLog(
     tab,
+    appliedRange,
     activeSorting,
   );
 
   return (
-    <section className="flex w-full flex-col gap-3">
+    <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
+      <TimeframeControls
+        appliedRange={appliedRange}
+        onSelectPreset={(preset) =>
+          setParams({ from: null, range: preset, to: null })
+        }
+        onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
+      />
       <p className="text-sm font-medium">
         {data ? formatCourtDate(data.from) : "Today"}
       </p>
@@ -68,7 +92,7 @@ export default function TransactionLog() {
           onRetry={refetch}
         />
       ) : (
-        <div>
+        <div className="flex min-h-0 flex-1 flex-col">
           <StatusTabs
             selected={tab}
             counts={data?.counts}

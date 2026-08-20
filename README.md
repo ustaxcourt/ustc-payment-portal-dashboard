@@ -21,13 +21,13 @@ The app runs at http://localhost:3000.
 
 ## Scripts
 
-| Script | Purpose |
-| --- | --- |
-| `npm run dev` | Local dev server |
-| `npm run build` | Production build |
+| Script          | Purpose                  |
+| --------------- | ------------------------ |
+| `npm run dev`   | Local dev server         |
+| `npm run build` | Production build         |
 | `npm run start` | Serve a production build |
-| `npm run lint` | Biome lint |
-| `npm run tsc` | Type check (no emit) |
+| `npm run lint`  | Biome lint               |
+| `npm run tsc`   | Type check (no emit)     |
 
 ## Stack
 
@@ -68,8 +68,8 @@ server, checks the Court session, then signs a SigV4 request to the API's
 `/transaction-log` endpoint as the Amplify compute role. The API authorises on
 IAM, so neither the session nor the AWS credential reaches the client.
 
-| Variable | Purpose |
-| --- | --- |
+| Variable                 | Purpose                                                                                             |
+| ------------------------ | --------------------------------------------------------------------------------------------------- |
 | `PAYMENT_PORTAL_API_URL` | Base URL of the payment-portal API, e.g. `https://<api-id>.execute-api.us-east-1.amazonaws.com/dev` |
 
 Amplify supplies the AWS credentials itself through the app's compute role — no
@@ -92,6 +92,7 @@ These are deliberate gaps, not oversights — see ADR 0001's open questions:
   `next/jest` handles the App Router config when it is added. The auth guard and
   parameter whitelist in `/api/transactions` have no coverage.
 - **No paging controls.** The log fetches every transaction for the day across
-  as many API pages as it takes. That is bounded by a single Court day; a
-  future date-range picker would need real pagination, since ADR 0001 rejects
-  pulling unbounded history into the browser.
+  as many API pages as it takes, including wider custom date ranges. The UI
+  still renders one scrollable table rather than explicit page controls, so a
+  very large history window may still need product-level pagination later,
+  since ADR 0001 rejects pulling unbounded history into the browser.
