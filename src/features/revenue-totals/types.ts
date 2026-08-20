@@ -49,7 +49,17 @@ const monthName = new Intl.DateTimeFormat("en-US", {
 const fiscalQuarter = (month: number): number =>
   Math.floor(((month + 2) % 12) / 3) + 1;
 
+/**
+ * Periods whose subtitle is already a date, so printing the window beneath
+ * them would only restate it.
+ */
+export const SUBTITLE_IS_DATED = new Set<TotalPeriodName>(["day", "week"]);
 
+/**
+ * The window the server summed, shown under "February" / "Q2" / "FY26" — labels
+ * that name a period without saying when it opened. A fiscal quarter needs it
+ * most, since Q1 runs Oct–Dec.
+ */
 export const periodRange = ({ from, to }: TotalPeriod): string =>
   `${formatCourtDate(from)} to ${formatCourtDate(to)}`;
 

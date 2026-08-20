@@ -1,6 +1,7 @@
 "use client";
 
 import { parseAsStringLiteral, useQueryStates } from "nuqs";
+import ErrorPanel from "@/components/ui/ErrorPanel";
 import { formatCourtDate } from "@/lib/format";
 import { COLUMN_LABEL, isSortableOnTab } from "./columns";
 import StatusTabs from "./StatusTabs";
@@ -61,19 +62,11 @@ export default function TransactionLog() {
       </p>
 
       {isError ? (
-        <div className="rounded-md border border-destructive/50 p-6 text-sm">
-          <p className="font-medium">Could not load the transaction log.</p>
-          <p className="mt-1 text-muted-foreground">
-            {(error as Error).message}
-          </p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="mt-4 rounded-md border px-3 py-1.5 hover:bg-muted"
-          >
-            Try again
-          </button>
-        </div>
+        <ErrorPanel
+          title="Could not load the transaction log."
+          message={error.message}
+          onRetry={refetch}
+        />
       ) : (
         <div>
           <StatusTabs

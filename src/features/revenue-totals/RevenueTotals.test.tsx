@@ -45,9 +45,9 @@ describe("RevenueTotals", () => {
     expect(screen.getByText("$458,500.00")).toBeInTheDocument();
   });
 
-  // The design abbreviates the wider periods, so the AC's start and end dates
-  // have to survive in the header's accessible name.
-  it("names every column with its full window", async () => {
+  // "Q2" and "FY26" name a period without saying when it opened, so the AC's
+  // start and end dates have to be on screen for them.
+  it("prints the window under the periods that are named, not dated", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
@@ -55,14 +55,28 @@ describe("RevenueTotals", () => {
 
     renderTotals();
 
-    const fiscalYear = await screen.findByRole("columnheader", {
-      name: /Fiscal Year - FY26, Oct 1, 2025 to Feb 18, 2026/,
-    });
-    expect(fiscalYear).toBeInTheDocument();
+    expect(
+      await screen.findByText("Jan 1, 2026 to Feb 18, 2026"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Oct 1, 2025 to Feb 18, 2026")).toBeInTheDocument();
+    expect(screen.getByText("Feb 1, 2026 to Feb 18, 2026")).toBeInTheDocument();
+  });
 
+  it("leaves the dated periods without a repeated window", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    // The day and week subtitles already carry their dates.
+    expect(
+      await screen.findByRole("columnheader", { name: "Today - Feb 18, 2026" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("columnheader", {
-        name: /Quarter - Q2, Jan 1, 2026 to Feb 18, 2026/,
+        name: "Week - Feb 15, 2026 – Feb 18, 2026",
       }),
     ).toBeInTheDocument();
   });
