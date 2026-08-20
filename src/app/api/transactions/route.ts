@@ -29,6 +29,20 @@ export async function GET(request: Request) {
     }
   }
 
+  const requestedPage = Number(incoming.get("page") ?? "1");
+  forwarded.set(
+    "page",
+    String(
+      Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1,
+    ),
+  );
+  const requestedPageSize = Number(incoming.get("pageSize") ?? "200");
+  const pageSize =
+    Number.isInteger(requestedPageSize) && requestedPageSize > 0
+      ? Math.min(200, requestedPageSize)
+      : 200;
+  forwarded.set("pageSize", String(pageSize));
+
   try {
     const upstream = await getSigned("/transaction-log", forwarded);
     const body = await upstream.text();
