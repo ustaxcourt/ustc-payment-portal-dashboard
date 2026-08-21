@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import TransactionLog from "./TransactionLog";
@@ -97,15 +98,13 @@ describe("TransactionLog", () => {
     expect(requested).not.toContain("returnDetail");
   });
 
-  it("renders the Search Transactions tab", async () => {
+  it("renders the Search tab", async () => {
     mockFetch(response());
 
     renderLog("");
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("tab", { name: "Search Transactions" }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Search" })).toBeInTheDocument();
     });
   });
 
@@ -165,5 +164,42 @@ describe("TransactionLog", () => {
 
     const requested = String(fetchMock.mock.calls[0][0]);
     expect(requested).toContain("lookupValue=26PHF07R");
+  });
+
+  it("only shows Clear Filters/Search on the search tab", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog("?status=all");
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    expect(
+      screen.queryByRole("button", { name: "Clear Filters/Search" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears search filters when Clear Filters/Search is clicked", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=PETITION_FILING_FEE&lookupValue=26PHF07R",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    fetchMock.mockClear();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Clear Filters/Search" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Choose a fee type, pay type, or lookup value to search transactions.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

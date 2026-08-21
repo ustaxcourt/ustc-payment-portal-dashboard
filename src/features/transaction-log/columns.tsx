@@ -120,7 +120,7 @@ const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
   cell: ({ row }) => row.original.returnDetail ?? "—",
 };
 
-/** Columns for the "Search Transactions" tab. Only Timestamp and Amount are
+/** Columns for the "Search" tab. Only Timestamp and Amount are
  *  sortable there, matching the mockup — the rest are filter/lookup targets. */
 export const SEARCH_SORT_FIELDS = [
   "createdAt",

@@ -1,6 +1,7 @@
 "use client";
 
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
+import { Button } from "@/components/ui/button";
 import { formatCourtDate } from "@/lib/format";
 import { COLUMN_LABEL, isSortableOnTab } from "./columns";
 import StatusTabs from "./StatusTabs";
@@ -133,11 +134,20 @@ export default function TransactionLog() {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <StatusTabs
-            selected={tab}
-            counts={data?.counts}
-            onSelect={selectTab}
-          />
+          <div className="flex items-end justify-between gap-3 border-b">
+            <StatusTabs
+              selected={tab}
+              counts={data?.counts}
+              onSelect={selectTab}
+            />
+            <div className="m-2.5">
+               {tab === "search" ? (
+              <Button type="button" variant="outline" onClick={clearSearch}>
+                Clear Filters/Search
+              </Button>
+            ) : null}
+            </div>
+          </div>
           {tab === "search" ? (
             <TransactionSearch
               feeType={params.feeType}
@@ -150,7 +160,6 @@ export default function TransactionLog() {
               onLookupValueChange={(lookupValue) =>
                 setParams({ lookupValue })
               }
-              onClear={clearSearch}
               rows={hasSearchCriteria ? (data?.data ?? []) : []}
               sorting={activeSorting}
               onSortingChange={setParams}

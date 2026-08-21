@@ -19,7 +19,7 @@ export default function StatusTabs({
 }) {
   return (
     <div
-      className="flex items-end gap-2 border-b"
+      className="flex items-end gap-2"
       role="tablist"
       aria-label="Filter by payment status"
     >
@@ -41,9 +41,7 @@ export default function StatusTabs({
                 : "border border-transparent bg-muted text-muted-foreground underline hover:bg-muted/70",
             )}
           >
-            <span>
-              {isStatusTab(option) ? TAB_LABEL[option] : "Search Transactions"}
-            </span>
+            <span>{TAB_LABEL[option]}</span>
             {isStatusTab(option) ? (
               <span
                 className={cn(
