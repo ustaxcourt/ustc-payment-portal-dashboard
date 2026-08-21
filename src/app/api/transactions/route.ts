@@ -13,7 +13,12 @@ const FORWARDED = [
   "pageSize",
   "sort",
   "order",
+  "export",
 ] as const;
+
+// Mirrors the API's caps; the API remains the authority.
+const MAX_PAGE_SIZE = 200;
+const MAX_EXPORT_PAGE_SIZE = 5000;
 
 export async function GET(request: Request) {
   if (!(await hasDashboardSession())) {
@@ -36,10 +41,12 @@ export async function GET(request: Request) {
       Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1,
     ),
   );
+  const maxPageSize =
+    incoming.get("export") === "true" ? MAX_EXPORT_PAGE_SIZE : MAX_PAGE_SIZE;
   const requestedPageSize = Number(incoming.get("pageSize") ?? "200");
   const pageSize =
     Number.isInteger(requestedPageSize) && requestedPageSize > 0
-      ? Math.min(200, requestedPageSize)
+      ? Math.min(maxPageSize, requestedPageSize)
       : 200;
   forwarded.set("pageSize", String(pageSize));
 

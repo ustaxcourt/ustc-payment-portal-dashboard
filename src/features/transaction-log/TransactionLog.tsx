@@ -3,11 +3,9 @@
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { formatCourtDate } from "@/lib/format";
 import { COLUMN_LABEL, isSortableOnTab } from "./columns";
+import { DATE_RANGE_PRESETS, resolveAppliedDateRange } from "./dateRange";
+import ExportButton from "./ExportButton";
 import StatusTabs from "./StatusTabs";
-import {
-  DATE_RANGE_PRESETS,
-  resolveAppliedDateRange,
-} from "./dateRange";
 import TimeframeControls from "./TimeframeControls";
 import TransactionTable from "./TransactionTable";
 import {
@@ -36,13 +34,13 @@ export default function TransactionLog() {
   );
 
   const tab = params.status;
-  const sorting = { sort: params.sort, order: params.order };
   const appliedRange = resolveAppliedDateRange(
     params.range,
     params.from,
     params.to,
   );
 
+  const sorting = { sort: params.sort, order: params.order };
   const activeSorting = isSortableOnTab(sorting.sort, tab)
     ? sorting
     : { sort: DEFAULT_SORT, order: DEFAULT_ORDER };
@@ -63,13 +61,21 @@ export default function TransactionLog() {
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
-      <TimeframeControls
-        appliedRange={appliedRange}
-        onSelectPreset={(preset) =>
-          setParams({ from: null, range: preset, to: null })
-        }
-        onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <TimeframeControls
+          appliedRange={appliedRange}
+          onSelectPreset={(preset) =>
+            setParams({ from: null, range: preset, to: null })
+          }
+          onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
+        />
+        <ExportButton
+          tab={tab}
+          range={appliedRange}
+          sorting={activeSorting}
+          disabled={!data || data.data.length === 0}
+        />
+      </div>
       <p className="text-sm font-medium">
         {data ? formatCourtDate(data.from) : "Today"}
       </p>
@@ -116,8 +122,8 @@ export default function TransactionLog() {
           />
           {data ? (
             <p className="mt-2 text-right text-sm text-muted-foreground">
-              {data.data.length < data.total
-                ? `Showing ${data.data.length} of ${data.total} transactions`
+              {typeof data.total === "number" && data.data.length < data.total
+                ? `Showing ${data.data.length} of ${data.total} transactions — export to get the full set`
                 : `${data.data.length} ${data.data.length === 1 ? "transaction" : "transactions"}`}
             </p>
           ) : null}

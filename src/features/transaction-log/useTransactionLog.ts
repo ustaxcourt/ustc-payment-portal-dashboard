@@ -1,31 +1,33 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { AppliedDateRange } from "./dateRange";
+import { type AppliedDateRange, courtDayIsoBounds } from "./dateRange";
 import type {
   TransactionLogResponse,
   TransactionSorting,
   TransactionTab,
 } from "./types";
 
-// The UI still scrolls one assembled table rather than exposing paging controls,
-// so wider timeframes must walk the upstream pages and merge them client-side.
+// The table shows one page; the footer reports the true total and the export
+// is the path to the complete set.
 const PAGE_SIZE = 200;
 
-const fetchTransactionLogPage = async (
+export const fetchTransactionLogPage = async (
   tab: TransactionTab,
   range: AppliedDateRange,
   sorting: TransactionSorting,
   page: number,
+  pageSize: number,
   signal?: AbortSignal,
 ): Promise<TransactionLogResponse> => {
+  const bounds = courtDayIsoBounds(range);
   const params = new URLSearchParams({
-    from: range.from,
+    from: bounds.from,
     order: sorting.order,
     page: String(page),
-    pageSize: String(PAGE_SIZE),
+    pageSize: String(pageSize),
     sort: sorting.sort,
-    to: range.to,
+    to: bounds.to,
   });
   if (tab !== "all") params.set("status", tab);
 
@@ -36,52 +38,6 @@ const fetchTransactionLogPage = async (
   }
 
   return response.json();
-};
-
-const fetchTransactionLog = async (
-  tab: TransactionTab,
-  range: AppliedDateRange,
-  sorting: TransactionSorting,
-  signal?: AbortSignal,
-): Promise<TransactionLogResponse> => {
-  const firstPage = await fetchTransactionLogPage(
-    tab,
-    range,
-    sorting,
-    1,
-    signal,
-  );
-
-  if (
-    firstPage.data.length >= firstPage.total ||
-    firstPage.total <= firstPage.pageSize
-  ) {
-    return firstPage;
-  }
-
-  const data = [...firstPage.data];
-  const lastPage = Math.max(
-    firstPage.page,
-    Math.ceil(firstPage.total / firstPage.pageSize),
-  );
-
-  for (let page = firstPage.page + 1; page <= lastPage; page += 1) {
-    const currentPage = await fetchTransactionLogPage(
-      tab,
-      range,
-      sorting,
-      page,
-      signal,
-    );
-    data.push(...currentPage.data);
-  }
-
-  return {
-    ...firstPage,
-    data,
-    page: 1,
-    pageSize: firstPage.pageSize,
-  };
 };
 
 export const useTransactionLog = (
@@ -98,6 +54,7 @@ export const useTransactionLog = (
       sorting.sort,
       sorting.order,
     ],
-    queryFn: ({ signal }) => fetchTransactionLog(tab, range, sorting, signal),
+    queryFn: ({ signal }) =>
+      fetchTransactionLogPage(tab, range, sorting, 1, PAGE_SIZE, signal),
     placeholderData: (previous) => previous,
   });
