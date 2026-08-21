@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import LogoutButton from "@/components/ui/LogoutButton";
 import PaymentBreakdownPane from "@/features/payment-breakdown/PaymentBreakdownPane";
+import RevenueTotals from "@/features/revenue-totals/RevenueTotals";
 import TimeframeBar from "@/features/transaction-log/TimeframeBar";
 import TransactionLog from "@/features/transaction-log/TransactionLog";
 import { getSessionAuthOptions } from "@/lib/auth";
@@ -49,10 +50,13 @@ export default async function Home({
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <p className="text-sm text-muted-foreground">
-              {session.user?.email}
-            </p>
-            <LogoutButton />
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-muted-foreground">
+                {session.user?.email}
+              </p>
+              <LogoutButton />
+            </div>
+            <RevenueTotals />
           </div>
         </header>
       </div>
