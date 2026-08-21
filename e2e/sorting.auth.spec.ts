@@ -4,7 +4,7 @@ test("the dashboard opens for a signed-in user", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { name: "Finance Dashboard" }),
+    page.getByRole("heading", { name: "Payment Portal" }),
   ).toBeVisible();
   await expect(page).not.toHaveURL(/\/login/);
 });

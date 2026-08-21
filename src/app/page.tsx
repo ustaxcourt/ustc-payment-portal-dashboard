@@ -35,24 +35,37 @@ export default async function Home({
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-6 sm:p-8">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Finance Dashboard</h1>
-        <div className="flex flex-col items-end gap-2">
-          <p className="text-sm text-muted-foreground">{session.user?.email}</p>
-          <LogoutButton />
-        </div>
-      </header>
+    <>
+      <div className="border-b-2 border-foreground">
+        <header className="flex flex-wrap items-start justify-between gap-4 px-6 py-4 sm:px-8">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Payment Portal
+            </h1>
+            <p className="text-base font-semibold text-primary">
+              Case Services &amp; Finance Dashboard
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <p className="text-sm text-muted-foreground">
+              {session.user?.email}
+            </p>
+            <LogoutButton />
+          </div>
+        </header>
+      </div>
 
-      <Suspense
-        fallback={
-          <p className="text-sm text-muted-foreground">
-            Loading transaction log…
-          </p>
-        }
-      >
-        <TransactionLog />
-      </Suspense>
-    </main>
+      <main className="flex flex-1 flex-col gap-6 p-6 sm:p-8">
+        <Suspense
+          fallback={
+            <p className="text-sm text-muted-foreground">
+              Loading transaction log…
+            </p>
+          }
+        >
+          <TransactionLog />
+        </Suspense>
+      </main>
+    </>
   );
 }
