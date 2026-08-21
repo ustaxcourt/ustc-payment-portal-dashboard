@@ -1,7 +1,3 @@
-// Rejects Tailwind classes that bypass the design tokens in src/app/globals.css:
-// arbitrary color values (bg-[#...], text-[rgb(...)]) and raw palette shades
-// (bg-red-500). Use token utilities instead: bg-primary, bg-muted, bg-status-*.
-// Known limitation: only matches plain string literals, not template literals.
 `$s` where {
 	$s <: string(),
 	or {
