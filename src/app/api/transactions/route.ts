@@ -13,6 +13,10 @@ const FORWARDED = [
   "pageSize",
   "sort",
   "order",
+  "fee",
+  "paymentMethod",
+  "lookupType",
+  "lookupValue",
 ] as const;
 
 export async function GET(request: Request) {

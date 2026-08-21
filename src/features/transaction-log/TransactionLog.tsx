@@ -1,6 +1,7 @@
 "use client";
 
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
+import { Button } from "@/components/ui/button";
 import { formatCourtDate } from "@/lib/format";
 import { COLUMN_LABEL, isSortableOnTab } from "./columns";
 import StatusTabs from "./StatusTabs";
@@ -9,14 +10,19 @@ import {
   resolveAppliedDateRange,
 } from "./dateRange";
 import TimeframeControls from "./TimeframeControls";
+import TransactionSearch from "./TransactionSearch";
 import TransactionTable from "./TransactionTable";
 import {
   DEFAULT_ORDER,
   DEFAULT_SORT,
+  FEE_TYPES,
+  LOOKUP_TYPES,
+  PAY_TYPES,
   SORT_ORDERS,
   TRANSACTION_SORT_FIELDS,
-  TRANSACTION_TABS,
-  type TransactionTab,
+  VIEW_TABS,
+  type TransactionSearchFilters,
+  type ViewTab,
 } from "./types";
 import { useTransactionLog } from "./useTransactionLog";
 
@@ -27,8 +33,12 @@ export default function TransactionLog() {
       order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
       range: parseAsStringLiteral(DATE_RANGE_PRESETS).withDefault("today"),
       sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(DEFAULT_SORT),
-      status: parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
+      status: parseAsStringLiteral(VIEW_TABS).withDefault("all"),
       to: parseAsString,
+      feeType: parseAsStringLiteral(FEE_TYPES),
+      payType: parseAsStringLiteral(PAY_TYPES),
+      lookupType: parseAsStringLiteral(LOOKUP_TYPES).withDefault("accountHolder"),
+      lookupValue: parseAsString,
     },
     {
       clearOnDefault: true,
@@ -47,7 +57,7 @@ export default function TransactionLog() {
     ? sorting
     : { sort: DEFAULT_SORT, order: DEFAULT_ORDER };
 
-  const selectTab = (next: TransactionTab) => {
+  const selectTab = (next: ViewTab) => {
     setParams(
       isSortableOnTab(params.sort, next)
         ? { status: next }
@@ -55,10 +65,34 @@ export default function TransactionLog() {
     );
   };
 
+  const searchFilters: TransactionSearchFilters | undefined =
+    tab === "search"
+      ? {
+          feeType: params.feeType,
+          payType: params.payType,
+          lookupType: params.lookupType,
+          lookupValue: params.lookupValue,
+        }
+      : undefined;
+
+  const hasSearchCriteria = Boolean(
+    searchFilters?.feeType || searchFilters?.payType || searchFilters?.lookupValue,
+  );
+
+  const clearSearch = () =>
+    setParams({
+      feeType: null,
+      payType: null,
+      lookupType: "accountHolder",
+      lookupValue: null,
+    });
+
   const { data, isPending, isError, error, refetch } = useTransactionLog(
     tab,
     appliedRange,
     activeSorting,
+    searchFilters,
+    tab !== "search" || hasSearchCriteria,
   );
 
   return (
@@ -100,20 +134,54 @@ export default function TransactionLog() {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <StatusTabs
-            selected={tab}
-            counts={data?.counts}
-            onSelect={selectTab}
-          />
-          <TransactionTable
-            rows={data?.data ?? []}
-            tab={tab}
-            sorting={activeSorting}
-            onSortingChange={setParams}
-            emptyMessage={
-              isPending ? "Loading transactions…" : "No transactions to show."
-            }
-          />
+          <div className="flex items-end justify-between gap-3 border-b">
+            <StatusTabs
+              selected={tab}
+              counts={data?.counts}
+              onSelect={selectTab}
+            />
+            <div className="m-2.5">
+               {tab === "search" ? (
+              <Button type="button" variant="outline" onClick={clearSearch}>
+                Clear Filters/Search
+              </Button>
+            ) : null}
+            </div>
+          </div>
+          {tab === "search" ? (
+            <TransactionSearch
+              feeType={params.feeType}
+              payType={params.payType}
+              lookupType={params.lookupType}
+              lookupValue={params.lookupValue}
+              onFeeTypeChange={(feeType) => setParams({ feeType })}
+              onPayTypeChange={(payType) => setParams({ payType })}
+              onLookupTypeChange={(lookupType) => setParams({ lookupType })}
+              onLookupValueChange={(lookupValue) =>
+                setParams({ lookupValue })
+              }
+              rows={hasSearchCriteria ? (data?.data ?? []) : []}
+              sorting={activeSorting}
+              onSortingChange={setParams}
+              emptyMessage={
+                !hasSearchCriteria
+                  ? "Choose a fee type, pay type, or lookup value to search transactions."
+                  : isPending
+                    ? "Searching…"
+                    : "No transactions match your search."
+              }
+            />
+          ) : (
+            <TransactionTable
+              rows={data?.data ?? []}
+              tab={tab}
+              sorting={activeSorting}
+              onSortingChange={setParams}
+              emptyMessage={
+                isPending ? "Loading transactions…" : "No transactions to show."
+              }
+            />
+          )}
           {data ? (
             <p className="mt-2 text-right text-sm text-muted-foreground">
               {data.data.length < data.total

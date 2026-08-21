@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import TransactionLog from "./TransactionLog";
@@ -95,5 +96,110 @@ describe("TransactionLog", () => {
     expect(requested).toContain("sort=createdAt");
     expect(requested).toContain("order=desc");
     expect(requested).not.toContain("returnDetail");
+  });
+
+  it("renders the Search tab", async () => {
+    mockFetch(response());
+
+    renderLog("");
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Search" })).toBeInTheDocument();
+    });
+  });
+
+  it("forwards fee, pay type, and lookup filters when searching", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=PETITION_FILING_FEE&payType=ACH&lookupType=agencyId&lookupValue=26PHF07R",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = String(fetchMock.mock.calls[0][0]);
+    expect(requested).toContain("fee=PETITION_FILING_FEE");
+    expect(requested).toContain("paymentMethod=ACH");
+    expect(requested).toContain("lookupType=agencyId");
+    expect(requested).toContain("lookupValue=26PHF07R");
+    expect(requested).not.toContain("status=search");
+  });
+
+  it("falls back to the default sort when switching to search with an unsupported field", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&sort=clientName&order=asc&lookupValue=Inez",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = String(fetchMock.mock.calls[0][0]);
+    expect(requested).toContain("sort=createdAt");
+    expect(requested).toContain("order=desc");
+  });
+
+  it("does not query when the search tab has no filter or lookup value yet", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog("?status=search");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Choose a fee type, pay type, or lookup value to search transactions.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("starts querying as soon as a lookup value is entered", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog("?status=search&lookupValue=26PHF07R");
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = String(fetchMock.mock.calls[0][0]);
+    expect(requested).toContain("lookupValue=26PHF07R");
+  });
+
+  it("only shows Clear Filters/Search on the search tab", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog("?status=all");
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    expect(
+      screen.queryByRole("button", { name: "Clear Filters/Search" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears search filters when Clear Filters/Search is clicked", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=PETITION_FILING_FEE&lookupValue=26PHF07R",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    fetchMock.mockClear();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Clear Filters/Search" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Choose a fee type, pay type, or lookup value to search transactions.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,137 @@
+"use client";
+
+import {
+  type ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  type SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import {
+  isTransactionSortField,
+  type TransactionLogEntry,
+  type TransactionSorting,
+} from "./types";
+
+// Core model only: the server owns sorting, filtering and pagination.
+export default function DataTable({
+  rows,
+  columns,
+  caption,
+  headerTone,
+  sorting,
+  onSortingChange,
+  emptyMessage,
+  wrapperClassName = "max-h-[60vh] overflow-auto rounded-b-md border border-t-0",
+}: {
+  rows: TransactionLogEntry[];
+  columns: ColumnDef<TransactionLogEntry>[];
+  caption: string;
+  headerTone: string;
+  sorting: TransactionSorting;
+  onSortingChange: (next: TransactionSorting) => void;
+  emptyMessage: string;
+  wrapperClassName?: string;
+}) {
+  const sortingState: SortingState = useMemo(
+    () => [{ id: sorting.sort, desc: sorting.order === "desc" }],
+    [sorting.sort, sorting.order],
+  );
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    manualSorting: true,
+    enableSortingRemoval: false,
+    state: { sorting: sortingState },
+    onSortingChange: (updater) => {
+      const next =
+        typeof updater === "function" ? updater(sortingState) : updater;
+      const [column] = next;
+      if (!column || !isTransactionSortField(column.id)) return;
+
+      onSortingChange({
+        sort: column.id,
+        order: column.desc ? "desc" : "asc",
+      });
+    },
+  });
+
+  return (
+    <div className={wrapperClassName}>
+      <Table>
+        <TableCaption className="sr-only">{caption}</TableCaption>
+        <TableHeader className={cn("sticky top-0 z-10", headerTone)}>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id} className="hover:bg-transparent">
+              {headerGroup.headers.map((header, index) => (
+                <TableHead
+                  key={header.id}
+                  aria-sort={
+                    header.column.getCanSort()
+                      ? ariaSort(header.column.getIsSorted())
+                      : undefined
+                  }
+                  className={cellBorder(index, headerGroup.headers.length)}
+                >
+                  {flexRender(
+                    header.column.columnDef.header,
+                    header.getContext(),
+                  )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length}
+                className="h-24 text-center text-muted-foreground"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          ) : (
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell, index) => (
+                  <TableCell
+                    key={cell.id}
+                    className={cellBorder(index, row.getVisibleCells().length)}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+const cellBorder = (index: number, total: number) =>
+  index === total - 1 ? "whitespace-nowrap" : "whitespace-nowrap border-r";
+
+const ariaSort = (
+  sorted: false | "asc" | "desc",
+): "ascending" | "descending" | "none" => {
+  if (sorted === "asc") return "ascending";
+  if (sorted === "desc") return "descending";
+  return "none";
+};

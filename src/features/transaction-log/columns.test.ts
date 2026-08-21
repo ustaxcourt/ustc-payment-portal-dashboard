@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COLUMN_LABEL, isSortableOnTab } from "./columns";
+import { COLUMN_LABEL, isSortableOnTab, SEARCH_SORT_FIELDS } from "./columns";
 import { TRANSACTION_SORT_FIELDS, TRANSACTION_TABS } from "./types";
 
 describe("isSortableOnTab", () => {
@@ -19,6 +19,14 @@ describe("isSortableOnTab", () => {
       for (const field of alwaysPresent) {
         expect(isSortableOnTab(field, tab)).toBe(true);
       }
+    }
+  });
+
+  it("only reports Timestamp and Amount as sortable on the search tab", () => {
+    for (const field of TRANSACTION_SORT_FIELDS) {
+      expect(isSortableOnTab(field, "search")).toBe(
+        (SEARCH_SORT_FIELDS as readonly string[]).includes(field),
+      );
     }
   });
 });
