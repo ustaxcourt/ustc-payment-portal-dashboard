@@ -1,57 +1,15 @@
 "use client";
 
-import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { formatCourtDate } from "@/lib/format";
-import { COLUMN_LABEL, isSortableOnTab } from "./columns";
-import { DATE_RANGE_PRESETS, resolveAppliedDateRange } from "./dateRange";
-import ExportButton from "./ExportButton";
+import { COLUMN_LABEL } from "./columns";
 import StatusTabs from "./StatusTabs";
-import TimeframeControls from "./TimeframeControls";
 import TransactionTable from "./TransactionTable";
-import {
-  DEFAULT_ORDER,
-  DEFAULT_SORT,
-  SORT_ORDERS,
-  TRANSACTION_SORT_FIELDS,
-  TRANSACTION_TABS,
-  type TransactionTab,
-} from "./types";
 import { useTransactionLog } from "./useTransactionLog";
+import { useTransactionLogParams } from "./useTransactionLogParams";
 
 export default function TransactionLog() {
-  const [params, setParams] = useQueryStates(
-    {
-      from: parseAsString,
-      order: parseAsStringLiteral(SORT_ORDERS).withDefault(DEFAULT_ORDER),
-      range: parseAsStringLiteral(DATE_RANGE_PRESETS).withDefault("today"),
-      sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(DEFAULT_SORT),
-      status: parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
-      to: parseAsString,
-    },
-    {
-      clearOnDefault: true,
-    },
-  );
-
-  const tab = params.status;
-  const appliedRange = resolveAppliedDateRange(
-    params.range,
-    params.from,
-    params.to,
-  );
-
-  const sorting = { sort: params.sort, order: params.order };
-  const activeSorting = isSortableOnTab(sorting.sort, tab)
-    ? sorting
-    : { sort: DEFAULT_SORT, order: DEFAULT_ORDER };
-
-  const selectTab = (next: TransactionTab) => {
-    setParams(
-      isSortableOnTab(params.sort, next)
-        ? { status: next }
-        : { status: next, sort: DEFAULT_SORT, order: DEFAULT_ORDER },
-    );
-  };
+  const { setParams, tab, appliedRange, activeSorting, selectTab } =
+    useTransactionLogParams();
 
   const { data, isPending, isError, error, refetch } = useTransactionLog(
     tab,
@@ -61,21 +19,6 @@ export default function TransactionLog() {
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <TimeframeControls
-          appliedRange={appliedRange}
-          onSelectPreset={(preset) =>
-            setParams({ from: null, range: preset, to: null })
-          }
-          onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
-        />
-        <ExportButton
-          tab={tab}
-          range={appliedRange}
-          sorting={activeSorting}
-          disabled={!data || data.data.length === 0}
-        />
-      </div>
       <p className="text-sm font-medium">
         {data ? formatCourtDate(data.from) : "Today"}
       </p>

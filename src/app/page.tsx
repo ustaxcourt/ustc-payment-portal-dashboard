@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import LogoutButton from "@/components/ui/LogoutButton";
+import TimeframeBar from "@/features/transaction-log/TimeframeBar";
 import TransactionLog from "@/features/transaction-log/TransactionLog";
 import { getSessionAuthOptions } from "@/lib/auth";
 import { loginUrlReturningTo } from "@/lib/callbackUrl";
@@ -54,6 +55,10 @@ export default async function Home({
           </div>
         </header>
       </div>
+
+      <Suspense fallback={<div className="bg-muted px-6 py-4 sm:px-8" />}>
+        <TimeframeBar />
+      </Suspense>
 
       <main className="flex flex-1 flex-col gap-6 p-6 sm:p-8">
         <Suspense

@@ -96,7 +96,7 @@ export default function TimeframeControls({
   };
 
   return (
-    <div className="rounded-md border bg-muted/20 p-4">
+    <div className="py-1">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-sm font-medium">Timeframe</p>
