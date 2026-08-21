@@ -34,7 +34,7 @@ export default function StatusTabs({
             aria-selected={isSelected}
             onClick={() => onSelect(option)}
             className={cn(
-              "flex items-center gap-3 rounded-t-md px-5 py-3 text-sm transition-colors",
+              "flex cursor-pointer items-center gap-3 rounded-t-md px-5 py-3 text-sm transition-colors",
               // Sits on the table's border so the two read as one panel.
               isSelected
                 ? "-mb-px border border-b-background bg-background font-semibold"
