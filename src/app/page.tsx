@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import LogoutButton from "@/components/ui/LogoutButton";
+import PaymentBreakdownPane from "@/features/payment-breakdown/PaymentBreakdownPane";
 import TimeframeBar from "@/features/transaction-log/TimeframeBar";
 import TransactionLog from "@/features/transaction-log/TransactionLog";
 import { getSessionAuthOptions } from "@/lib/auth";
@@ -60,16 +61,19 @@ export default async function Home({
         <TimeframeBar />
       </Suspense>
 
-      <main className="flex flex-1 flex-col gap-6 p-6 sm:p-8">
-        <Suspense
-          fallback={
-            <p className="text-sm text-muted-foreground">
-              Loading transaction log…
-            </p>
-          }
-        >
-          <TransactionLog />
-        </Suspense>
+      <main className="grid min-h-0 flex-1 grid-cols-3 gap-6 p-6 sm:p-8">
+        <PaymentBreakdownPane />
+        <div className="col-span-2 flex min-h-0 flex-col">
+          <Suspense
+            fallback={
+              <p className="text-sm text-muted-foreground">
+                Loading transaction log…
+              </p>
+            }
+          >
+            <TransactionLog />
+          </Suspense>
+        </div>
       </main>
     </>
   );
