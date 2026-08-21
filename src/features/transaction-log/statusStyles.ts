@@ -8,15 +8,15 @@ export const TAB_LABEL: Record<TransactionTab, string> = {
 };
 
 export const TAB_TONE: Record<TransactionTab, string> = {
-  all: "bg-slate-200 text-slate-900",
-  success: "bg-green-200 text-green-900",
-  failed: "bg-red-200 text-red-900",
-  pending: "bg-amber-200 text-amber-900",
+  all: "bg-status-neutral text-status-neutral-foreground",
+  success: "bg-status-success text-status-success-foreground",
+  failed: "bg-status-failed text-status-failed-foreground",
+  pending: "bg-status-pending text-status-pending-foreground",
 };
 
 export const TAB_HEADER_TONE: Record<TransactionTab, string> = {
-  all: "bg-slate-50",
-  success: "bg-green-50",
-  failed: "bg-red-50",
-  pending: "bg-amber-50",
+  all: "bg-status-neutral-subtle",
+  success: "bg-status-success-subtle",
+  failed: "bg-status-failed-subtle",
+  pending: "bg-status-pending-subtle",
 };

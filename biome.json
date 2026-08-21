@@ -1,5 +1,6 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.5/schema.json",
+  "plugins": ["./biome-plugins/no-hardcoded-colors.grit"],
   "vcs": {
     "enabled": true,
     "clientKind": "git",
