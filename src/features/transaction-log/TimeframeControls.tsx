@@ -101,7 +101,7 @@ export default function TimeframeControls({
   return (
     <div className="py-1">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
+        <div className="min-w-40">
           <p className="text-sm font-medium">Timeframe</p>
           <p className="text-sm text-muted-foreground">
             {appliedRange.label}
