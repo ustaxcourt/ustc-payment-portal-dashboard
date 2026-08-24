@@ -186,6 +186,54 @@ describe("TransactionLog", () => {
     },
   );
 
+  it("changing the timeframe while a filter is active keeps the filter and updates the range", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog("?status=search&feeType=PETITION_FILING_FEE&range=today");
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const firstRequest = new URL(
+      String(fetchMock.mock.calls[0][0]),
+      "http://localhost",
+    );
+    const firstFrom = firstRequest.searchParams.get("from");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Last 7 days" }),
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const secondRequest = new URL(
+      String(fetchMock.mock.calls[1][0]),
+      "http://localhost",
+    );
+
+    expect(secondRequest.searchParams.get("fee")).toBe(
+      "PETITION_FILING_FEE",
+    );
+    expect(secondRequest.searchParams.get("from")).not.toBe(firstFrom);
+  });
+
+  it("forwards a custom timeframe together with search filters", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&range=custom&from=07/01/2026&to=07/10/2026&transactionStatus=processed",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = new URL(
+      String(fetchMock.mock.calls[0][0]),
+      "http://localhost",
+    );
+    expect(requested.searchParams.get("from")).toBe(
+      "2026-07-01T04:00:00.000Z",
+    );
+    expect(requested.searchParams.get("to")).toBe("2026-07-11T04:00:00.000Z");
+    expect(requested.searchParams.get("transactionStatus")).toBe("processed");
+  });
+
   it("only shows Clear All on the search tab", async () => {
     const fetchMock = mockFetch(response());
 

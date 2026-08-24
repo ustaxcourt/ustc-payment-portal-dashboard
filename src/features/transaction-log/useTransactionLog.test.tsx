@@ -106,4 +106,33 @@ describe("useTransactionLog", () => {
     // The true total stays visible so the footer can point at the export.
     expect(result.current.data?.total).toBe(3);
   });
+
+  it("forwards a non-default range together with an active search filter", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => response(),
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const filters = {
+      feeType: "PETITION_FILING_FEE" as const,
+      payType: null,
+      paymentStatus: null,
+      transactionStatus: null,
+    };
+
+    const { result } = renderHook(
+      () => useTransactionLog("search", range, sorting, filters, true),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const url = new URL(fetchMock.mock.calls[0][0], "http://localhost");
+    expect(url.searchParams.get("from")).toBe("2026-08-12T04:00:00.000Z");
+    expect(url.searchParams.get("to")).toBe("2026-08-19T04:00:00.000Z");
+    expect(url.searchParams.get("fee")).toBe("PETITION_FILING_FEE");
+  });
 });
