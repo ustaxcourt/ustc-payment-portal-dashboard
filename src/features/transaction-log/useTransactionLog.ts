@@ -33,6 +33,11 @@ const fetchTransactionLogPage = async (
 
   if (filters?.feeType) params.set("fee", filters.feeType);
   if (filters?.payType) params.set("paymentMethod", filters.payType);
+  if (filters?.paymentStatus) params.set("status", filters.paymentStatus);
+  if (filters?.transactionStatus) {
+    params.set("transactionStatus", filters.transactionStatus);
+  }
+  if (filters?.clientName) params.set("clientName", filters.clientName);
 
   const response = await fetch(`/api/transactions?${params}`, { signal });
 
@@ -109,6 +114,9 @@ export const useTransactionLog = (
       sorting.order,
       filters?.feeType,
       filters?.payType,
+      filters?.paymentStatus,
+      filters?.transactionStatus,
+      filters?.clientName,
     ],
     queryFn: ({ signal }) =>
       fetchTransactionLog(tab, range, sorting, filters, signal),

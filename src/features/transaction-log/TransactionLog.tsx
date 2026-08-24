@@ -17,8 +17,10 @@ import {
   DEFAULT_SORT,
   FEE_TYPES,
   PAY_TYPES,
+  PAYMENT_STATUSES,
   SORT_ORDERS,
   TRANSACTION_SORT_FIELDS,
+  TRANSACTION_STATUSES,
   VIEW_TABS,
   type TransactionSearchFilters,
   type ViewTab,
@@ -36,6 +38,9 @@ export default function TransactionLog() {
       to: parseAsString,
       feeType: parseAsStringLiteral(FEE_TYPES),
       payType: parseAsStringLiteral(PAY_TYPES),
+      paymentStatus: parseAsStringLiteral(PAYMENT_STATUSES),
+      transactionStatus: parseAsStringLiteral(TRANSACTION_STATUSES),
+      clientName: parseAsString,
     },
     {
       clearOnDefault: true,
@@ -67,17 +72,27 @@ export default function TransactionLog() {
       ? {
           feeType: params.feeType,
           payType: params.payType,
+          paymentStatus: params.paymentStatus,
+          transactionStatus: params.transactionStatus,
+          clientName: params.clientName,
         }
       : undefined;
 
   const hasSearchCriteria = Boolean(
-    searchFilters?.feeType || searchFilters?.payType,
+    searchFilters?.feeType ||
+      searchFilters?.payType ||
+      searchFilters?.paymentStatus ||
+      searchFilters?.transactionStatus ||
+      searchFilters?.clientName,
   );
 
   const clearSearch = () =>
     setParams({
       feeType: null,
       payType: null,
+      paymentStatus: null,
+      transactionStatus: null,
+      clientName: null,
     });
 
   const { data, isPending, isError, error, refetch } = useTransactionLog(
@@ -136,7 +151,7 @@ export default function TransactionLog() {
             <div className="m-2.5">
                {tab === "search" ? (
               <Button type="button" variant="outline" onClick={clearSearch}>
-                Clear Filters/Search
+                Clear All
               </Button>
             ) : null}
             </div>
@@ -145,14 +160,24 @@ export default function TransactionLog() {
             <TransactionSearch
               feeType={params.feeType}
               payType={params.payType}
+              paymentStatus={params.paymentStatus}
+              transactionStatus={params.transactionStatus}
+              clientName={params.clientName}
               onFeeTypeChange={(feeType) => setParams({ feeType })}
               onPayTypeChange={(payType) => setParams({ payType })}
+              onPaymentStatusChange={(paymentStatus) =>
+                setParams({ paymentStatus })
+              }
+              onTransactionStatusChange={(transactionStatus) =>
+                setParams({ transactionStatus })
+              }
+              onClientNameChange={(clientName) => setParams({ clientName })}
               rows={hasSearchCriteria ? (data?.data ?? []) : []}
               sorting={activeSorting}
               onSortingChange={setParams}
               emptyMessage={
                 !hasSearchCriteria
-                  ? "Choose a fee type or pay type to search transactions."
+                  ? "Choose a filter to search transactions."
                   : isPending
                     ? "Searching…"
                     : "No transactions match your search."

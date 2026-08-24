@@ -2,6 +2,18 @@ export const PAYMENT_STATUSES = ["success", "failed", "pending"] as const;
 
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
+/** Mirrors `TransactionStatusSchema` in the payment portal. Distinct from `PaymentStatus`. */
+export const TRANSACTION_STATUSES = [
+  "received",
+  "initiated",
+  "processing",
+  "processed",
+  "failed",
+  "pending",
+] as const;
+
+export type TransactionStatus = (typeof TRANSACTION_STATUSES)[number];
+
 export const TRANSACTION_TABS = ["all", ...PAYMENT_STATUSES] as const;
 
 export type TransactionTab = (typeof TRANSACTION_TABS)[number];
@@ -31,6 +43,9 @@ export type PayType = (typeof PAY_TYPES)[number];
 export type TransactionSearchFilters = {
   feeType: FeeType | null;
   payType: PayType | null;
+  paymentStatus: PaymentStatus | null;
+  transactionStatus: TransactionStatus | null;
+  clientName: string | null;
 };
 
 /** Mirrors `TRANSACTION_LOG_SORT_FIELDS` in the payment portal. */

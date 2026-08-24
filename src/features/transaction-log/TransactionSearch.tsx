@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -8,22 +10,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatLabel } from "@/lib/format";
 import TransactionSearchTable from "./TransactionSearchTable";
 import {
   FEE_TYPES,
   FEE_TYPE_LABEL,
   PAY_TYPES,
+  PAYMENT_STATUSES,
+  TRANSACTION_STATUSES,
   type FeeType,
   type PayType,
+  type PaymentStatus,
   type TransactionLogEntry,
   type TransactionSorting,
+  type TransactionStatus,
 } from "./types";
 
 type Props = {
   feeType: FeeType | null;
   payType: PayType | null;
+  paymentStatus: PaymentStatus | null;
+  transactionStatus: TransactionStatus | null;
+  clientName: string | null;
   onFeeTypeChange: (value: FeeType | null) => void;
   onPayTypeChange: (value: PayType | null) => void;
+  onPaymentStatusChange: (value: PaymentStatus | null) => void;
+  onTransactionStatusChange: (value: TransactionStatus | null) => void;
+  onClientNameChange: (value: string | null) => void;
   rows: TransactionLogEntry[];
   sorting: TransactionSorting;
   onSortingChange: (next: TransactionSorting) => void;
@@ -33,13 +46,29 @@ type Props = {
 export default function TransactionSearch({
   feeType,
   payType,
+  paymentStatus,
+  transactionStatus,
+  clientName,
   onFeeTypeChange,
   onPayTypeChange,
+  onPaymentStatusChange,
+  onTransactionStatusChange,
+  onClientNameChange,
   rows,
   sorting,
   onSortingChange,
   emptyMessage,
 }: Props) {
+  const [clientNameDraft, setClientNameDraft] = useState(clientName ?? "");
+
+  useEffect(() => {
+    setClientNameDraft(clientName ?? "");
+  }, [clientName]);
+
+  const commitClientName = () => {
+    const trimmed = clientNameDraft.trim();
+    onClientNameChange(trimmed || null);
+  };
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-y-6 rounded-md border bg-background p-4 lg:grid-cols-2 lg:gap-y-0 lg:divide-x">
@@ -82,10 +111,73 @@ export default function TransactionSearch({
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="search-payment-status">Payment Status</Label>
+              <Select
+                value={paymentStatus}
+                onValueChange={(value) =>
+                  onPaymentStatusChange(value as PaymentStatus)
+                }
+              >
+                <SelectTrigger id="search-payment-status" className="w-full">
+                  <SelectValue placeholder="- Select -" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_STATUSES.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {formatLabel(option)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="search-transaction-status">
+                Transaction Status
+              </Label>
+              <Select
+                value={transactionStatus}
+                onValueChange={(value) =>
+                  onTransactionStatusChange(value as TransactionStatus)
+                }
+              >
+                <SelectTrigger
+                  id="search-transaction-status"
+                  className="w-full"
+                >
+                  <SelectValue placeholder="- Select -" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRANSACTION_STATUSES.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {formatLabel(option)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 lg:pl-6" />
+        <div className="flex flex-col gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 lg:pl-6">
+          <h3 className="text-sm font-semibold">Search</h3>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="search-client-name">Client Name</Label>
+            <Input
+              id="search-client-name"
+              value={clientNameDraft}
+              placeholder="Enter a client name"
+              onChange={(event) => setClientNameDraft(event.target.value)}
+              onBlur={commitClientName}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  commitClientName();
+                }
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <TransactionSearchTable

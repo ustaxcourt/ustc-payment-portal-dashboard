@@ -123,6 +123,21 @@ describe("TransactionLog", () => {
     expect(requested).not.toContain("status=search");
   });
 
+  it("forwards payment status, transaction status, and client name filters when searching", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&paymentStatus=failed&transactionStatus=processed&clientName=payment-portal",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = String(fetchMock.mock.calls[0][0]);
+    expect(requested).toContain("status=failed");
+    expect(requested).toContain("transactionStatus=processed");
+    expect(requested).toContain("clientName=payment-portal");
+  });
+
   it("keeps the sort when switching to search, since its columns match the other tabs", async () => {
     const fetchMock = mockFetch(response());
 
@@ -145,7 +160,7 @@ describe("TransactionLog", () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          "Choose a fee type or pay type to search transactions.",
+          "Choose a filter to search transactions.",
         ),
       ).toBeInTheDocument();
     });
@@ -164,7 +179,7 @@ describe("TransactionLog", () => {
     expect(requested).toContain("fee=PETITION_FILING_FEE");
   });
 
-  it("only shows Clear Filters/Search on the search tab", async () => {
+  it("only shows Clear All on the search tab", async () => {
     const fetchMock = mockFetch(response());
 
     renderLog("?status=all");
@@ -172,26 +187,28 @@ describe("TransactionLog", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
     expect(
-      screen.queryByRole("button", { name: "Clear Filters/Search" }),
+      screen.queryByRole("button", { name: "Clear All" }),
     ).not.toBeInTheDocument();
   });
 
-  it("clears search filters when Clear Filters/Search is clicked", async () => {
+  it("clears search filters when Clear All is clicked", async () => {
     const fetchMock = mockFetch(response());
 
-    renderLog("?status=search&feeType=PETITION_FILING_FEE&payType=ACH");
+    renderLog(
+      "?status=search&feeType=PETITION_FILING_FEE&payType=ACH&paymentStatus=failed&transactionStatus=processed&clientName=payment-portal",
+    );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     fetchMock.mockClear();
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Clear Filters/Search" }),
+      screen.getByRole("button", { name: "Clear All" }),
     );
 
     await waitFor(() => {
       expect(
         screen.getByText(
-          "Choose a fee type or pay type to search transactions.",
+          "Choose a filter to search transactions.",
         ),
       ).toBeInTheDocument();
     });
