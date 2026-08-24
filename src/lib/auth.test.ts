@@ -2,11 +2,8 @@ import type { Account, Profile, Session, User } from "next-auth";
 import type { AdapterUser } from "next-auth/adapters";
 import type { JWT } from "next-auth/jwt";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  AUTH_TOKEN_REFRESH_ERROR,
-  getSessionAuthOptions,
-  hasValidDashboardSession,
-} from "./auth";
+import { getSessionAuthOptions, hasValidDashboardSession } from "./auth";
+import { AUTH_TOKEN_REFRESH_ERROR } from "./authConstants";
 
 const ENVIRONMENT = {
   AUTH_MICROSOFT_ENTRA_ID_ID: "entra-client-id",

@@ -7,6 +7,7 @@ import type {
 } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import AzureADProvider from "next-auth/providers/azure-ad";
+import { AUTH_TOKEN_REFRESH_ERROR } from "./authConstants";
 import { SESSION_MAX_AGE_SECONDS } from "./session";
 
 interface AzureProfile extends Profile {
@@ -35,8 +36,6 @@ interface RefreshTokenResponse {
 type DashboardSession = Session & {
   error?: string;
 };
-
-export const AUTH_TOKEN_REFRESH_ERROR = "RefreshAccessTokenError";
 
 const ENVIRONMENT_VARIABLES = [
   "AUTH_MICROSOFT_ENTRA_ID_ID",

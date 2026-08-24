@@ -1,10 +1,11 @@
 import { withAuth } from "next-auth/middleware";
-import { AUTH_TOKEN_REFRESH_ERROR } from "@/lib/auth";
+import { AUTH_TOKEN_REFRESH_ERROR } from "@/lib/authConstants";
 
 export default withAuth({
   pages: { signIn: "/login" },
   callbacks: {
-    authorized: ({ token }) => token?.error !== AUTH_TOKEN_REFRESH_ERROR,
+    authorized: ({ token }) =>
+      token !== null && token !== undefined && token.error !== AUTH_TOKEN_REFRESH_ERROR,
   },
 });
 
