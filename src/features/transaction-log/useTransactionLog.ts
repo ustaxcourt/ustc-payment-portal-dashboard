@@ -33,10 +33,6 @@ const fetchTransactionLogPage = async (
 
   if (filters?.feeType) params.set("fee", filters.feeType);
   if (filters?.payType) params.set("paymentMethod", filters.payType);
-  if (filters?.lookupValue) {
-    params.set("lookupType", filters.lookupType);
-    params.set("lookupValue", filters.lookupValue);
-  }
 
   const response = await fetch(`/api/transactions?${params}`, { signal });
 
@@ -113,8 +109,6 @@ export const useTransactionLog = (
       sorting.order,
       filters?.feeType,
       filters?.payType,
-      filters?.lookupType,
-      filters?.lookupValue,
     ],
     queryFn: ({ signal }) =>
       fetchTransactionLog(tab, range, sorting, filters, signal),

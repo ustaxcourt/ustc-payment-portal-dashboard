@@ -16,7 +16,6 @@ import {
   DEFAULT_ORDER,
   DEFAULT_SORT,
   FEE_TYPES,
-  LOOKUP_TYPES,
   PAY_TYPES,
   SORT_ORDERS,
   TRANSACTION_SORT_FIELDS,
@@ -37,8 +36,6 @@ export default function TransactionLog() {
       to: parseAsString,
       feeType: parseAsStringLiteral(FEE_TYPES),
       payType: parseAsStringLiteral(PAY_TYPES),
-      lookupType: parseAsStringLiteral(LOOKUP_TYPES).withDefault("accountHolder"),
-      lookupValue: parseAsString,
     },
     {
       clearOnDefault: true,
@@ -70,21 +67,17 @@ export default function TransactionLog() {
       ? {
           feeType: params.feeType,
           payType: params.payType,
-          lookupType: params.lookupType,
-          lookupValue: params.lookupValue,
         }
       : undefined;
 
   const hasSearchCriteria = Boolean(
-    searchFilters?.feeType || searchFilters?.payType || searchFilters?.lookupValue,
+    searchFilters?.feeType || searchFilters?.payType,
   );
 
   const clearSearch = () =>
     setParams({
       feeType: null,
       payType: null,
-      lookupType: "accountHolder",
-      lookupValue: null,
     });
 
   const { data, isPending, isError, error, refetch } = useTransactionLog(
@@ -152,20 +145,14 @@ export default function TransactionLog() {
             <TransactionSearch
               feeType={params.feeType}
               payType={params.payType}
-              lookupType={params.lookupType}
-              lookupValue={params.lookupValue}
               onFeeTypeChange={(feeType) => setParams({ feeType })}
               onPayTypeChange={(payType) => setParams({ payType })}
-              onLookupTypeChange={(lookupType) => setParams({ lookupType })}
-              onLookupValueChange={(lookupValue) =>
-                setParams({ lookupValue })
-              }
               rows={hasSearchCriteria ? (data?.data ?? []) : []}
               sorting={activeSorting}
               onSortingChange={setParams}
               emptyMessage={
                 !hasSearchCriteria
-                  ? "Choose a fee type, pay type, or lookup value to search transactions."
+                  ? "Choose a fee type or pay type to search transactions."
                   : isPending
                     ? "Searching…"
                     : "No transactions match your search."

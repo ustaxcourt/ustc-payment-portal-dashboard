@@ -108,11 +108,11 @@ describe("TransactionLog", () => {
     });
   });
 
-  it("forwards fee, pay type, and lookup filters when searching", async () => {
+  it("forwards fee and pay type filters when searching", async () => {
     const fetchMock = mockFetch(response());
 
     renderLog(
-      "?status=search&feeType=PETITION_FILING_FEE&payType=ACH&lookupType=agencyId&lookupValue=26PHF07R",
+      "?status=search&feeType=PETITION_FILING_FEE&payType=ACH",
     );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
@@ -120,26 +120,24 @@ describe("TransactionLog", () => {
     const requested = String(fetchMock.mock.calls[0][0]);
     expect(requested).toContain("fee=PETITION_FILING_FEE");
     expect(requested).toContain("paymentMethod=ACH");
-    expect(requested).toContain("lookupType=agencyId");
-    expect(requested).toContain("lookupValue=26PHF07R");
     expect(requested).not.toContain("status=search");
   });
 
-  it("falls back to the default sort when switching to search with an unsupported field", async () => {
+  it("keeps the sort when switching to search, since its columns match the other tabs", async () => {
     const fetchMock = mockFetch(response());
 
     renderLog(
-      "?status=search&sort=clientName&order=asc&lookupValue=Inez",
+      "?status=search&sort=clientName&order=asc&feeType=PETITION_FILING_FEE",
     );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
     const requested = String(fetchMock.mock.calls[0][0]);
-    expect(requested).toContain("sort=createdAt");
-    expect(requested).toContain("order=desc");
+    expect(requested).toContain("sort=clientName");
+    expect(requested).toContain("order=asc");
   });
 
-  it("does not query when the search tab has no filter or lookup value yet", async () => {
+  it("does not query when the search tab has no filter yet", async () => {
     const fetchMock = mockFetch(response());
 
     renderLog("?status=search");
@@ -147,7 +145,7 @@ describe("TransactionLog", () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          "Choose a fee type, pay type, or lookup value to search transactions.",
+          "Choose a fee type or pay type to search transactions.",
         ),
       ).toBeInTheDocument();
     });
@@ -155,15 +153,15 @@ describe("TransactionLog", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("starts querying as soon as a lookup value is entered", async () => {
+  it("starts querying as soon as a fee type filter is set", async () => {
     const fetchMock = mockFetch(response());
 
-    renderLog("?status=search&lookupValue=26PHF07R");
+    renderLog("?status=search&feeType=PETITION_FILING_FEE");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
     const requested = String(fetchMock.mock.calls[0][0]);
-    expect(requested).toContain("lookupValue=26PHF07R");
+    expect(requested).toContain("fee=PETITION_FILING_FEE");
   });
 
   it("only shows Clear Filters/Search on the search tab", async () => {
@@ -181,9 +179,7 @@ describe("TransactionLog", () => {
   it("clears search filters when Clear Filters/Search is clicked", async () => {
     const fetchMock = mockFetch(response());
 
-    renderLog(
-      "?status=search&feeType=PETITION_FILING_FEE&lookupValue=26PHF07R",
-    );
+    renderLog("?status=search&feeType=PETITION_FILING_FEE&payType=ACH");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     fetchMock.mockClear();
@@ -195,7 +191,7 @@ describe("TransactionLog", () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          "Choose a fee type, pay type, or lookup value to search transactions.",
+          "Choose a fee type or pay type to search transactions.",
         ),
       ).toBeInTheDocument();
     });

@@ -28,20 +28,9 @@ export const PAY_TYPES = ["Credit/Debit Card", "ACH", "PayPal"] as const;
 
 export type PayType = (typeof PAY_TYPES)[number];
 
-export const LOOKUP_TYPES = ["accountHolder", "agencyId"] as const;
-
-export type LookupType = (typeof LOOKUP_TYPES)[number];
-
-export const LOOKUP_TYPE_LABEL: Record<LookupType, string> = {
-  accountHolder: "Account Holder",
-  agencyId: "Agency ID",
-};
-
 export type TransactionSearchFilters = {
   feeType: FeeType | null;
   payType: PayType | null;
-  lookupType: LookupType;
-  lookupValue: string | null;
 };
 
 /** Mirrors `TRANSACTION_LOG_SORT_FIELDS` in the payment portal. */

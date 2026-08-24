@@ -15,8 +15,6 @@ const FORWARDED = [
   "order",
   "fee",
   "paymentMethod",
-  "lookupType",
-  "lookupValue",
 ] as const;
 
 export async function GET(request: Request) {

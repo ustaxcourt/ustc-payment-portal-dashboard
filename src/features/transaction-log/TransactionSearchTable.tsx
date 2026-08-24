@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { getSearchColumns } from "./columns";
+import { getColumns } from "./columns";
 import DataTable from "./DataTable";
 import type { TransactionLogEntry, TransactionSorting } from "./types";
 
@@ -16,7 +16,7 @@ export default function TransactionSearchTable({
   onSortingChange: (next: TransactionSorting) => void;
   emptyMessage: string;
 }) {
-  const columns = useMemo(() => getSearchColumns(), []);
+  const columns = useMemo(() => getColumns("all"), []);
 
   return (
     <DataTable

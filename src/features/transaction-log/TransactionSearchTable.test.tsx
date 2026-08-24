@@ -12,11 +12,11 @@ const row: TransactionLogEntry = {
   transactionAmount: 60,
   clientName: "payment-portal",
   transactionReferenceId: "ref-1",
-  paymentStatus: "success",
+  paymentStatus: "failed",
   transactionStatus: "processed",
   paymentMethod: "Credit/Debit Card",
-  returnCode: null,
-  returnDetail: null,
+  returnCode: 102,
+  returnDetail: "Insufficient funds",
   createdAt: "2026-08-03T12:00:00.000Z",
   lastUpdatedAt: "2026-08-03T13:00:00.000Z",
 };
@@ -38,46 +38,44 @@ const headerFor = (name: string) =>
   screen.getByRole("columnheader", { name: new RegExp(name) });
 
 describe("TransactionSearchTable", () => {
-  it("renders the mockup's column set", () => {
+  it("matches the other tabs' column set", () => {
     renderTable();
 
     for (const label of [
-      "Timestamp",
-      "Fee Type",
+      "Created",
+      "Last updated",
+      "Fee type",
       "Amount",
-      "Pay Type",
-      "Status",
-      "Account Holder",
-      "Agency ID",
+      "Payment method",
+      "Payment status",
+      "Failure reason",
+      "Transaction status",
+      "Client",
+      "Reference ID",
     ]) {
       expect(headerFor(label)).toBeInTheDocument();
     }
   });
 
-  it("only makes Timestamp and Amount clickable to sort", () => {
+  it("makes every column clickable to sort, matching the other tabs", () => {
     renderTable();
 
-    expect(
-      within(headerFor("Timestamp")).getByRole("button", {
-        name: "Timestamp",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      within(headerFor("Amount")).getByRole("button", { name: "Amount" }),
-    ).toBeInTheDocument();
-
-    for (const label of ["Fee Type", "Pay Type", "Status", "Account Holder", "Agency ID"]) {
+    for (const label of [
+      "Created",
+      "Last updated",
+      "Fee type",
+      "Amount",
+      "Payment method",
+      "Payment status",
+      "Failure reason",
+      "Transaction status",
+      "Client",
+      "Reference ID",
+    ]) {
       expect(
-        within(headerFor(label)).queryByRole("button"),
-      ).not.toBeInTheDocument();
+        within(headerFor(label)).getByRole("button", { name: label }),
+      ).toBeInTheDocument();
     }
-  });
-
-  it("marks non-sortable columns without an aria-sort claim", () => {
-    renderTable();
-
-    expect(headerFor("Timestamp")).toHaveAttribute("aria-sort", "descending");
-    expect(headerFor("Fee Type")).not.toHaveAttribute("aria-sort");
   });
 
   it("sorts Amount on click", async () => {
@@ -94,10 +92,15 @@ describe("TransactionSearchTable", () => {
     });
   });
 
-  it("shows the account holder and agency id values", () => {
+  it("shows the payment status as a badge, matching the other tabs", () => {
     renderTable();
 
-    expect(screen.getByText("payment-portal")).toBeInTheDocument();
-    expect(screen.getByText("agency-1")).toBeInTheDocument();
+    expect(screen.getByText("Failed")).toBeInTheDocument();
+  });
+
+  it("shows the failure reason", () => {
+    renderTable();
+
+    expect(screen.getByText("Insufficient funds")).toBeInTheDocument();
   });
 });
