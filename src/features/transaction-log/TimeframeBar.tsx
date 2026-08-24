@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCourtDate } from "@/lib/format";
 import ExportButton from "./ExportButton";
 import TimeframeControls from "./TimeframeControls";
 import { useTransactionLog } from "./useTransactionLog";
@@ -14,6 +15,7 @@ export default function TimeframeBar() {
     <div className="flex flex-wrap items-center justify-between gap-3 bg-muted px-6 py-2 sm:px-8">
       <TimeframeControls
         appliedRange={appliedRange}
+        appliedDate={data ? formatCourtDate(data.from) : null}
         onSelectPreset={(preset) =>
           setParams({ from: null, range: preset, to: null })
         }

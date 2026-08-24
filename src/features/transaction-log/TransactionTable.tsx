@@ -82,7 +82,10 @@ export default function TransactionTable({
                 <TableHead
                   key={header.id}
                   aria-sort={ariaSort(header.column.getIsSorted())}
-                  className={cellBorder(index, headerGroup.headers.length)}
+                  className={cn(
+                    "h-8",
+                    cellBorder(index, headerGroup.headers.length),
+                  )}
                 >
                   {flexRender(
                     header.column.columnDef.header,
@@ -109,7 +112,10 @@ export default function TransactionTable({
                 {row.getVisibleCells().map((cell, index) => (
                   <TableCell
                     key={cell.id}
-                    className={cellBorder(index, row.getVisibleCells().length)}
+                    className={cn(
+                      "py-1",
+                      cellBorder(index, row.getVisibleCells().length),
+                    )}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>

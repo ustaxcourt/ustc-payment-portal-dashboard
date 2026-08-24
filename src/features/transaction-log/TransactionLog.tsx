@@ -1,7 +1,6 @@
 "use client";
 
 import ErrorPanel from "@/components/ui/ErrorPanel";
-import { formatCourtDate } from "@/lib/format";
 import { COLUMN_LABEL } from "./columns";
 import StatusTabs from "./StatusTabs";
 import TransactionTable from "./TransactionTable";
@@ -20,10 +19,6 @@ export default function TransactionLog() {
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
-      <p className="text-sm font-medium">
-        {data ? formatCourtDate(data.from) : "Today"}
-      </p>
-
       <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
 
       <p aria-live="polite" className="sr-only">

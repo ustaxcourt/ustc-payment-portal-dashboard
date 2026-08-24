@@ -12,7 +12,7 @@ import {
 } from "./types";
 import { useTotals } from "./useTotals";
 
-const CELL = "border px-4 py-2";
+const CELL = "border px-4 py-1.5";
 const HEADER_ROW = "bg-totals-header";
 const HEADING_ID = "revenue-totals-heading";
 
@@ -71,13 +71,17 @@ export default function RevenueTotals() {
           <tr className={HEADER_ROW}>
             <td className={cn(CELL, "border-0 bg-background")} />
             {TOTAL_PERIODS.map((period) => (
-              <th key={period} scope="col" className={cn(CELL, "text-sm font-normal")}>
+              <th
+                key={period}
+                scope="col"
+                className={cn(CELL, "min-w-32 text-sm font-normal")}
+              >
                 <span className="font-bold">{PERIOD_LABEL[period]}</span>
                 {` - ${periodSubtitle(data[period], period)}`}
+                {/* The design shows only the subtitle; the summed window still
+                    reads out where the subtitle alone doesn't date it. */}
                 {SUBTITLE_IS_DATED.has(period) ? null : (
-                  <span className="block text-xs font-normal text-muted-foreground">
-                    {periodRange(data[period])}
-                  </span>
+                  <span className="sr-only">{periodRange(data[period])}</span>
                 )}
               </th>
             ))}
@@ -87,12 +91,12 @@ export default function RevenueTotals() {
           <tr>
             <th
               scope="row"
-              className={cn(CELL, "border-0 text-right text-sm font-normal")}
+              className={cn(CELL, "border-0 text-right text-sm font-normal whitespace-nowrap")}
             >
-              Total
+              Current Total
             </th>
             {TOTAL_PERIODS.map((period) => (
-              <td key={period} className={cn(CELL, "text-2xl tabular-nums")}>
+              <td key={period} className={cn(CELL, "text-lg tabular-nums")}>
                 {formatCurrency(data[period].total)}
               </td>
             ))}

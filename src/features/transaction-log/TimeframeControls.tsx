@@ -23,12 +23,15 @@ const PRESET_COPY: Record<DateRangePreset, string> = {
 
 type Props = {
   appliedRange: AppliedDateRange;
+  /** Server-confirmed start of the shown window, e.g. "Aug 22, 2026". */
+  appliedDate?: string | null;
   onSelectPreset: (preset: Exclude<DateRangePreset, "custom">) => void;
   onApplyCustom: (from: string, to: string) => void;
 };
 
 export default function TimeframeControls({
   appliedRange,
+  appliedDate,
   onSelectPreset,
   onApplyCustom,
 }: Props) {
@@ -100,7 +103,10 @@ export default function TimeframeControls({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-sm font-medium">Timeframe</p>
-          <p className="text-sm text-muted-foreground">{appliedRange.label}</p>
+          <p className="text-sm text-muted-foreground">
+            {appliedRange.label}
+            {appliedDate ? ` – ${appliedDate}` : null}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {DATE_RANGE_PRESETS.map((preset) => {
