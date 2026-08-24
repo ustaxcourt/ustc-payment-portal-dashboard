@@ -9,5 +9,5 @@ export default withAuth({
 // callbackUrl query parameter. API routes are excluded so they can answer with
 // a JSON 401 — a redirect would hand fetch clients an HTML login page.
 export const config = {
-  matcher: ["/((?!$|api/|login(?:/|$)|_next/static|_next/image|favicon[.]ico$).*)"],
+  matcher: ["/((?!$|api/|login(?:/|$)|_next/static|_next/image|favicon[.]ico$|icon[.]png$).*)"],
 };
