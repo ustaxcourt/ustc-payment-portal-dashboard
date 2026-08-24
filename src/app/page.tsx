@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import LogoutButton from "@/components/ui/LogoutButton";
+import RevenueTotals from "@/features/revenue-totals/RevenueTotals";
 import TransactionLog from "@/features/transaction-log/TransactionLog";
 import { getSessionAuthOptions } from "@/lib/auth";
 import { loginUrlReturningTo } from "@/lib/callbackUrl";
@@ -44,6 +45,9 @@ export default async function Home({
         </div>
       </header>
 
+      <RevenueTotals />
+
+      {/* nuqs reads search params, so the log renders inside a boundary. */}
       <Suspense
         fallback={
           <p className="text-sm text-muted-foreground">
