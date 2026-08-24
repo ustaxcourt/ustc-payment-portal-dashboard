@@ -169,7 +169,7 @@ describe("auth token refresh", () => {
     expect(result).toMatchObject({
       accessToken: "stale-access-token",
       error: AUTH_TOKEN_REFRESH_ERROR,
-      refreshToken: "refresh-token-secret",
+      refreshToken: undefined,
     });
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain(
       "stale-access-token",
@@ -177,6 +177,29 @@ describe("auth token refresh", () => {
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain(
       "refresh-token-secret",
     );
+  });
+
+  it("does not retry refresh after the token is already marked invalid", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await getCallbacks().jwt({
+      account: null,
+      profile: undefined,
+      token: {
+        ...expiredToken(),
+        error: AUTH_TOKEN_REFRESH_ERROR,
+        refreshToken: undefined,
+      },
+      user: signedInAdapterUser,
+    });
+
+    expect(result).toMatchObject({
+      accessToken: "stale-access-token",
+      error: AUTH_TOKEN_REFRESH_ERROR,
+      refreshToken: undefined,
+    });
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("surfaces refresh failure on the session and treats it as unauthenticated", async () => {

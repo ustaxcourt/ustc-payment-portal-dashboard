@@ -56,6 +56,9 @@ const tokenEndpointUrl = (issuer: string) =>
 const asString = (value: unknown): string | undefined =>
   typeof value === "string" && value.length > 0 ? value : undefined;
 
+const isPermanentRefreshFailure = (value: unknown): boolean =>
+  asString(value) === "invalid_grant";
+
 const asExpiresInSeconds = (value: unknown): number | undefined => {
   if (typeof value === "number" && Number.isFinite(value) && value > 0) {
     return value;
@@ -113,15 +116,20 @@ async function refreshAccessToken(token: DashboardJwt): Promise<DashboardJwt> {
       .catch(() => null)) as RefreshTokenResponse | null;
 
     if (!response.ok) {
+      const refreshError = asString(payload?.error);
+
       console.error("[auth] access token refresh failed", {
         status: response.status,
-        error: asString(payload?.error),
+        error: refreshError,
         errorDescription: asString(payload?.error_description),
       });
 
       return {
         ...token,
         error: AUTH_TOKEN_REFRESH_ERROR,
+        refreshToken: isPermanentRefreshFailure(refreshError)
+          ? undefined
+          : token.refreshToken,
       };
     }
   } catch (error) {
@@ -208,6 +216,10 @@ const authCallbacks: NextAuthOptions["callbacks"] = {
       dashboardToken.accessTokenExpires &&
       Date.now() < dashboardToken.accessTokenExpires
     ) {
+      return dashboardToken;
+    }
+
+    if (dashboardToken.error === AUTH_TOKEN_REFRESH_ERROR) {
       return dashboardToken;
     }
 
