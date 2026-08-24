@@ -167,16 +167,24 @@ describe("TransactionLog", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("starts querying as soon as a fee type filter is set", async () => {
-    const fetchMock = mockFetch(response());
+  it.each([
+    ["feeType=PETITION_FILING_FEE", "fee=PETITION_FILING_FEE"],
+    ["payType=ACH", "paymentMethod=ACH"],
+    ["paymentStatus=failed", "status=failed"],
+    ["transactionStatus=processed", "transactionStatus=processed"],
+  ])(
+    "starts querying as soon as %s is set, with no other filter present",
+    async (param, expectedQuery) => {
+      const fetchMock = mockFetch(response());
 
-    renderLog("?status=search&feeType=PETITION_FILING_FEE");
+      renderLog(`?status=search&${param}`);
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
-    const requested = String(fetchMock.mock.calls[0][0]);
-    expect(requested).toContain("fee=PETITION_FILING_FEE");
-  });
+      const requested = String(fetchMock.mock.calls[0][0]);
+      expect(requested).toContain(expectedQuery);
+    },
+  );
 
   it("only shows Clear All on the search tab", async () => {
     const fetchMock = mockFetch(response());
