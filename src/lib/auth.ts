@@ -1,4 +1,10 @@
-import type { Account, NextAuthOptions, Profile, User } from "next-auth";
+import type {
+  Account,
+  NextAuthOptions,
+  Profile,
+  Session,
+  User,
+} from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import { SESSION_MAX_AGE_SECONDS } from "./session";
@@ -7,6 +13,31 @@ interface AzureProfile extends Profile {
   preferred_username: string;
 }
 
+interface DashboardJwt extends JWT {
+  accessToken?: string;
+  accessTokenExpires?: number;
+  error?: string;
+  idToken?: string;
+  profile?: Profile | AzureProfile;
+  refreshToken?: string;
+  user?: User;
+}
+
+interface RefreshTokenResponse {
+  access_token?: string;
+  error?: string;
+  error_description?: string;
+  expires_in?: number;
+  id_token?: string;
+  refresh_token?: string;
+}
+
+type DashboardSession = Session & {
+  error?: string;
+};
+
+export const AUTH_TOKEN_REFRESH_ERROR = "RefreshAccessTokenError";
+
 const ENVIRONMENT_VARIABLES = [
   "AUTH_MICROSOFT_ENTRA_ID_ID",
   "AUTH_MICROSOFT_ENTRA_ID_SECRET",
@@ -14,6 +45,134 @@ const ENVIRONMENT_VARIABLES = [
   "NEXTAUTH_SECRET",
   "NEXTAUTH_URL",
 ] as const;
+
+const ENTRA_SCOPES = "openid profile offline_access User.Read";
+
+const issuerBaseUrl = (issuer: string) =>
+  issuer.replace(/\/v2\.0\/?$/, "").replace(/\/$/, "");
+
+const tokenEndpointUrl = (issuer: string) =>
+  `${issuerBaseUrl(issuer)}/oauth2/v2.0/token`;
+
+const asString = (value: unknown): string | undefined =>
+  typeof value === "string" && value.length > 0 ? value : undefined;
+
+const asExpiresInSeconds = (value: unknown): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsedValue = Number(value);
+    return Number.isFinite(parsedValue) && parsedValue > 0
+      ? parsedValue
+      : undefined;
+  }
+
+  return undefined;
+};
+
+async function refreshAccessToken(token: DashboardJwt): Promise<DashboardJwt> {
+  const env = loadEnv();
+  const issuer = env.AUTH_MICROSOFT_ENTRA_ID_ISSUER;
+  const clientId = env.AUTH_MICROSOFT_ENTRA_ID_ID;
+  const clientSecret = env.AUTH_MICROSOFT_ENTRA_ID_SECRET;
+
+  if (!issuer || !clientId || !clientSecret || !token.refreshToken) {
+    console.error("[auth] access token refresh could not start", {
+      hasIssuer: Boolean(issuer),
+      hasClientId: Boolean(clientId),
+      hasClientSecret: Boolean(clientSecret),
+      hasRefreshToken: Boolean(token.refreshToken),
+    });
+
+    return {
+      ...token,
+      error: AUTH_TOKEN_REFRESH_ERROR,
+    };
+  }
+
+  let payload: RefreshTokenResponse | null = null;
+
+  try {
+    const response = await fetch(tokenEndpointUrl(issuer), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken,
+        scope: ENTRA_SCOPES,
+      }),
+    });
+
+    payload = (await response
+      .json()
+      .catch(() => null)) as RefreshTokenResponse | null;
+
+    if (!response.ok) {
+      console.error("[auth] access token refresh failed", {
+        status: response.status,
+        error: asString(payload?.error),
+        errorDescription: asString(payload?.error_description),
+      });
+
+      return {
+        ...token,
+        error: AUTH_TOKEN_REFRESH_ERROR,
+      };
+    }
+  } catch (error) {
+    console.error("[auth] access token refresh request threw", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      ...token,
+      error: AUTH_TOKEN_REFRESH_ERROR,
+    };
+  }
+
+  const nextAccessToken = asString(payload?.access_token);
+  const expiresInSeconds = asExpiresInSeconds(payload?.expires_in);
+
+  if (!nextAccessToken || !expiresInSeconds) {
+    console.error(
+      "[auth] access token refresh returned an incomplete payload",
+      {
+        hasAccessToken: Boolean(nextAccessToken),
+        hasExpiresIn: Boolean(expiresInSeconds),
+      },
+    );
+
+    return {
+      ...token,
+      error: AUTH_TOKEN_REFRESH_ERROR,
+    };
+  }
+
+  return {
+    ...token,
+    accessToken: nextAccessToken,
+    accessTokenExpires: Date.now() + expiresInSeconds * 1000,
+    error: undefined,
+    idToken: asString(payload?.id_token) ?? token.idToken,
+    refreshToken: asString(payload?.refresh_token) ?? token.refreshToken,
+  };
+}
+
+export function hasValidDashboardSession(
+  session: Session | null | undefined,
+): session is Session {
+  return (
+    session !== null &&
+    session !== undefined &&
+    (session as DashboardSession).error !== AUTH_TOKEN_REFRESH_ERROR
+  );
+}
 
 const authCallbacks: NextAuthOptions["callbacks"] = {
   async jwt({
@@ -24,7 +183,7 @@ const authCallbacks: NextAuthOptions["callbacks"] = {
   }: {
     profile?: Profile | AzureProfile;
     token: JWT;
-    user: User;
+    user?: User;
     account: Account | null;
   }) {
     if (account && user) {
@@ -44,11 +203,27 @@ const authCallbacks: NextAuthOptions["callbacks"] = {
       };
     }
 
-    return token;
+    const dashboardToken = token as DashboardJwt;
+
+    if (
+      dashboardToken.accessTokenExpires &&
+      Date.now() < dashboardToken.accessTokenExpires
+    ) {
+      return dashboardToken;
+    }
+
+    if (!dashboardToken.refreshToken) {
+      return {
+        ...dashboardToken,
+        error: AUTH_TOKEN_REFRESH_ERROR,
+      };
+    }
+
+    return refreshAccessToken(dashboardToken);
   },
   async session(props) {
     const session = props.session;
-    const token = props.token;
+    const token = props.token as DashboardJwt;
 
     if (session) {
       session.user = token.user as {
@@ -57,6 +232,7 @@ const authCallbacks: NextAuthOptions["callbacks"] = {
         image: string;
         preferred_username?: string;
       };
+      (session as DashboardSession).error = token.error;
     }
     return session;
   },
@@ -126,9 +302,7 @@ export function getFederatedLogoutUrl(
     return null;
   }
 
-  const logoutUrl = new URL(
-    `${issuer.replace(/\/v2\.0\/?$/, "").replace(/\/$/, "")}/oauth2/v2.0/logout`,
-  );
+  const logoutUrl = new URL(`${issuerBaseUrl(issuer)}/oauth2/v2.0/logout`);
   const postLogoutRedirectUrl = new URL(postLogoutPath, baseUrl);
 
   logoutUrl.searchParams.set(
@@ -166,7 +340,7 @@ function buildAuthOptions(): NextAuthOptions {
         clientSecret: env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
         tenantId,
         authorization: {
-          params: { scope: "openid profile User.Read" },
+          params: { scope: ENTRA_SCOPES },
         },
         httpOptions: { timeout: 10000 },
       }),
