@@ -16,7 +16,6 @@ const FORWARDED = [
   "fee",
   "paymentMethod",
   "transactionStatus",
-  "clientName",
 ] as const;
 
 export async function GET(request: Request) {

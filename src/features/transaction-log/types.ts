@@ -45,7 +45,6 @@ export type TransactionSearchFilters = {
   payType: PayType | null;
   paymentStatus: PaymentStatus | null;
   transactionStatus: TransactionStatus | null;
-  clientName: string | null;
 };
 
 /** Mirrors `TRANSACTION_LOG_SORT_FIELDS` in the payment portal. */

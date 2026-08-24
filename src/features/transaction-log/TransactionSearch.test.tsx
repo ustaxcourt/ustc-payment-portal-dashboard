@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import TransactionSearch from "./TransactionSearch";
 
@@ -12,12 +11,10 @@ const renderSearch = (
       payType={null}
       paymentStatus={null}
       transactionStatus={null}
-      clientName={null}
       onFeeTypeChange={vi.fn()}
       onPayTypeChange={vi.fn()}
       onPaymentStatusChange={vi.fn()}
       onTransactionStatusChange={vi.fn()}
-      onClientNameChange={vi.fn()}
       rows={[]}
       sorting={{ sort: "createdAt", order: "desc" }}
       onSortingChange={vi.fn()}
@@ -35,18 +32,6 @@ describe("TransactionSearch", () => {
     expect(screen.getByLabelText("Pay Type")).toBeInTheDocument();
     expect(screen.getByLabelText("Payment Status")).toBeInTheDocument();
     expect(screen.getByLabelText("Transaction Status")).toBeInTheDocument();
-  });
-
-  it("commits a client name to onClientNameChange on Enter, not per keystroke", async () => {
-    const onClientNameChange = vi.fn();
-    renderSearch({ onClientNameChange });
-
-    const input = screen.getByLabelText("Client Name");
-    await userEvent.type(input, "payment-portal");
-    expect(onClientNameChange).not.toHaveBeenCalled();
-
-    await userEvent.keyboard("{Enter}");
-    expect(onClientNameChange).toHaveBeenCalledWith("payment-portal");
   });
 
   it("renders the results table matching the other tabs' column set", () => {

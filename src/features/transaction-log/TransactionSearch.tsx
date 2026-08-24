@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -31,12 +29,10 @@ type Props = {
   payType: PayType | null;
   paymentStatus: PaymentStatus | null;
   transactionStatus: TransactionStatus | null;
-  clientName: string | null;
   onFeeTypeChange: (value: FeeType | null) => void;
   onPayTypeChange: (value: PayType | null) => void;
   onPaymentStatusChange: (value: PaymentStatus | null) => void;
   onTransactionStatusChange: (value: TransactionStatus | null) => void;
-  onClientNameChange: (value: string | null) => void;
   rows: TransactionLogEntry[];
   sorting: TransactionSorting;
   onSortingChange: (next: TransactionSorting) => void;
@@ -48,27 +44,15 @@ export default function TransactionSearch({
   payType,
   paymentStatus,
   transactionStatus,
-  clientName,
   onFeeTypeChange,
   onPayTypeChange,
   onPaymentStatusChange,
   onTransactionStatusChange,
-  onClientNameChange,
   rows,
   sorting,
   onSortingChange,
   emptyMessage,
 }: Props) {
-  const [clientNameDraft, setClientNameDraft] = useState(clientName ?? "");
-
-  useEffect(() => {
-    setClientNameDraft(clientName ?? "");
-  }, [clientName]);
-
-  const commitClientName = () => {
-    const trimmed = clientNameDraft.trim();
-    onClientNameChange(trimmed || null);
-  };
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-y-6 rounded-md border bg-background p-4 lg:grid-cols-2 lg:gap-y-0 lg:divide-x">
@@ -159,25 +143,7 @@ export default function TransactionSearch({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 lg:pl-6">
-          <h3 className="text-sm font-semibold">Search</h3>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="search-client-name">Client Name</Label>
-            <Input
-              id="search-client-name"
-              value={clientNameDraft}
-              placeholder="Enter a client name"
-              onChange={(event) => setClientNameDraft(event.target.value)}
-              onBlur={commitClientName}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  commitClientName();
-                }
-              }}
-            />
-          </div>
-        </div>
+        <div className="flex flex-col gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 lg:pl-6" />
       </div>
 
       <TransactionSearchTable

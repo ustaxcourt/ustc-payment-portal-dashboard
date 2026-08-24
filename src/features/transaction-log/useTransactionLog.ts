@@ -37,7 +37,6 @@ const fetchTransactionLogPage = async (
   if (filters?.transactionStatus) {
     params.set("transactionStatus", filters.transactionStatus);
   }
-  if (filters?.clientName) params.set("clientName", filters.clientName);
 
   const response = await fetch(`/api/transactions?${params}`, { signal });
 
@@ -116,7 +115,6 @@ export const useTransactionLog = (
       filters?.payType,
       filters?.paymentStatus,
       filters?.transactionStatus,
-      filters?.clientName,
     ],
     queryFn: ({ signal }) =>
       fetchTransactionLog(tab, range, sorting, filters, signal),

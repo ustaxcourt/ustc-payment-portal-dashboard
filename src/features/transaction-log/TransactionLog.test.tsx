@@ -123,11 +123,11 @@ describe("TransactionLog", () => {
     expect(requested).not.toContain("status=search");
   });
 
-  it("forwards payment status, transaction status, and client name filters when searching", async () => {
+  it("forwards payment status and transaction status filters when searching", async () => {
     const fetchMock = mockFetch(response());
 
     renderLog(
-      "?status=search&paymentStatus=failed&transactionStatus=processed&clientName=payment-portal",
+      "?status=search&paymentStatus=failed&transactionStatus=processed",
     );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
@@ -135,7 +135,6 @@ describe("TransactionLog", () => {
     const requested = String(fetchMock.mock.calls[0][0]);
     expect(requested).toContain("status=failed");
     expect(requested).toContain("transactionStatus=processed");
-    expect(requested).toContain("clientName=payment-portal");
   });
 
   it("keeps the sort when switching to search, since its columns match the other tabs", async () => {
@@ -195,7 +194,7 @@ describe("TransactionLog", () => {
     const fetchMock = mockFetch(response());
 
     renderLog(
-      "?status=search&feeType=PETITION_FILING_FEE&payType=ACH&paymentStatus=failed&transactionStatus=processed&clientName=payment-portal",
+      "?status=search&feeType=PETITION_FILING_FEE&payType=ACH&paymentStatus=failed&transactionStatus=processed",
     );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());

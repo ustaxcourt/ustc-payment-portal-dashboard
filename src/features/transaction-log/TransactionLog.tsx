@@ -40,7 +40,6 @@ export default function TransactionLog() {
       payType: parseAsStringLiteral(PAY_TYPES),
       paymentStatus: parseAsStringLiteral(PAYMENT_STATUSES),
       transactionStatus: parseAsStringLiteral(TRANSACTION_STATUSES),
-      clientName: parseAsString,
     },
     {
       clearOnDefault: true,
@@ -74,7 +73,6 @@ export default function TransactionLog() {
           payType: params.payType,
           paymentStatus: params.paymentStatus,
           transactionStatus: params.transactionStatus,
-          clientName: params.clientName,
         }
       : undefined;
 
@@ -82,8 +80,7 @@ export default function TransactionLog() {
     searchFilters?.feeType ||
       searchFilters?.payType ||
       searchFilters?.paymentStatus ||
-      searchFilters?.transactionStatus ||
-      searchFilters?.clientName,
+      searchFilters?.transactionStatus,
   );
 
   const clearSearch = () =>
@@ -92,7 +89,6 @@ export default function TransactionLog() {
       payType: null,
       paymentStatus: null,
       transactionStatus: null,
-      clientName: null,
     });
 
   const { data, isPending, isError, error, refetch } = useTransactionLog(
@@ -162,7 +158,6 @@ export default function TransactionLog() {
               payType={params.payType}
               paymentStatus={params.paymentStatus}
               transactionStatus={params.transactionStatus}
-              clientName={params.clientName}
               onFeeTypeChange={(feeType) => setParams({ feeType })}
               onPayTypeChange={(payType) => setParams({ payType })}
               onPaymentStatusChange={(paymentStatus) =>
@@ -171,7 +166,6 @@ export default function TransactionLog() {
               onTransactionStatusChange={(transactionStatus) =>
                 setParams({ transactionStatus })
               }
-              onClientNameChange={(clientName) => setParams({ clientName })}
               rows={hasSearchCriteria ? (data?.data ?? []) : []}
               sorting={activeSorting}
               onSortingChange={setParams}
