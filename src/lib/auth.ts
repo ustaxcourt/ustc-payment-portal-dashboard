@@ -46,6 +46,8 @@ const ENVIRONMENT_VARIABLES = [
 ] as const;
 
 const ENTRA_SCOPES = "openid profile offline_access User.Read";
+const TOKEN_EXPIRY_SKEW_MS = 60_000;
+const TOKEN_REFRESH_TIMEOUT_MS = 10_000;
 
 const issuerBaseUrl = (issuer: string) =>
   issuer.replace(/\/v2\.0\/?$/, "").replace(/\/$/, "");
@@ -74,6 +76,27 @@ const asExpiresInSeconds = (value: unknown): number | undefined => {
   return undefined;
 };
 
+const hasUsableAccessToken = (token: DashboardJwt): boolean =>
+  typeof token.accessTokenExpires === "number" &&
+  Number.isFinite(token.accessTokenExpires) &&
+  Date.now() < token.accessTokenExpires - TOKEN_EXPIRY_SKEW_MS;
+
+function failRefresh(
+  token: DashboardJwt,
+  message: string,
+  details?: Record<string, unknown>,
+): DashboardJwt {
+  console.error(message, details);
+
+  return {
+    ...token,
+    error: AUTH_TOKEN_REFRESH_ERROR,
+    refreshToken: isPermanentRefreshFailure(details?.error)
+      ? undefined
+      : token.refreshToken,
+  };
+}
+
 async function refreshAccessToken(token: DashboardJwt): Promise<DashboardJwt> {
   const env = loadEnv();
   const issuer = env.AUTH_MICROSOFT_ENTRA_ID_ISSUER;
@@ -81,17 +104,12 @@ async function refreshAccessToken(token: DashboardJwt): Promise<DashboardJwt> {
   const clientSecret = env.AUTH_MICROSOFT_ENTRA_ID_SECRET;
 
   if (!issuer || !clientId || !clientSecret || !token.refreshToken) {
-    console.error("[auth] access token refresh could not start", {
+    return failRefresh(token, "[auth] access token refresh could not start", {
       hasIssuer: Boolean(issuer),
       hasClientId: Boolean(clientId),
       hasClientSecret: Boolean(clientSecret),
       hasRefreshToken: Boolean(token.refreshToken),
     });
-
-    return {
-      ...token,
-      error: AUTH_TOKEN_REFRESH_ERROR,
-    };
   }
 
   let payload: RefreshTokenResponse | null = null;
@@ -99,6 +117,7 @@ async function refreshAccessToken(token: DashboardJwt): Promise<DashboardJwt> {
   try {
     const response = await fetch(tokenEndpointUrl(issuer), {
       method: "POST",
+      signal: AbortSignal.timeout(TOKEN_REFRESH_TIMEOUT_MS),
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
@@ -118,47 +137,30 @@ async function refreshAccessToken(token: DashboardJwt): Promise<DashboardJwt> {
     if (!response.ok) {
       const refreshError = asString(payload?.error);
 
-      console.error("[auth] access token refresh failed", {
+      return failRefresh(token, "[auth] access token refresh failed", {
         status: response.status,
         error: refreshError,
         errorDescription: asString(payload?.error_description),
       });
-
-      return {
-        ...token,
-        error: AUTH_TOKEN_REFRESH_ERROR,
-        refreshToken: isPermanentRefreshFailure(refreshError)
-          ? undefined
-          : token.refreshToken,
-      };
     }
   } catch (error) {
-    console.error("[auth] access token refresh request threw", {
+    return failRefresh(token, "[auth] access token refresh request threw", {
       error: error instanceof Error ? error.message : String(error),
     });
-
-    return {
-      ...token,
-      error: AUTH_TOKEN_REFRESH_ERROR,
-    };
   }
 
   const nextAccessToken = asString(payload?.access_token);
   const expiresInSeconds = asExpiresInSeconds(payload?.expires_in);
 
   if (!nextAccessToken || !expiresInSeconds) {
-    console.error(
+    return failRefresh(
+      token,
       "[auth] access token refresh returned an incomplete payload",
       {
         hasAccessToken: Boolean(nextAccessToken),
         hasExpiresIn: Boolean(expiresInSeconds),
       },
     );
-
-    return {
-      ...token,
-      error: AUTH_TOKEN_REFRESH_ERROR,
-    };
   }
 
   return {
@@ -197,7 +199,9 @@ const authCallbacks: NextAuthOptions["callbacks"] = {
       return {
         accessToken: account.access_token,
         idToken: account.id_token,
-        accessTokenExpires: account?.expires_at ? account.expires_at * 1000 : 0,
+        accessTokenExpires: account?.expires_at
+          ? account.expires_at * 1000
+          : undefined,
         refreshToken: account.refresh_token,
         profile,
         user: {
@@ -212,22 +216,12 @@ const authCallbacks: NextAuthOptions["callbacks"] = {
 
     const dashboardToken = token as DashboardJwt;
 
-    if (
-      dashboardToken.accessTokenExpires &&
-      Date.now() < dashboardToken.accessTokenExpires
-    ) {
+    if (hasUsableAccessToken(dashboardToken)) {
       return dashboardToken;
     }
 
     if (dashboardToken.error === AUTH_TOKEN_REFRESH_ERROR) {
       return dashboardToken;
-    }
-
-    if (!dashboardToken.refreshToken) {
-      return {
-        ...dashboardToken,
-        error: AUTH_TOKEN_REFRESH_ERROR,
-      };
     }
 
     return refreshAccessToken(dashboardToken);

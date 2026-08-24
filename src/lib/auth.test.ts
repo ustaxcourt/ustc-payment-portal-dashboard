@@ -84,6 +84,27 @@ afterEach(() => {
 });
 
 describe("auth token refresh", () => {
+  it("does not force an immediate refresh when the provider omits expires_at", async () => {
+    const token = await getCallbacks().jwt({
+      account: {
+        access_token: "initial-access-token",
+        expires_at: undefined,
+        id_token: "initial-id-token",
+        refresh_token: "refresh-token-secret",
+      } as Account,
+      profile: undefined,
+      token: {} as JWT,
+      user: signedInAdapterUser,
+    });
+
+    expect(token).toMatchObject({
+      accessToken: "initial-access-token",
+      accessTokenExpires: undefined,
+      idToken: "initial-id-token",
+      refreshToken: "refresh-token-secret",
+    });
+  });
+
   it("refreshes an expired access token and updates its expiry", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-08-24T12:00:00.000Z"));
@@ -118,10 +139,40 @@ describe("auth token refresh", () => {
     );
 
     const request = fetch.mock.calls[0]?.[1];
+    expect(request?.signal).toBeInstanceOf(AbortSignal);
     const body = request?.body as URLSearchParams;
     expect(request?.method).toBe("POST");
     expect(body.get("grant_type")).toBe("refresh_token");
     expect(body.get("scope")).toBe("openid profile offline_access User.Read");
+  });
+
+  it("refreshes a token that is about to expire within the skew window", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-24T12:00:00.000Z"));
+
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        access_token: "fresh-access-token",
+        expires_in: 3600,
+      }),
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const token = await getCallbacks().jwt({
+      account: null,
+      profile: undefined,
+      token: {
+        accessToken: "stale-soon-access-token",
+        accessTokenExpires: Date.now() + 30_000,
+        refreshToken: "refresh-token-secret",
+        user: signedInUser,
+      } as JWT,
+      user: signedInAdapterUser,
+    });
+
+    expect(token).toMatchObject({ accessToken: "fresh-access-token" });
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("stores a rotated refresh token when Entra returns one", async () => {
