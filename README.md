@@ -80,6 +80,34 @@ only. `amplify.yml` writes it there, and fails the build if it is unset.
 Set it as a plain Amplify environment variable (not a secret — it is a public
 URL) per environment.
 
+## Exporting transactions
+
+The Export button saves the **complete** current view — every row matching
+the applied timeframe, status tab, and sort, not just the 200 the table shows —
+as an `.xlsx` workbook named for the data's date range (for example
+`2026-08-01 to 2026-08-17 - USTC Fee Payment Summary (Failed).xlsx`).
+In Edge/Chrome a save-as dialog opens first (File System Access API) so the
+user picks the destination; elsewhere, or if the dialog is blocked, it falls
+back to a standard browser download. Cancelling the dialog abandons the
+export before any data is fetched.
+
+How it works, and where the pieces live (all under
+`src/features/transaction-log/`):
+
+- `exportTransactions.ts` fetches up to 5 pages concurrently at
+  `pageSize=5000` (`export=true` unlocks that ceiling server-side), refuses
+  views over `EXPORT_ROW_LIMIT` (50k), and — because offset pages are not a
+  consistent snapshot — verifies the assembled row count against page 1's
+  `total`, refetching once on a mismatch.
+- `workbookBuilder.ts` + `exportWorkbook.worker.ts` build the workbook off the
+  main thread so a 50k-row file cannot freeze the tab. Cells are typed:
+  amounts are real numbers with a currency format, timestamps split into
+  Eastern-time date and time cells. exceljs stays out of the page bundle; it
+  loads only inside the worker chunk.
+- `exportColumns.ts` derives the columns from the same source of truth as the
+  table, so the file always matches the on-screen column set (including the
+  tab-dependent Failure reason column).
+
 ## Not yet set up
 
 These are deliberate gaps, not oversights — see ADR 0001's open questions:
@@ -88,11 +116,9 @@ These are deliberate gaps, not oversights — see ADR 0001's open questions:
   `openid profile User.Read` and checks no group or role claim, so any user in
   the Court's Microsoft tenant can sign in and read live financial data.
   ADR 0001 calls for restricting to a subset of users.
-- **Test harness.** No test runner is configured. The backend uses Jest, and
-  `next/jest` handles the App Router config when it is added. The auth guard and
-  parameter whitelist in `/api/transactions` have no coverage.
-- **No paging controls.** The log fetches every transaction for the day across
-  as many API pages as it takes, including wider custom date ranges. The UI
-  still renders one scrollable table rather than explicit page controls, so a
-  very large history window may still need product-level pagination later,
-  since ADR 0001 rejects pulling unbounded history into the browser.
+- **Route coverage.** Vitest and Playwright are set up, but the auth guard and
+  parameter whitelist in `/api/transactions` still have no direct coverage.
+- **No paging controls.** The table shows the first 200 rows of the current
+  view; the footer reports the true total and points at the export, which is
+  the sanctioned path to the complete set. If users ever need deeper on-screen
+  browsing, a load-more control is purely additive — the API already pages.

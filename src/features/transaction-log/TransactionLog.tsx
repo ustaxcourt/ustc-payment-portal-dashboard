@@ -1,14 +1,13 @@
 "use client";
 
+import ErrorPanel from "@/components/ui/ErrorPanel";
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { formatCourtDate } from "@/lib/format";
 import { COLUMN_LABEL, isSortableOnTab } from "./columns";
+import { DATE_RANGE_PRESETS, resolveAppliedDateRange } from "./dateRange";
+import ExportButton from "./ExportButton";
 import StatusTabs from "./StatusTabs";
-import {
-  DATE_RANGE_PRESETS,
-  resolveAppliedDateRange,
-} from "./dateRange";
 import TimeframeControls from "./TimeframeControls";
 import TransactionSearch from "./TransactionSearch";
 import TransactionTable from "./TransactionTable";
@@ -47,13 +46,13 @@ export default function TransactionLog() {
   );
 
   const tab = params.status;
-  const sorting = { sort: params.sort, order: params.order };
   const appliedRange = resolveAppliedDateRange(
     params.range,
     params.from,
     params.to,
   );
 
+  const sorting = { sort: params.sort, order: params.order };
   const activeSorting = isSortableOnTab(sorting.sort, tab)
     ? sorting
     : { sort: DEFAULT_SORT, order: DEFAULT_ORDER };
@@ -101,13 +100,21 @@ export default function TransactionLog() {
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
-      <TimeframeControls
-        appliedRange={appliedRange}
-        onSelectPreset={(preset) =>
-          setParams({ from: null, range: preset, to: null })
-        }
-        onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <TimeframeControls
+          appliedRange={appliedRange}
+          onSelectPreset={(preset) =>
+            setParams({ from: null, range: preset, to: null })
+          }
+          onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
+        />
+        <ExportButton
+          tab={tab}
+          range={appliedRange}
+          sorting={activeSorting}
+          disabled={!data || data.data.length === 0}
+        />
+      </div>
       <p className="text-sm font-medium">
         {data ? formatCourtDate(data.from) : "Today"}
       </p>
@@ -123,19 +130,11 @@ export default function TransactionLog() {
       </p>
 
       {isError ? (
-        <div className="rounded-md border border-destructive/50 p-6 text-sm">
-          <p className="font-medium">Could not load the transaction log.</p>
-          <p className="mt-1 text-muted-foreground">
-            {(error as Error).message}
-          </p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="mt-4 rounded-md border px-3 py-1.5 hover:bg-muted"
-          >
-            Try again
-          </button>
-        </div>
+        <ErrorPanel
+          title="Could not load the transaction log."
+          message={error.message}
+          onRetry={refetch}
+        />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-end justify-between gap-3 border-b">
@@ -190,8 +189,8 @@ export default function TransactionLog() {
           )}
           {data ? (
             <p className="mt-2 text-right text-sm text-muted-foreground">
-              {data.data.length < data.total
-                ? `Showing ${data.data.length} of ${data.total} transactions`
+              {typeof data.total === "number" && data.data.length < data.total
+                ? `Showing ${data.data.length} of ${data.total} transactions — export to get the full set`
                 : `${data.data.length} ${data.data.length === 1 ? "transaction" : "transactions"}`}
             </p>
           ) : null}

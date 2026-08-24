@@ -58,6 +58,45 @@ const toInputDate = (value: Date): string => {
   return `${month}/${day}/${year}`;
 };
 
+/** UTC instant of Court-time midnight on the given calendar day. ET midnight
+ *  is 04:00Z under EDT or 05:00Z under EST; the 04:00Z candidate lands on the
+ *  requested Court calendar day only when EDT is in effect. */
+const courtMidnightUtc = (calendarDay: Date): Date => {
+  const edt = new Date(
+    Date.UTC(
+      calendarDay.getUTCFullYear(),
+      calendarDay.getUTCMonth(),
+      calendarDay.getUTCDate(),
+      4,
+    ),
+  );
+  if (getCourtCalendarDate(edt).getTime() === calendarDay.getTime()) return edt;
+  return new Date(
+    Date.UTC(
+      calendarDay.getUTCFullYear(),
+      calendarDay.getUTCMonth(),
+      calendarDay.getUTCDate(),
+      5,
+    ),
+  );
+};
+
+/** The applied range as exact ISO instants — inclusive Court-midnight start,
+ *  exclusive next-midnight end. The API keeps ISO timestamps as-is, so this
+ *  works without server-side day expansion. */
+export const courtDayIsoBounds = (
+  range: Pick<AppliedDateRange, "from" | "to">,
+): { from: string; to: string } => {
+  const fromDay = parseInputDate(range.from);
+  const toDay = parseInputDate(range.to);
+  if (!fromDay || !toDay) return { from: range.from, to: range.to };
+
+  return {
+    from: courtMidnightUtc(fromDay).toISOString(),
+    to: courtMidnightUtc(shiftUtcDays(toDay, 1)).toISOString(),
+  };
+};
+
 const buildPresetRange = (
   preset: Exclude<DateRangePreset, "custom">,
   now = new Date(),

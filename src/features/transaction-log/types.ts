@@ -106,12 +106,14 @@ export type TransactionCounts = {
 
 export type TransactionLogResponse = {
   data: TransactionLogEntry[];
-  counts: TransactionCounts;
+  /** Absent on export requests for pages after the first. */
+  counts?: TransactionCounts;
   from: string;
   to: string;
   page: number;
   pageSize: number;
   sort: TransactionSortField;
   order: SortOrder;
-  total: number;
+  /** Absent on export requests for pages after the first. */
+  total?: number;
 };
