@@ -109,10 +109,10 @@ export default function TransactionLog() {
           onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
         />
         <ExportButton
-          tab={tab}
+          tab={tab === "search" ? "all" : tab}
           range={appliedRange}
           sorting={activeSorting}
-          disabled={!data || data.data.length === 0}
+          disabled={tab === "search" || !data || data.data.length === 0}
         />
       </div>
       <p className="text-sm font-medium">
