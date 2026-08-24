@@ -84,7 +84,10 @@ afterEach(() => {
 });
 
 describe("auth token refresh", () => {
-  it("does not force an immediate refresh when the provider omits expires_at", async () => {
+  it("falls back to a conservative expiry when the provider omits expires_at", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-24T12:00:00.000Z"));
+
     const token = await getCallbacks().jwt({
       account: {
         access_token: "initial-access-token",
@@ -99,10 +102,43 @@ describe("auth token refresh", () => {
 
     expect(token).toMatchObject({
       accessToken: "initial-access-token",
-      accessTokenExpires: undefined,
+      accessTokenExpires: Date.now() + 3_600_000,
       idToken: "initial-id-token",
       refreshToken: "refresh-token-secret",
     });
+  });
+
+  it("reuses the fallback expiry token instead of refreshing on the next callback", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-24T12:00:00.000Z"));
+
+    const initialToken = await getCallbacks().jwt({
+      account: {
+        access_token: "initial-access-token",
+        expires_at: undefined,
+        id_token: "initial-id-token",
+        refresh_token: "refresh-token-secret",
+      } as Account,
+      profile: undefined,
+      token: {} as JWT,
+      user: signedInAdapterUser,
+    });
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const token = await getCallbacks().jwt({
+      account: null,
+      profile: undefined,
+      token: initialToken,
+      user: signedInAdapterUser,
+    });
+
+    expect(token).toMatchObject({
+      accessToken: "initial-access-token",
+      accessTokenExpires: Date.now() + 3_600_000,
+      refreshToken: "refresh-token-secret",
+    });
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("refreshes an expired access token and updates its expiry", async () => {

@@ -48,6 +48,7 @@ const ENVIRONMENT_VARIABLES = [
 const ENTRA_SCOPES = "openid profile offline_access User.Read";
 const TOKEN_EXPIRY_SKEW_MS = 60_000;
 const TOKEN_REFRESH_TIMEOUT_MS = 10_000;
+const FALLBACK_ACCESS_TOKEN_LIFETIME_MS = SESSION_MAX_AGE_SECONDS * 1000;
 
 const issuerBaseUrl = (issuer: string) =>
   issuer.replace(/\/v2\.0\/?$/, "").replace(/\/$/, "");
@@ -80,6 +81,29 @@ const hasUsableAccessToken = (token: DashboardJwt): boolean =>
   typeof token.accessTokenExpires === "number" &&
   Number.isFinite(token.accessTokenExpires) &&
   Date.now() < token.accessTokenExpires - TOKEN_EXPIRY_SKEW_MS;
+
+const resolveAccessTokenExpires = (
+  expiresAt?: number,
+  previousExpiry?: number,
+): number => {
+  if (
+    typeof expiresAt === "number" &&
+    Number.isFinite(expiresAt) &&
+    expiresAt > 0
+  ) {
+    return expiresAt * 1000;
+  }
+
+  if (
+    typeof previousExpiry === "number" &&
+    Number.isFinite(previousExpiry) &&
+    previousExpiry > Date.now()
+  ) {
+    return previousExpiry;
+  }
+
+  return Date.now() + FALLBACK_ACCESS_TOKEN_LIFETIME_MS;
+};
 
 function failRefresh(
   token: DashboardJwt,
@@ -195,13 +219,16 @@ const authCallbacks: NextAuthOptions["callbacks"] = {
     user?: User;
     account: Account | null;
   }) {
+    const dashboardToken = token as DashboardJwt;
+
     if (account && user) {
       return {
         accessToken: account.access_token,
         idToken: account.id_token,
-        accessTokenExpires: account?.expires_at
-          ? account.expires_at * 1000
-          : undefined,
+        accessTokenExpires: resolveAccessTokenExpires(
+          account.expires_at,
+          dashboardToken.accessTokenExpires,
+        ),
         refreshToken: account.refresh_token,
         profile,
         user: {
@@ -213,8 +240,6 @@ const authCallbacks: NextAuthOptions["callbacks"] = {
         },
       };
     }
-
-    const dashboardToken = token as DashboardJwt;
 
     if (hasUsableAccessToken(dashboardToken)) {
       return dashboardToken;
