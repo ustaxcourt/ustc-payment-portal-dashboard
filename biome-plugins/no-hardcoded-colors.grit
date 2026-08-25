@@ -2,7 +2,7 @@
 	$s <: string(),
 	or {
 		$s <: r".*(?:bg|text|border|ring|outline|fill|stroke|shadow|accent|caret|divide|decoration|from|via|to)-\[(?:#|rgb|hsl|oklch).*",
-		$s <: r".*(?:bg|text|border|ring|fill|stroke)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-(?:50|[1-9]00|950)(?:[^0-9].*)?"
+		$s <: r".*(?:bg|text|border|ring|outline|fill|stroke|shadow|accent|caret|divide|decoration|from|via|to)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-(?:50|[1-9]00|950)(?:[^0-9].*)?"
 	},
 	register_diagnostic(
 		span = $s,
