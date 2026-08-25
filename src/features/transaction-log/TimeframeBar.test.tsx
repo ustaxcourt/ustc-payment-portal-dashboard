@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { formatCourtDate } from "@/lib/format";
 import TimeframeBar from "./TimeframeBar";
 import type { TransactionLogEntry, TransactionLogResponse } from "./types";
 
@@ -100,6 +101,21 @@ describe("TimeframeBar", () => {
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Export" })).toBeEnabled(),
     );
+  });
+
+  it("shows the server-confirmed date beside the applied preset", async () => {
+    mockFetch(response());
+    renderBar();
+
+    const applied = formatCourtDate("2026-08-03T04:00:00.000Z");
+    expect(await screen.findByText(`Today – ${applied}`)).toBeInTheDocument();
+  });
+
+  it("shows no date until the server confirms the window", () => {
+    mockFetch(response());
+    renderBar();
+
+    expect(screen.queryByText(/–/)).not.toBeInTheDocument();
   });
 
   it("writes the chosen preset to the URL it shares with the log", async () => {
