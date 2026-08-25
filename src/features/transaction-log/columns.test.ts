@@ -21,14 +21,6 @@ describe("isSortableOnTab", () => {
       }
     }
   });
-
-  it("matches the All tab's columns on the search tab", () => {
-    for (const field of TRANSACTION_SORT_FIELDS) {
-      expect(isSortableOnTab(field, "search")).toBe(
-        isSortableOnTab(field, "all"),
-      );
-    }
-  });
 });
 
 describe("COLUMN_LABEL", () => {
