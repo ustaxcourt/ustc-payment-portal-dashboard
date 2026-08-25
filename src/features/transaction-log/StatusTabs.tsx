@@ -21,7 +21,7 @@ export default function StatusTabs({
     <div
       className="flex items-end gap-2"
       role="tablist"
-      aria-label="Filter by payment status"
+      aria-label="Filter transactions by status or custom search"
     >
       {VIEW_TABS.map((option) => {
         const isSelected = option === selected;
