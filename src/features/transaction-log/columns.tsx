@@ -24,20 +24,18 @@ export const COLUMN_LABEL: Record<TransactionSortField, string> = {
   transactionReferenceId: "Reference ID",
 };
 
-const sortable =
-  (label?: string) =>
-  ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
-    <SortableHeader
-      label={label ?? COLUMN_LABEL[column.id as TransactionSortField]}
-      sorted={column.getIsSorted()}
-      onToggle={() => column.toggleSorting()}
-    />
-  );
+const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
+  <SortableHeader
+    label={COLUMN_LABEL[column.id as TransactionSortField]}
+    sorted={column.getIsSorted()}
+    onToggle={() => column.toggleSorting()}
+  />
+);
 
 const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   {
     accessorKey: "createdAt",
-    header: sortable(),
+    header: sortable,
     sortDescFirst: true,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.createdAt);
@@ -51,7 +49,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "lastUpdatedAt",
-    header: sortable(),
+    header: sortable,
     sortDescFirst: true,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.lastUpdatedAt);
@@ -65,11 +63,11 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "feeName",
-    header: sortable(),
+    header: sortable,
   },
   {
     accessorKey: "transactionAmount",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => (
       <span className="tabular-nums">
         {formatCurrency(row.original.transactionAmount)}
@@ -78,12 +76,12 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "paymentMethod",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => formatLabel(row.original.paymentMethod),
   },
   {
     accessorKey: "paymentStatus",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => {
       const status = row.original.paymentStatus;
       return (
@@ -95,16 +93,16 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "transactionStatus",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => formatLabel(row.original.transactionStatus),
   },
   {
     accessorKey: "clientName",
-    header: sortable(),
+    header: sortable,
   },
   {
     accessorKey: "transactionReferenceId",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => (
       <span className="font-mono text-xs">
         {row.original.transactionReferenceId}
@@ -115,7 +113,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
 
 const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
   accessorKey: "returnDetail",
-  header: sortable(),
+  header: sortable,
   cell: ({ row }) => row.original.returnDetail ?? "—",
 };
 
