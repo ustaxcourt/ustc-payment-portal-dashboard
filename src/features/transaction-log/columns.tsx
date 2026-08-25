@@ -8,7 +8,6 @@ import { TAB_LABEL, TAB_TONE } from "./statusStyles";
 import type {
   TransactionLogEntry,
   TransactionSortField,
-  TransactionTab,
   ViewTab,
 } from "./types";
 
@@ -124,13 +123,13 @@ export const isSortableOnTab = (
   field: TransactionSortField,
   tab: ViewTab,
 ): boolean =>
-  getColumns(tab === "search" ? "all" : tab).some(
+  getColumns(tab).some(
     (column) => (column as { accessorKey?: string }).accessorKey === field,
   );
 
 export const getColumns = (
-  tab: TransactionTab,
+  tab: ViewTab,
 ): ColumnDef<TransactionLogEntry>[] =>
-  tab === "failed" || tab === "all"
+  tab === "failed" || tab === "all" || tab === "search"
     ? [...BASE_COLUMNS.slice(0, 6), FAILURE_REASON, ...BASE_COLUMNS.slice(6)]
     : BASE_COLUMNS;
