@@ -100,7 +100,7 @@ export default function TimeframeControls({
 
   return (
     <div className="py-1">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="min-w-40">
           <p className="text-sm font-medium">Timeframe</p>
           <p className="text-sm text-muted-foreground">
@@ -137,55 +137,55 @@ export default function TimeframeControls({
             );
           })}
         </div>
-      </div>
 
-      {isCustomOpen ? (
-        <div className="mt-4 grid gap-3 border-t pt-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
-          <label className="flex flex-col gap-1 text-sm font-medium">
-            <span>From</span>
-            <input
-              type="date"
-              value={draftFrom}
-              min={minDate}
-              max={maxDate}
-              onChange={(event) => {
-                setDraftFrom(event.target.value);
-                setError(null);
-              }}
-              className={cn(
-                "h-9 rounded-md border bg-background px-3 text-sm outline-none",
-                "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-                error ? "border-destructive" : "border-border",
-              )}
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? errorId : undefined}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium">
-            <span>To</span>
-            <input
-              type="date"
-              value={draftTo}
-              min={minDate}
-              max={maxDate}
-              onChange={(event) => {
-                setDraftTo(event.target.value);
-                setError(null);
-              }}
-              className={cn(
-                "h-9 rounded-md border bg-background px-3 text-sm outline-none",
-                "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-                error ? "border-destructive" : "border-border",
-              )}
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? errorId : undefined}
-            />
-          </label>
-          <Button type="button" onClick={applyCustomRange}>
-            Apply
-          </Button>
-        </div>
-      ) : null}
+        {isCustomOpen ? (
+          <div className="flex flex-wrap items-center gap-3 self-stretch border-l pl-4">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <span>From</span>
+              <input
+                type="date"
+                value={draftFrom}
+                min={minDate}
+                max={maxDate}
+                onChange={(event) => {
+                  setDraftFrom(event.target.value);
+                  setError(null);
+                }}
+                className={cn(
+                  "h-9 rounded-md border bg-background px-3 text-sm outline-none",
+                  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                  error ? "border-destructive" : "border-border",
+                )}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? errorId : undefined}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <span>To</span>
+              <input
+                type="date"
+                value={draftTo}
+                min={minDate}
+                max={maxDate}
+                onChange={(event) => {
+                  setDraftTo(event.target.value);
+                  setError(null);
+                }}
+                className={cn(
+                  "h-9 rounded-md border bg-background px-3 text-sm outline-none",
+                  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                  error ? "border-destructive" : "border-border",
+                )}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? errorId : undefined}
+              />
+            </label>
+            <Button type="button" size="sm" onClick={applyCustomRange}>
+              Apply
+            </Button>
+          </div>
+        ) : null}
+      </div>
 
       {error ? (
         <p

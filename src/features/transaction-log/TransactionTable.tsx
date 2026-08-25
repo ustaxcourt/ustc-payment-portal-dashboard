@@ -68,7 +68,10 @@ export default function TransactionTable({
   });
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto rounded-b-md border-2 border-t-0 border-muted-foreground">
+    <div
+      data-testid="transaction-table-scroll"
+      className="min-h-0 flex-1 overflow-auto rounded-b-md border-2 border-t-0 border-muted-foreground"
+    >
       <Table>
         <TableCaption className="sr-only">
           Transaction log, {TAB_LABEL[tab]}
