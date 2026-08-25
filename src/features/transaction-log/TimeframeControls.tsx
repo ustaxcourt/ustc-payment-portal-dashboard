@@ -101,6 +101,7 @@ export default function TimeframeControls({
   return (
     <div className="py-1">
       <div className="flex flex-wrap items-center gap-4">
+        {/* Holds the preset buttons still as the label length changes. */}
         <div className="min-w-40">
           <p className="text-sm font-medium">Timeframe</p>
           <p className="text-sm text-muted-foreground">

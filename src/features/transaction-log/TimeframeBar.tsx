@@ -12,6 +12,7 @@ export default function TimeframeBar() {
   const { data } = useTransactionLog(tab, appliedRange, activeSorting);
 
   return (
+    // Band ≈ half the header's height (PO-approved); pairs with TimeframeControls' py-1.
     <div className="flex flex-wrap items-center justify-between gap-3 bg-muted px-6 py-2 sm:px-8">
       <TimeframeControls
         appliedRange={appliedRange}

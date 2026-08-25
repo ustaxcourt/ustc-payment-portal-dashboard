@@ -8,6 +8,8 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
+      // Diverges from stock shadcn: overflow-x-auto here breaks sticky headers.
+      // Guarded by the "pinned while the log scrolls" e2e test.
       className="relative w-full"
     >
       <table
