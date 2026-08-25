@@ -130,6 +130,6 @@ export const isSortableOnTab = (
 export const getColumns = (
   tab: ViewTab,
 ): ColumnDef<TransactionLogEntry>[] =>
-  tab === "failed" || tab === "all" || tab === "search"
+  tab === "failed" || tab === "all"
     ? [...BASE_COLUMNS.slice(0, 6), FAILURE_REASON, ...BASE_COLUMNS.slice(6)]
     : BASE_COLUMNS;

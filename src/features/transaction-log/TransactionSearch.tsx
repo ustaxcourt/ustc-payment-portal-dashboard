@@ -150,7 +150,7 @@ export default function TransactionSearch({
 
       <TransactionTable
         rows={rows}
-        columns={getColumns("search")}
+        columns={getColumns("all")}
         caption="Transaction log, Search results"
         headerTone="bg-slate-50"
         sorting={sorting}
