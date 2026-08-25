@@ -144,6 +144,7 @@ export default function TransactionSearch({
           </div>
         </div>
 
+        {/* Expand this div to store Search input in PAY-394 */}
         <div className="flex flex-col gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 lg:pl-6" />
       </div>
 
