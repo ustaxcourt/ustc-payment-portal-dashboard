@@ -1,13 +1,14 @@
 "use client";
 
-import ErrorPanel from "@/components/ui/ErrorPanel";
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { Button } from "@/components/ui/button";
+import ErrorPanel from "@/components/ui/ErrorPanel";
 import { formatCourtDate } from "@/lib/format";
-import { COLUMN_LABEL, isSortableOnTab } from "./columns";
+import { COLUMN_LABEL, getColumns, isSortableOnTab } from "./columns";
 import { DATE_RANGE_PRESETS, resolveAppliedDateRange } from "./dateRange";
 import ExportButton from "./ExportButton";
 import StatusTabs from "./StatusTabs";
+import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
 import TimeframeControls from "./TimeframeControls";
 import TransactionSearch from "./TransactionSearch";
 import TransactionTable from "./TransactionTable";
@@ -20,8 +21,8 @@ import {
   SORT_ORDERS,
   TRANSACTION_SORT_FIELDS,
   TRANSACTION_STATUSES,
-  VIEW_TABS,
   type TransactionSearchFilters,
+  VIEW_TABS,
   type ViewTab,
 } from "./types";
 import { useTransactionLog } from "./useTransactionLog";
@@ -179,7 +180,9 @@ export default function TransactionLog() {
           ) : (
             <TransactionTable
               rows={data?.data ?? []}
-              tab={tab}
+              columns={getColumns(tab)}
+              caption={`Transaction log, ${TAB_LABEL[tab]}`}
+              headerTone={TAB_HEADER_TONE[tab]}
               sorting={activeSorting}
               onSortingChange={setParams}
               emptyMessage={

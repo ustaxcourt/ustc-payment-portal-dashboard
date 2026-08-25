@@ -9,16 +9,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatLabel } from "@/lib/format";
-import TransactionSearchTable from "./TransactionSearchTable";
+import { getColumns } from "./columns";
+import TransactionTable from "./TransactionTable";
 import {
-  FEE_TYPES,
   FEE_TYPE_LABEL,
+  FEE_TYPES,
+  type FeeType,
   PAY_TYPES,
   PAYMENT_STATUSES,
-  TRANSACTION_STATUSES,
-  type FeeType,
-  type PayType,
   type PaymentStatus,
+  type PayType,
+  TRANSACTION_STATUSES,
   type TransactionLogEntry,
   type TransactionSorting,
   type TransactionStatus,
@@ -146,11 +147,15 @@ export default function TransactionSearch({
         <div className="flex flex-col gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 lg:pl-6" />
       </div>
 
-      <TransactionSearchTable
+      <TransactionTable
         rows={rows}
+        columns={getColumns("all")}
+        caption="Transaction log, Search results"
+        headerTone="bg-slate-50"
         sorting={sorting}
         onSortingChange={onSortingChange}
         emptyMessage={emptyMessage}
+        wrapperClassName="max-h-[60vh] overflow-auto rounded-md border"
       />
     </div>
   );
