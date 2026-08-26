@@ -7,11 +7,20 @@ import type { TotalsResponse } from "./types";
 const NOW = "2026-02-18T20:00:00.000Z";
 
 const totals = (): TotalsResponse => ({
-  day: { from: "2026-02-18T05:00:00.000Z", to: NOW, total: 4500 },
-  week: { from: "2026-02-15T05:00:00.000Z", to: NOW, total: 22000 },
-  month: { from: "2026-02-01T05:00:00.000Z", to: NOW, total: 98125 },
-  quarter: { from: "2026-01-01T05:00:00.000Z", to: NOW, total: 158500 },
-  fiscalYear: { from: "2025-10-01T04:00:00.000Z", to: NOW, total: 458500 },
+  current: {
+    day: { from: "2026-02-18T05:00:00.000Z", to: NOW, total: 4500 },
+    week: { from: "2026-02-15T05:00:00.000Z", to: NOW, total: 22000 },
+    month: { from: "2026-02-01T05:00:00.000Z", to: NOW, total: 98125 },
+    quarter: { from: "2026-01-01T05:00:00.000Z", to: NOW, total: 158500 },
+    fiscalYear: { from: "2025-10-01T04:00:00.000Z", to: NOW, total: 458500 },
+  },
+  previous: {
+    day: { from: "2025-02-18T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 3800 },
+    week: { from: "2025-02-15T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 20000 },
+    month: { from: "2025-02-01T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 96500 },
+    quarter: { from: "2025-01-01T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 160375 },
+    fiscalYear: { from: "2024-10-01T04:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 488450 },
+  },
 });
 
 const renderTotals = () => {
@@ -25,6 +34,9 @@ const renderTotals = () => {
     </QueryClientProvider>,
   );
 };
+
+const hasText = (expected: string) => (_: string, element: Element | null) =>
+  element?.textContent?.replace(/\s+/g, " ").trim() === expected;
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -43,6 +55,24 @@ describe("RevenueTotals", () => {
       expect(screen.getByText("$4,500.00")).toBeInTheDocument();
     });
     expect(screen.getByText("$458,500.00")).toBeInTheDocument();
+    expect(
+      screen.getByRole("rowheader", { name: "YoY Trend FY26 vs FY25" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders a trend cell per period against the prior fiscal year", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    expect(await screen.findByText(hasText("▲ +$700.00 (18%)"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▲ +$2,000.00 (10%)"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▲ +$1,625.00 (2%)"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▼ -$1,875.00 (1%)"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▼ -$29,950.00 (6%)"))).toBeInTheDocument();
   });
 
   // "Q2" and "FY26" name a period without saying when it opened, so the AC's

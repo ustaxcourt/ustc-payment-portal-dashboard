@@ -9,6 +9,7 @@ import {
   periodSubtitle,
   SUBTITLE_IS_DATED,
   TOTAL_PERIODS,
+  type TotalPeriod,
 } from "./types";
 import { useTotals } from "./useTotals";
 
@@ -17,6 +18,37 @@ const CELL = "border px-4 py-2";
  *  The dark variant is what a bare palette class would be missing. */
 const HEADER_ROW = "bg-blue-100 dark:bg-blue-950";
 const HEADING_ID = "revenue-totals-heading";
+
+const formatTrendAmount = (amount: number): string => {
+  const direction = amount > 0 ? "+" : amount < 0 ? "-" : "";
+  return `${direction}${formatCurrency(Math.abs(amount))}`;
+};
+
+const formatTrendPercent = (current: number, previous: number): string | null => {
+  if (previous <= 0) return null;
+  return `${Math.round((Math.abs(current - previous) / previous) * 100)}%`;
+};
+
+const trendStyles = (amount: number): string =>
+  amount > 0
+    ? "text-green-700 dark:text-green-400"
+    : amount < 0
+      ? "text-red-700 dark:text-red-400"
+      : "text-muted-foreground";
+
+function TrendCell({ current, previous }: { current: TotalPeriod; previous: TotalPeriod }) {
+  const amount = current.total - previous.total;
+  const percent = formatTrendPercent(current.total, previous.total);
+  const indicator = amount > 0 ? "▲" : amount < 0 ? "▼" : "•";
+
+  return (
+    <td className={cn(CELL, "text-lg tabular-nums")}>
+      <span className={cn("font-semibold", trendStyles(amount))}>{indicator}</span>{" "}
+      <span className="tabular-nums">{formatTrendAmount(amount)}</span>
+      {percent ? ` (${percent})` : ""}
+    </td>
+  );
+}
 
 /** Mirrors the transaction log's section/h2, so the page has one outline. */
 function Panel({ children }: { children: React.ReactNode }) {
@@ -61,6 +93,9 @@ export default function RevenueTotals() {
     );
   }
 
+  const currentFiscalYear = periodSubtitle(data.current.fiscalYear, "fiscalYear");
+  const previousFiscalYear = periodSubtitle(data.previous.fiscalYear, "fiscalYear");
+
   return (
     <Panel>
       <div className="overflow-x-auto">
@@ -75,10 +110,10 @@ export default function RevenueTotals() {
             {TOTAL_PERIODS.map((period) => (
               <th key={period} scope="col" className={cn(CELL, "text-sm font-normal")}>
                 <span className="font-bold">{PERIOD_LABEL[period]}</span>
-                {` - ${periodSubtitle(data[period], period)}`}
+                {` - ${periodSubtitle(data.current[period], period)}`}
                 {SUBTITLE_IS_DATED.has(period) ? null : (
                   <span className="block text-xs font-normal text-muted-foreground">
-                    {periodRange(data[period])}
+                    {periodRange(data.current[period])}
                   </span>
                 )}
               </th>
@@ -91,12 +126,27 @@ export default function RevenueTotals() {
               scope="row"
               className={cn(CELL, "border-0 text-right text-sm font-normal")}
             >
-              Total
+              Current Total
             </th>
             {TOTAL_PERIODS.map((period) => (
               <td key={period} className={cn(CELL, "text-2xl tabular-nums")}>
-                {formatCurrency(data[period].total)}
+                {formatCurrency(data.current[period].total)}
               </td>
+            ))}
+          </tr>
+          <tr>
+            <th
+              scope="row"
+              className={cn(CELL, "border-0 text-right text-sm font-normal")}
+            >
+              {`YoY Trend (${currentFiscalYear} vs ${previousFiscalYear})`}
+            </th>
+            {TOTAL_PERIODS.map((period) => (
+              <TrendCell
+                key={period}
+                current={data.current[period]}
+                previous={data.previous[period]}
+              />
             ))}
           </tr>
         </tbody>

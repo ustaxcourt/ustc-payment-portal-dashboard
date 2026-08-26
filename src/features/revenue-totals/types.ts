@@ -20,7 +20,12 @@ export type TotalPeriod = {
   total: number;
 };
 
-export type TotalsResponse = Record<TotalPeriodName, TotalPeriod>;
+export type TotalsSnapshot = Record<TotalPeriodName, TotalPeriod>;
+
+export type TotalsResponse = {
+  current: TotalsSnapshot;
+  previous: TotalsSnapshot;
+};
 
 export const PERIOD_LABEL: Record<TotalPeriodName, string> = {
   day: "Today",
@@ -64,7 +69,10 @@ export const periodRange = ({ from, to }: TotalPeriod): string =>
   `${formatCourtDate(from)} to ${formatCourtDate(to)}`;
 
 /** Labels the instants the server reported; no boundary is recomputed here. */
-export const periodSubtitle = ({ from, to }: TotalPeriod, period: TotalPeriodName): string => {
+export const periodSubtitle = (
+  { from, to }: TotalPeriod,
+  period: TotalPeriodName,
+): string => {
   const opened = new Date(from);
   const parts = courtParts.formatToParts(opened);
   const month = Number(parts.find((part) => part.type === "month")?.value);
