@@ -1,39 +1,66 @@
 "use client";
 
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import FilterSelect from "@/components/ui/FilterSelect";
 import { formatLabel } from "@/lib/format";
 import { getColumns } from "./columns";
 import TransactionTable from "./TransactionTable";
 import {
   FEE_TYPE_LABEL,
   FEE_TYPES,
-  type FeeType,
   PAY_TYPES,
   PAYMENT_STATUSES,
-  type PaymentStatus,
-  type PayType,
   TRANSACTION_STATUSES,
   type TransactionLogEntry,
+  type TransactionSearchFilters,
   type TransactionSorting,
-  type TransactionStatus,
 } from "./types";
 
+type FilterKey = keyof TransactionSearchFilters;
+
+const FILTER_CONFIG: {
+  key: FilterKey;
+  id: string;
+  label: string;
+  options: readonly { value: string; label: string }[];
+}[] = [
+  {
+    key: "feeType",
+    id: "search-fee-type",
+    label: "Fee Type",
+    options: FEE_TYPES.map((value) => ({
+      value,
+      label: FEE_TYPE_LABEL[value],
+    })),
+  },
+  {
+    key: "payType",
+    id: "search-pay-type",
+    label: "Pay Type",
+    options: PAY_TYPES.map((value) => ({ value, label: value })),
+  },
+  {
+    key: "paymentStatus",
+    id: "search-payment-status",
+    label: "Payment Status",
+    options: PAYMENT_STATUSES.map((value) => ({
+      value,
+      label: formatLabel(value),
+    })),
+  },
+  {
+    key: "transactionStatus",
+    id: "search-transaction-status",
+    label: "Transaction Status",
+    options: TRANSACTION_STATUSES.map((value) => ({
+      value,
+      label: formatLabel(value),
+    })),
+  },
+];
+
 type Props = {
-  feeType: FeeType | null;
-  payType: PayType | null;
-  paymentStatus: PaymentStatus | null;
-  transactionStatus: TransactionStatus | null;
-  onFeeTypeChange: (value: FeeType | null) => void;
-  onPayTypeChange: (value: PayType | null) => void;
-  onPaymentStatusChange: (value: PaymentStatus | null) => void;
-  onTransactionStatusChange: (value: TransactionStatus | null) => void;
+  filters: TransactionSearchFilters;
+  onFilterChange: (key: FilterKey, value: string | null) => void;
   rows: TransactionLogEntry[];
   sorting: TransactionSorting;
   onSortingChange: (next: TransactionSorting) => void;
@@ -41,14 +68,8 @@ type Props = {
 };
 
 export default function TransactionSearch({
-  feeType,
-  payType,
-  paymentStatus,
-  transactionStatus,
-  onFeeTypeChange,
-  onPayTypeChange,
-  onPaymentStatusChange,
-  onTransactionStatusChange,
+  filters,
+  onFilterChange,
   rows,
   sorting,
   onSortingChange,
@@ -60,87 +81,16 @@ export default function TransactionSearch({
         <div className="lg:pr-6">
           <h3 className="text-sm font-semibold">Filter by Type</h3>
           <div className="mt-3 flex flex-col gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="search-fee-type">Fee Type</Label>
-              <Select
-                value={feeType}
-                onValueChange={(value) => onFeeTypeChange(value as FeeType)}
-              >
-                <SelectTrigger id="search-fee-type" className="w-full">
-                  <SelectValue placeholder="- Select -" />
-                </SelectTrigger>
-                <SelectContent>
-                  {FEE_TYPES.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {FEE_TYPE_LABEL[option]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="search-pay-type">Pay Type</Label>
-              <Select
-                value={payType}
-                onValueChange={(value) => onPayTypeChange(value as PayType)}
-              >
-                <SelectTrigger id="search-pay-type" className="w-full">
-                  <SelectValue placeholder="- Select -" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAY_TYPES.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="search-payment-status">Payment Status</Label>
-              <Select
-                value={paymentStatus}
-                onValueChange={(value) =>
-                  onPaymentStatusChange(value as PaymentStatus)
-                }
-              >
-                <SelectTrigger id="search-payment-status" className="w-full">
-                  <SelectValue placeholder="- Select -" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYMENT_STATUSES.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {formatLabel(option)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="search-transaction-status">
-                Transaction Status
-              </Label>
-              <Select
-                value={transactionStatus}
-                onValueChange={(value) =>
-                  onTransactionStatusChange(value as TransactionStatus)
-                }
-              >
-                <SelectTrigger
-                  id="search-transaction-status"
-                  className="w-full"
-                >
-                  <SelectValue placeholder="- Select -" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TRANSACTION_STATUSES.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {formatLabel(option)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {FILTER_CONFIG.map((filter) => (
+              <FilterSelect
+                key={filter.key}
+                id={filter.id}
+                label={filter.label}
+                value={filters[filter.key]}
+                options={filter.options}
+                onChange={(value) => onFilterChange(filter.key, value)}
+              />
+            ))}
           </div>
         </div>
 

@@ -154,17 +154,17 @@ export default function TransactionLog() {
           </div>
           {tab === "search" ? (
             <TransactionSearch
-              feeType={params.feeType}
-              payType={params.payType}
-              paymentStatus={params.paymentStatus}
-              transactionStatus={params.transactionStatus}
-              onFeeTypeChange={(feeType) => setParams({ feeType })}
-              onPayTypeChange={(payType) => setParams({ payType })}
-              onPaymentStatusChange={(paymentStatus) =>
-                setParams({ paymentStatus })
-              }
-              onTransactionStatusChange={(transactionStatus) =>
-                setParams({ transactionStatus })
+              filters={{
+                feeType: params.feeType,
+                payType: params.payType,
+                paymentStatus: params.paymentStatus,
+                transactionStatus: params.transactionStatus,
+              }}
+              onFilterChange={(key, value) =>
+                setParams({ [key]: value } as Pick<
+                  TransactionSearchFilters,
+                  typeof key
+                >)
               }
               rows={hasSearchCriteria ? (data?.data ?? []) : []}
               sorting={activeSorting}
