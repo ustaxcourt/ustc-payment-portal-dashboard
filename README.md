@@ -61,6 +61,14 @@ npm run dev
 Then sign in at http://localhost:3000. Note `npm run build` and `npm run dev`
 share `.next`, so running a build while the dev server is up will break it.
 
+The dashboard requests the Microsoft refresh-token scope (`offline_access`) and
+refreshes Entra access tokens server-side inside the NextAuth JWT callback.
+Make sure the app registration and tenant policy allow issuing refresh tokens
+for the delegated scopes `openid profile offline_access User.Read`; if refresh
+fails because the token was revoked or expired, the dashboard clears the
+session on the next auth check and sends the user back through the normal
+sign-in flow.
+
 ## Talking to the payment portal
 
 The browser never calls the payment-portal API. `/api/transactions` runs on the

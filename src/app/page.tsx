@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import LogoutButton from "@/components/ui/LogoutButton";
 import RevenueTotals from "@/features/revenue-totals/RevenueTotals";
 import TransactionLog from "@/features/transaction-log/TransactionLog";
-import { getSessionAuthOptions } from "@/lib/auth";
+import { getSessionAuthOptions, hasValidDashboardSession } from "@/lib/auth";
 import { loginUrlReturningTo } from "@/lib/callbackUrl";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -30,7 +30,7 @@ export default async function Home({
 }) {
   const session = await getServerSession(getSessionAuthOptions());
 
-  if (!session) {
+  if (!hasValidDashboardSession(session)) {
     const query = toQueryString(await searchParams);
     redirect(loginUrlReturningTo(query ? `/?${query}` : "/"));
   }
