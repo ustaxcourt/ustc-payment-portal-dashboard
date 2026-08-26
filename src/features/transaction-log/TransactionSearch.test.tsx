@@ -86,7 +86,7 @@ describe("TransactionSearch", () => {
     );
   });
 
-  it("selecting All clears an active filter", async () => {
+  it("selecting Any clears an active filter", async () => {
     const onFilterChange = vi.fn();
     renderSearch({
       onFilterChange,
@@ -99,7 +99,7 @@ describe("TransactionSearch", () => {
     });
 
     await userEvent.click(screen.getByLabelText("Fee Type"));
-    await userEvent.click(await screen.findByRole("option", { name: "All" }));
+    await userEvent.click(await screen.findByRole("option", { name: "Any" }));
 
     expect(onFilterChange).toHaveBeenCalledWith("feeType", null);
   });
