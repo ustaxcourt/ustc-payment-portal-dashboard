@@ -14,12 +14,23 @@ const totals = (): TotalsResponse => ({
     quarter: { from: "2026-01-01T05:00:00.000Z", to: NOW, total: 158500 },
     fiscalYear: { from: "2025-10-01T04:00:00.000Z", to: NOW, total: 458500 },
   },
-  previous: {
-    day: { from: "2025-02-18T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 3800 },
-    week: { from: "2025-02-15T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 20000 },
-    month: { from: "2025-02-01T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 96500 },
-    quarter: { from: "2025-01-01T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 160375 },
-    fiscalYear: { from: "2024-10-01T04:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 488450 },
+  priorYear: {
+    day: { from: "2025-02-18T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 3800, hasData: true },
+    week: { from: "2025-02-15T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 20000, hasData: true },
+    month: { from: "2025-02-01T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 96500, hasData: true },
+    quarter: { from: "2025-01-01T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 160375, hasData: true },
+    fiscalYear: { from: "2024-10-01T04:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 488450, hasData: true },
+  },
+});
+
+const totalsWithoutPriorYear = (): TotalsResponse => ({
+  ...totals(),
+  priorYear: {
+    day: { from: "2025-02-18T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 0, hasData: false },
+    week: { from: "2025-02-15T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 0, hasData: false },
+    month: { from: "2025-02-01T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 0, hasData: false },
+    quarter: { from: "2025-01-01T05:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 0, hasData: false },
+    fiscalYear: { from: "2024-10-01T04:00:00.000Z", to: "2025-02-18T20:00:00.000Z", total: 0, hasData: false },
   },
 });
 
@@ -56,7 +67,9 @@ describe("RevenueTotals", () => {
     });
     expect(screen.getByText("$458,500.00")).toBeInTheDocument();
     expect(
-      screen.getByRole("rowheader", { name: "YoY Trend FY26 vs FY25" }),
+      screen.getByRole("rowheader", {
+        name: "Year-over-Year Change (FY26 vs FY25)",
+      }),
     ).toBeInTheDocument();
   });
 
@@ -68,11 +81,27 @@ describe("RevenueTotals", () => {
 
     renderTotals();
 
-    expect(await screen.findByText(hasText("▲ +$700.00 (18%)"))).toBeInTheDocument();
-    expect(screen.getByText(hasText("▲ +$2,000.00 (10%)"))).toBeInTheDocument();
-    expect(screen.getByText(hasText("▲ +$1,625.00 (2%)"))).toBeInTheDocument();
-    expect(screen.getByText(hasText("▼ -$1,875.00 (1%)"))).toBeInTheDocument();
-    expect(screen.getByText(hasText("▼ -$29,950.00 (6%)"))).toBeInTheDocument();
+    expect(await screen.findByText(hasText("▲ +$700.00"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▲ +$2,000.00"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▲ +$1,625.00"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▼ -$1,875.00"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▼ -$29,950.00"))).toBeInTheDocument();
+  });
+
+  it("shows N/A when there is no prior-year data", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => totalsWithoutPriorYear(),
+      }),
+    );
+
+    renderTotals();
+
+    expect(await screen.findAllByText("N/A")).toHaveLength(5);
+    expect(screen.getByText("$458,500.00")).toBeInTheDocument();
   });
 
   // "Q2" and "FY26" name a period without saying when it opened, so the AC's

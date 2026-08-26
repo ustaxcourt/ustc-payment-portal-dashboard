@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import type { TotalsSnapshot } from "@/features/revenue-totals/types";
+import type {
+  PriorYearPeriod,
+  PriorYearTotalsSnapshot,
+  TotalsSnapshot,
+} from "@/features/revenue-totals/types";
 import { getSigned } from "@/lib/paymentPortalApi";
 import { hasDashboardSession } from "@/lib/serverSession";
 import { TOTAL_PERIODS } from "@/features/revenue-totals/types";
@@ -60,7 +64,13 @@ const shiftIsoYear = (iso: string, years: number): string => {
   return shifted.toISOString();
 };
 
-const previousRangeFor = ({
+/**
+ * The upstream totals already encode the dashboard's fiscal boundaries, so the
+ * prior-year comparator is the same exact elapsed window shifted back one year.
+ * For FYTD, that means Oct 1 of the prior fiscal year through the equivalent
+ * in-progress date one calendar year earlier.
+ */
+const priorYearRangeFor = ({
   from,
   to,
 }: TotalPeriod): Pick<TotalPeriod, "from" | "to"> => ({
@@ -68,11 +78,12 @@ const previousRangeFor = ({
   to: shiftIsoYear(to, -1),
 });
 
-const fetchSuccessfulTotalForRange = async (
+const fetchPriorYearTotalForRange = async (
   range: Pick<TotalPeriod, "from" | "to">,
-): Promise<number> => {
+): Promise<PriorYearPeriod> => {
   let page = 1;
   let total = 0;
+  let hasData = false;
 
   while (true) {
     const upstream = await getSigned(
@@ -88,20 +99,26 @@ const fetchSuccessfulTotalForRange = async (
       }),
     );
 
+    if (upstream.status === 404) {
+      return { ...range, total: 0, hasData: false };
+    }
+
     if (!upstream.ok) {
       console.error(
-        `[dashboard] previous totals upstream responded ${upstream.status}`,
+        `[dashboard] prior-year totals upstream responded ${upstream.status}`,
       );
-      throw new Error("Unable to load the previous totals");
+      throw new Error("Unable to load the prior-year totals");
     }
 
     const body: unknown = await upstream.json();
     if (!isTransactionPage(body)) {
       console.error(
-        "[dashboard] previous totals response missing transaction data",
+        "[dashboard] prior-year totals response missing transaction data",
       );
-      throw new Error("Unable to load the previous totals");
+      throw new Error("Unable to load the prior-year totals");
     }
+
+    hasData ||= body.data.length > 0;
 
     total += body.data.reduce(
       (sum, entry) =>
@@ -110,11 +127,11 @@ const fetchSuccessfulTotalForRange = async (
     );
 
     if (body.data.length === 0 || body.data.length < body.pageSize) {
-      return total;
+      return { ...range, total, hasData };
     }
 
     if (typeof body.total === "number" && page * body.pageSize >= body.total) {
-      return total;
+      return { ...range, total, hasData };
     }
 
     page += 1;
@@ -158,18 +175,18 @@ export async function GET() {
     }
 
     const current = totals as TotalsSnapshot;
-    const previous = Object.fromEntries(
+    const priorYear = Object.fromEntries(
       await Promise.all(
         TOTAL_PERIODS.map(async (period) => {
-          const range = previousRangeFor(current[period]);
-          const total = await fetchSuccessfulTotalForRange(range);
+          const range = priorYearRangeFor(current[period]);
+          const total = await fetchPriorYearTotalForRange(range);
 
-          return [period, { ...range, total }] as const;
+          return [period, total] as const;
         }),
       ),
-    ) as TotalsSnapshot;
+    ) as PriorYearTotalsSnapshot;
 
-    return NextResponse.json({ current, previous });
+    return NextResponse.json({ current, priorYear });
   } catch (err) {
     console.error("[dashboard] totals request failed:", err);
     return NextResponse.json(
