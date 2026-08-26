@@ -234,6 +234,36 @@ describe("TransactionLog", () => {
     expect(requested.searchParams.get("transactionStatus")).toBe("processed");
   });
 
+  it("does not carry over the previous tab's totals onto an empty search", async () => {
+    const fetchMock = mockFetch(
+      response({
+        data: [],
+        total: 4213,
+        from: "2026-08-20T04:00:00.000Z",
+        to: "2026-08-21T04:00:00.000Z",
+      }),
+    );
+
+    renderLog("?status=all");
+
+    await waitFor(() => {
+      expect(screen.getByText(/of 4213 transactions/)).toBeInTheDocument();
+    });
+
+    fetchMock.mockClear();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Search" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Choose a filter to search transactions."),
+      ).toBeInTheDocument();
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.queryByText(/of 4213 transactions/)).not.toBeInTheDocument();
+  });
+
   it("only shows Clear All on the search tab", async () => {
     const fetchMock = mockFetch(response());
 
