@@ -17,7 +17,7 @@ import {
 
 type FilterKey = keyof TransactionSearchFilters;
 
-const ANY_VALUE = "any";
+const ANY_VALUE = "Any";
 
 const withAnyOption = (
   options: readonly { value: string; label: string }[],
