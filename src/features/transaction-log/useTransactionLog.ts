@@ -71,9 +71,6 @@ export const useTransactionLog = (
     ],
     queryFn: ({ signal }) =>
       fetchTransactionLogPage(tab, range, sorting, filters, 1, PAGE_SIZE, signal),
-    // Only hold the previous page over a real refetch. When the query is
-    // disabled (Search tab with no filter chosen yet), don't let it linger
-    // and masquerade as a result for the empty state.
     placeholderData: (previous) => (enabled ? previous : undefined),
     enabled,
   });
