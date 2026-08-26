@@ -61,6 +61,10 @@ const mockFetch = (body: TransactionLogResponse) => {
   return fetchMock;
 };
 
+const mockPendingFetch = () => {
+  vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+};
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -112,7 +116,7 @@ describe("TimeframeBar", () => {
   });
 
   it("shows no date until the server confirms the window", () => {
-    mockFetch(response());
+    mockPendingFetch();
     renderBar();
 
     expect(screen.queryByText(/–/)).not.toBeInTheDocument();
