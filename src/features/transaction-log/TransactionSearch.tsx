@@ -17,6 +17,12 @@ import {
 
 type FilterKey = keyof TransactionSearchFilters;
 
+const ALL_VALUE = "All";
+
+const withAllOption = (
+  options: readonly { value: string; label: string }[],
+) => [{ value: ALL_VALUE, label: "All" }, ...options];
+
 const FILTER_CONFIG: {
   key: FilterKey;
   id: string;
@@ -27,34 +33,34 @@ const FILTER_CONFIG: {
     key: "feeType",
     id: "search-fee-type",
     label: "Fee Type",
-    options: FEE_TYPES.map((value) => ({
-      value,
-      label: FEE_TYPE_LABEL[value],
-    })),
+    options: withAllOption(
+      FEE_TYPES.map((value) => ({ value, label: FEE_TYPE_LABEL[value] })),
+    ),
   },
   {
     key: "payType",
     id: "search-pay-type",
     label: "Pay Type",
-    options: PAY_TYPES.map((value) => ({ value, label: value })),
+    options: withAllOption(PAY_TYPES.map((value) => ({ value, label: value }))),
   },
   {
     key: "paymentStatus",
     id: "search-payment-status",
     label: "Payment Status",
-    options: PAYMENT_STATUSES.map((value) => ({
-      value,
-      label: formatLabel(value),
-    })),
+    options: withAllOption(
+      PAYMENT_STATUSES.map((value) => ({ value, label: formatLabel(value) })),
+    ),
   },
   {
     key: "transactionStatus",
     id: "search-transaction-status",
     label: "Transaction Status",
-    options: TRANSACTION_STATUSES.map((value) => ({
-      value,
-      label: formatLabel(value),
-    })),
+    options: withAllOption(
+      TRANSACTION_STATUSES.map((value) => ({
+        value,
+        label: formatLabel(value),
+      })),
+    ),
   },
 ];
 
@@ -86,9 +92,11 @@ export default function TransactionSearch({
                 key={filter.key}
                 id={filter.id}
                 label={filter.label}
-                value={filters[filter.key]}
+                value={filters[filter.key] ?? ALL_VALUE}
                 options={filter.options}
-                onChange={(value) => onFilterChange(filter.key, value)}
+                onChange={(value) =>
+                  onFilterChange(filter.key, value === ALL_VALUE ? null : value)
+                }
               />
             ))}
           </div>

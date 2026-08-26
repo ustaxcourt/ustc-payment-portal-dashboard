@@ -13,16 +13,16 @@ export default function FilterSelect({
 }: {
   id: string;
   label: string;
-  value: string | null;
+  value: string;
   options: readonly { value: string; label: string }[];
-  onChange: (value: string | null) => void;
+  onChange: (value: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={(next) => onChange(next ?? value)}>
         <SelectTrigger id={id} className="w-full">
-          <SelectValue placeholder="- Select -" />
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (

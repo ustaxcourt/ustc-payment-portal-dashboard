@@ -40,7 +40,7 @@ describe("TransactionSearch", () => {
 
     await userEvent.click(screen.getByLabelText("Fee Type"));
     await userEvent.click(
-      await screen.findByRole("option", { name: "Filing Fee" }),
+      await screen.findByRole("option", { name: "Petition Filing Fee" }),
     );
 
     expect(onFilterChange).toHaveBeenCalledWith(
@@ -84,6 +84,24 @@ describe("TransactionSearch", () => {
       "transactionStatus",
       "processed",
     );
+  });
+
+  it("selecting All clears an active filter", async () => {
+    const onFilterChange = vi.fn();
+    renderSearch({
+      onFilterChange,
+      filters: {
+        feeType: "PETITION_FILING_FEE",
+        payType: null,
+        paymentStatus: null,
+        transactionStatus: null,
+      },
+    });
+
+    await userEvent.click(screen.getByLabelText("Fee Type"));
+    await userEvent.click(await screen.findByRole("option", { name: "All" }));
+
+    expect(onFilterChange).toHaveBeenCalledWith("feeType", null);
   });
 
   it("renders the results table matching the other tabs' column set", () => {
