@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
   type SortingState,
@@ -17,31 +18,32 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { getColumns } from "./columns";
-import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
 import {
   isTransactionSortField,
   type TransactionLogEntry,
   type TransactionSorting,
-  type TransactionTab,
 } from "./types";
 
 // Core model only: the server owns sorting, filtering and pagination.
 export default function TransactionTable({
   rows,
-  tab,
+  columns,
+  caption,
+  headerTone,
   sorting,
   onSortingChange,
   emptyMessage,
+  wrapperClassName = "min-h-0 flex-1 overflow-auto rounded-b-md border-2 border-t-0 border-muted-foreground",
 }: {
   rows: TransactionLogEntry[];
-  tab: TransactionTab;
+  columns: ColumnDef<TransactionLogEntry>[];
+  caption: string;
+  headerTone: string;
   sorting: TransactionSorting;
   onSortingChange: (next: TransactionSorting) => void;
   emptyMessage: string;
+  wrapperClassName?: string;
 }) {
-  const columns = useMemo(() => getColumns(tab), [tab]);
-
   const sortingState: SortingState = useMemo(
     () => [{ id: sorting.sort, desc: sorting.order === "desc" }],
     [sorting.sort, sorting.order],
@@ -68,23 +70,20 @@ export default function TransactionTable({
   });
 
   return (
-    <div
-      data-testid="transaction-table-scroll"
-      className="min-h-0 flex-1 overflow-auto rounded-b-md border-2 border-t-0 border-muted-foreground"
-    >
+    <div data-testid="transaction-table-scroll" className={wrapperClassName}>
       <Table>
-        <TableCaption className="sr-only">
-          Transaction log, {TAB_LABEL[tab]}
-        </TableCaption>
-        <TableHeader
-          className={cn("sticky top-0 z-10", TAB_HEADER_TONE[tab])}
-        >
+        <TableCaption className="sr-only">{caption}</TableCaption>
+        <TableHeader className={cn("sticky top-0 z-10", headerTone)}>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header, index) => (
                 <TableHead
                   key={header.id}
-                  aria-sort={ariaSort(header.column.getIsSorted())}
+                  aria-sort={
+                    header.column.getCanSort()
+                      ? ariaSort(header.column.getIsSorted())
+                      : undefined
+                  }
                   className={cn(
                     "h-8",
                     cellBorder(index, headerGroup.headers.length),

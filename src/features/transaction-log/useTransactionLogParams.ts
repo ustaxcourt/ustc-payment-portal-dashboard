@@ -6,10 +6,15 @@ import { DATE_RANGE_PRESETS, resolveAppliedDateRange } from "./dateRange";
 import {
   DEFAULT_ORDER,
   DEFAULT_SORT,
+  FEE_TYPES,
+  PAY_TYPES,
+  PAYMENT_STATUSES,
   SORT_ORDERS,
   TRANSACTION_SORT_FIELDS,
-  TRANSACTION_TABS,
-  type TransactionTab,
+  TRANSACTION_STATUSES,
+  type TransactionSearchFilters,
+  VIEW_TABS,
+  type ViewTab,
 } from "./types";
 
 export const useTransactionLogParams = () => {
@@ -21,8 +26,12 @@ export const useTransactionLogParams = () => {
       sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(
         DEFAULT_SORT,
       ),
-      status: parseAsStringLiteral(TRANSACTION_TABS).withDefault("all"),
+      status: parseAsStringLiteral(VIEW_TABS).withDefault("all"),
       to: parseAsString,
+      feeType: parseAsStringLiteral(FEE_TYPES),
+      payType: parseAsStringLiteral(PAY_TYPES),
+      paymentStatus: parseAsStringLiteral(PAYMENT_STATUSES),
+      transactionStatus: parseAsStringLiteral(TRANSACTION_STATUSES),
     },
     {
       clearOnDefault: true,
@@ -41,7 +50,7 @@ export const useTransactionLogParams = () => {
     ? sorting
     : { sort: DEFAULT_SORT, order: DEFAULT_ORDER };
 
-  const selectTab = (next: TransactionTab) => {
+  const selectTab = (next: ViewTab) => {
     setParams(
       isSortableOnTab(params.sort, next)
         ? { status: next }
@@ -49,5 +58,44 @@ export const useTransactionLogParams = () => {
     );
   };
 
-  return { params, setParams, tab, appliedRange, activeSorting, selectTab };
+  const searchFilters: TransactionSearchFilters | undefined =
+    tab === "search"
+      ? {
+          feeType: params.feeType,
+          payType: params.payType,
+          paymentStatus: params.paymentStatus,
+          transactionStatus: params.transactionStatus,
+        }
+      : undefined;
+
+  const hasSearchCriteria = Boolean(
+    searchFilters?.feeType ||
+      searchFilters?.payType ||
+      searchFilters?.paymentStatus ||
+      searchFilters?.transactionStatus,
+  );
+
+  const clearSearch = () =>
+    setParams({
+      feeType: null,
+      payType: null,
+      paymentStatus: null,
+      transactionStatus: null,
+    });
+
+  // The search tab fetches nothing until a filter is chosen.
+  const queryEnabled = tab !== "search" || hasSearchCriteria;
+
+  return {
+    params,
+    setParams,
+    tab,
+    appliedRange,
+    activeSorting,
+    selectTab,
+    searchFilters,
+    hasSearchCriteria,
+    clearSearch,
+    queryEnabled,
+  };
 };

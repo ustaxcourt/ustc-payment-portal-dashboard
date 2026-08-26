@@ -1,20 +1,36 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import ErrorPanel from "@/components/ui/ErrorPanel";
-import { COLUMN_LABEL } from "./columns";
+import { COLUMN_LABEL, getColumns } from "./columns";
 import StatusTabs from "./StatusTabs";
+import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
+import TransactionSearch from "./TransactionSearch";
 import TransactionTable from "./TransactionTable";
+import type { TransactionSearchFilters } from "./types";
 import { useTransactionLog } from "./useTransactionLog";
 import { useTransactionLogParams } from "./useTransactionLogParams";
 
 export default function TransactionLog() {
-  const { setParams, tab, appliedRange, activeSorting, selectTab } =
-    useTransactionLogParams();
+  const {
+    params,
+    setParams,
+    tab,
+    appliedRange,
+    activeSorting,
+    selectTab,
+    searchFilters,
+    hasSearchCriteria,
+    clearSearch,
+    queryEnabled,
+  } = useTransactionLogParams();
 
   const { data, isPending, isError, error, refetch } = useTransactionLog(
     tab,
     appliedRange,
     activeSorting,
+    searchFilters,
+    queryEnabled,
   );
 
   return (
@@ -37,20 +53,58 @@ export default function TransactionLog() {
         />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <StatusTabs
-            selected={tab}
-            counts={data?.counts}
-            onSelect={selectTab}
-          />
-          <TransactionTable
-            rows={data?.data ?? []}
-            tab={tab}
-            sorting={activeSorting}
-            onSortingChange={setParams}
-            emptyMessage={
-              isPending ? "Loading transactions…" : "No transactions to show."
-            }
-          />
+          <div className="flex items-end justify-between gap-3 border-b-2 border-muted-foreground">
+            <StatusTabs
+              selected={tab}
+              counts={data?.counts}
+              onSelect={selectTab}
+            />
+            <div className="m-2.5">
+               {tab === "search" ? (
+              <Button type="button" variant="outline" onClick={clearSearch}>
+                Clear All
+              </Button>
+            ) : null}
+            </div>
+          </div>
+          {tab === "search" ? (
+            <TransactionSearch
+              filters={{
+                feeType: params.feeType,
+                payType: params.payType,
+                paymentStatus: params.paymentStatus,
+                transactionStatus: params.transactionStatus,
+              }}
+              onFilterChange={(key, value) =>
+                setParams({ [key]: value } as Pick<
+                  TransactionSearchFilters,
+                  typeof key
+                >)
+              }
+              rows={hasSearchCriteria ? (data?.data ?? []) : []}
+              sorting={activeSorting}
+              onSortingChange={setParams}
+              emptyMessage={
+                !hasSearchCriteria
+                  ? "Choose a filter to search transactions."
+                  : isPending
+                    ? "Searching…"
+                    : "No transactions match your search."
+              }
+            />
+          ) : (
+            <TransactionTable
+              rows={data?.data ?? []}
+              columns={getColumns(tab)}
+              caption={`Transaction log, ${TAB_LABEL[tab]}`}
+              headerTone={TAB_HEADER_TONE[tab]}
+              sorting={activeSorting}
+              onSortingChange={setParams}
+              emptyMessage={
+                isPending ? "Loading transactions…" : "No transactions to show."
+              }
+            />
+          )}
           {data ? (
             <p className="mt-2 text-right text-sm text-muted-foreground">
               {typeof data.total === "number" && data.data.length < data.total

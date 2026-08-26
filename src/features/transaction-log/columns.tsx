@@ -8,7 +8,7 @@ import { TAB_LABEL, TAB_TONE } from "./statusStyles";
 import type {
   TransactionLogEntry,
   TransactionSortField,
-  TransactionTab,
+  ViewTab,
 } from "./types";
 
 export const COLUMN_LABEL: Record<TransactionSortField, string> = {
@@ -24,20 +24,18 @@ export const COLUMN_LABEL: Record<TransactionSortField, string> = {
   transactionReferenceId: "Reference ID",
 };
 
-const sortable =
-  () =>
-  ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
-    <SortableHeader
-      label={COLUMN_LABEL[column.id as TransactionSortField]}
-      sorted={column.getIsSorted()}
-      onToggle={() => column.toggleSorting()}
-    />
-  );
+const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
+  <SortableHeader
+    label={COLUMN_LABEL[column.id as TransactionSortField]}
+    sorted={column.getIsSorted()}
+    onToggle={() => column.toggleSorting()}
+  />
+);
 
 const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   {
     accessorKey: "createdAt",
-    header: sortable(),
+    header: sortable,
     sortDescFirst: true,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.createdAt);
@@ -51,7 +49,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "lastUpdatedAt",
-    header: sortable(),
+    header: sortable,
     sortDescFirst: true,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.lastUpdatedAt);
@@ -65,11 +63,11 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "feeName",
-    header: sortable(),
+    header: sortable,
   },
   {
     accessorKey: "transactionAmount",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => (
       <span className="tabular-nums">
         {formatCurrency(row.original.transactionAmount)}
@@ -78,12 +76,12 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "paymentMethod",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => formatLabel(row.original.paymentMethod),
   },
   {
     accessorKey: "paymentStatus",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => {
       const status = row.original.paymentStatus;
       return (
@@ -95,16 +93,16 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
   {
     accessorKey: "transactionStatus",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => formatLabel(row.original.transactionStatus),
   },
   {
     accessorKey: "clientName",
-    header: sortable(),
+    header: sortable,
   },
   {
     accessorKey: "transactionReferenceId",
-    header: sortable(),
+    header: sortable,
     cell: ({ row }) => (
       <span className="font-mono text-xs">
         {row.original.transactionReferenceId}
@@ -115,21 +113,30 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
 
 const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
   accessorKey: "returnDetail",
-  header: sortable(),
+  header: sortable,
   cell: ({ row }) => row.original.returnDetail ?? "—",
 };
 
 export const isSortableOnTab = (
   field: TransactionSortField,
-  tab: TransactionTab,
+  tab: ViewTab,
 ): boolean =>
   getColumns(tab).some(
     (column) => (column as { accessorKey?: string }).accessorKey === field,
   );
 
+const COLUMNS_WITH_FAILURE_REASON: ColumnDef<TransactionLogEntry>[] = [
+  ...BASE_COLUMNS.slice(0, 6),
+  FAILURE_REASON,
+  ...BASE_COLUMNS.slice(6),
+];
+
+// Returns a stable reference per tab — react-table's memoization (and any
+// caller passing this straight into useReactTable's columns option) relies
+// on that, not just a same-shape array, to avoid recomputing every render.
 export const getColumns = (
-  tab: TransactionTab,
+  tab: ViewTab,
 ): ColumnDef<TransactionLogEntry>[] =>
-  tab === "failed" || tab === "all"
-    ? [...BASE_COLUMNS.slice(0, 6), FAILURE_REASON, ...BASE_COLUMNS.slice(6)]
+  tab === "failed" || tab === "all" || tab === "search"
+    ? COLUMNS_WITH_FAILURE_REASON
     : BASE_COLUMNS;

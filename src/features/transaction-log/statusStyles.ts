@@ -1,10 +1,11 @@
-import type { TransactionTab } from "./types";
+import type { TransactionTab, ViewTab } from "./types";
 
-export const TAB_LABEL: Record<TransactionTab, string> = {
+export const TAB_LABEL: Record<ViewTab, string> = {
   all: "All",
   success: "Successful",
   failed: "Failed",
   pending: "Pending",
+  search: "Search",
 };
 
 export const TAB_TONE: Record<TransactionTab, string> = {
