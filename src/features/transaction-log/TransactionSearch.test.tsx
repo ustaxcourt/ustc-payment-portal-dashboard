@@ -86,6 +86,24 @@ describe("TransactionSearch", () => {
     );
   });
 
+  it("shows the resolved label, not the raw value, on a closed trigger", () => {
+    renderSearch({
+      filters: {
+        feeType: "NONATTORNEY_EXAM_REGISTRATION_FEE",
+        payType: null,
+        paymentStatus: null,
+        transactionStatus: null,
+      },
+    });
+
+    expect(
+      screen.getByText("Non-Attorney Exam Registration Fee"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("NONATTORNEY_EXAM_REGISTRATION_FEE"),
+    ).not.toBeInTheDocument();
+  });
+
   it("selecting Any clears an active filter", async () => {
     const onFilterChange = vi.fn();
     renderSearch({

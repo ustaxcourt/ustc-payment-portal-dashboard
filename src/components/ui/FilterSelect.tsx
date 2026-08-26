@@ -20,7 +20,11 @@ export default function FilterSelect({
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Select value={value} onValueChange={(next) => onChange(next ?? value)}>
+      <Select
+        items={options}
+        value={value}
+        onValueChange={(next) => onChange(next ?? value)}
+      >
         <SelectTrigger id={id} className="w-full">
           <SelectValue />
         </SelectTrigger>
