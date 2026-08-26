@@ -31,7 +31,7 @@ export const FEE_TYPES = [
 export type FeeType = (typeof FEE_TYPES)[number];
 
 export const FEE_TYPE_LABEL: Record<FeeType, string> = {
-  PETITION_FILING_FEE: "Filing Fee",
+  PETITION_FILING_FEE: "Petition Filing Fee",
   NONATTORNEY_EXAM_REGISTRATION_FEE: "Non-Attorney Exam Registration Fee",
 };
 
