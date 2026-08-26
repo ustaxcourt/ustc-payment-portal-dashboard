@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import LoginButton from "@/components/ui/LoginButton";
-import { getSessionAuthOptions } from "@/lib/auth";
+import { getSessionAuthOptions, hasValidDashboardSession } from "@/lib/auth";
 import { safeCallbackUrl } from "@/lib/callbackUrl";
 
 export default async function LoginPage({
@@ -13,7 +13,7 @@ export default async function LoginPage({
   const destination = safeCallbackUrl(callbackUrl);
   const session = await getServerSession(getSessionAuthOptions());
 
-  if (session) {
+  if (hasValidDashboardSession(session)) {
     redirect(destination);
   }
 
