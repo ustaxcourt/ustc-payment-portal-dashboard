@@ -125,9 +125,18 @@ export const isSortableOnTab = (
     (column) => (column as { accessorKey?: string }).accessorKey === field,
   );
 
+const COLUMNS_WITH_FAILURE_REASON: ColumnDef<TransactionLogEntry>[] = [
+  ...BASE_COLUMNS.slice(0, 6),
+  FAILURE_REASON,
+  ...BASE_COLUMNS.slice(6),
+];
+
+// Returns a stable reference per tab — react-table's memoization (and any
+// caller passing this straight into useReactTable's columns option) relies
+// on that, not just a same-shape array, to avoid recomputing every render.
 export const getColumns = (
   tab: ViewTab,
 ): ColumnDef<TransactionLogEntry>[] =>
   tab === "failed" || tab === "all" || tab === "search"
-    ? [...BASE_COLUMNS.slice(0, 6), FAILURE_REASON, ...BASE_COLUMNS.slice(6)]
+    ? COLUMNS_WITH_FAILURE_REASON
     : BASE_COLUMNS;

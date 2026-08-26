@@ -36,6 +36,14 @@ describe("isSortableOnTab", () => {
   });
 });
 
+describe("getColumns", () => {
+  it("returns a stable reference per tab, so react-table doesn't see new columns every render", () => {
+    for (const tab of [...TRANSACTION_TABS, "search"] as const) {
+      expect(getColumns(tab)).toBe(getColumns(tab));
+    }
+  });
+});
+
 describe("COLUMN_LABEL", () => {
   it("names every sortable column", () => {
     for (const field of TRANSACTION_SORT_FIELDS) {
