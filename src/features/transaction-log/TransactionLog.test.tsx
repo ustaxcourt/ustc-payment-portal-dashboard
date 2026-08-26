@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import TimeframeBar from "./TimeframeBar";
 import TransactionLog from "./TransactionLog";
 import type { TransactionLogResponse } from "./types";
 
@@ -29,6 +30,22 @@ const renderLog = (searchParams = "") => {
   return render(
     <NuqsTestingAdapter searchParams={searchParams}>
       <QueryClientProvider client={client}>
+        <TransactionLog />
+      </QueryClientProvider>
+    </NuqsTestingAdapter>,
+  );
+};
+
+/** The timeframe presets live in the bar; render both when a flow spans them. */
+const renderDashboard = (searchParams = "") => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  return render(
+    <NuqsTestingAdapter searchParams={searchParams}>
+      <QueryClientProvider client={client}>
+        <TimeframeBar />
         <TransactionLog />
       </QueryClientProvider>
     </NuqsTestingAdapter>,
@@ -189,7 +206,7 @@ describe("TransactionLog", () => {
   it("changing the timeframe while a filter is active keeps the filter and updates the range", async () => {
     const fetchMock = mockFetch(response());
 
-    renderLog("?status=search&feeType=PETITION_FILING_FEE&range=today");
+    renderDashboard("?status=search&feeType=PETITION_FILING_FEE&range=today");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     const firstRequest = new URL(

@@ -59,13 +59,17 @@ export default function TransactionLog() {
               counts={data?.counts}
               onSelect={selectTab}
             />
-            <div className="m-2.5">
-               {tab === "search" ? (
-              <Button type="button" variant="outline" onClick={clearSearch}>
+            {tab === "search" ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mb-1.5"
+                onClick={clearSearch}
+              >
                 Clear All
               </Button>
             ) : null}
-            </div>
           </div>
           {tab === "search" ? (
             <TransactionSearch
