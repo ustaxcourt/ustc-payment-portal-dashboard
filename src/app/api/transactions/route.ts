@@ -13,6 +13,9 @@ const FORWARDED = [
   "pageSize",
   "sort",
   "order",
+  "fee",
+  "paymentMethod",
+  "transactionStatus",
   "export",
 ] as const;
 

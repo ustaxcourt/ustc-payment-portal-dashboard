@@ -2,6 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { describe, expect, it, vi } from "vitest";
+import { getColumns } from "./columns";
+import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
 import TransactionTable from "./TransactionTable";
 import type { TransactionLogEntry } from "./types";
 
@@ -28,7 +30,9 @@ const renderTable = (
   render(
     <TransactionTable
       rows={[row]}
-      tab="all"
+      columns={getColumns("all")}
+      caption={`Transaction log, ${TAB_LABEL.all}`}
+      headerTone={TAB_HEADER_TONE.all}
       sorting={{ sort: "createdAt", order: "desc" }}
       onSortingChange={vi.fn()}
       emptyMessage="No transactions to show."
@@ -131,6 +135,18 @@ describe("TransactionTable sort state", () => {
     const { violations } = await axe.run(container);
 
     expect(violations.map((violation) => violation.id)).toEqual([]);
+  });
+
+  it("shows the payment status as a badge", () => {
+    renderTable();
+
+    expect(screen.getByText("Failed")).toBeInTheDocument();
+  });
+
+  it("shows the failure reason", () => {
+    renderTable();
+
+    expect(screen.getByText("Insufficient funds")).toBeInTheDocument();
   });
 
   it("keeps the headers usable when there are no rows", () => {

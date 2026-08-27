@@ -27,6 +27,6 @@
     "enabled": false
   },
   "files": {
-    "includes": ["**", "!src/components/ui/", "!next-env.d.ts"]
+    "includes": ["**", "!src/components/ui", "!next-env.d.ts"]
   }
 }

@@ -2,8 +2,10 @@
 
 import { cn } from "@/lib/utils";
 import { TAB_LABEL, TAB_TONE } from "./statusStyles";
-import { TRANSACTION_TABS } from "./types";
-import type { TransactionCounts, TransactionTab } from "./types";
+import { VIEW_TABS } from "./types";
+import type { TransactionCounts, TransactionTab, ViewTab } from "./types";
+
+const isStatusTab = (tab: ViewTab): tab is TransactionTab => tab !== "search";
 
 // Counts cover the whole timeframe, so they hold steady as the selection changes.
 export default function StatusTabs({
@@ -11,17 +13,17 @@ export default function StatusTabs({
   counts,
   onSelect,
 }: {
-  selected: TransactionTab;
+  selected: ViewTab;
   counts?: TransactionCounts;
-  onSelect: (tab: TransactionTab) => void;
+  onSelect: (tab: ViewTab) => void;
 }) {
   return (
     <div
-      className="flex items-end gap-2 border-b"
+      className="flex items-end gap-2"
       role="tablist"
-      aria-label="Filter by payment status"
+      aria-label="Filter transactions by status or custom search"
     >
-      {TRANSACTION_TABS.map((option) => {
+      {VIEW_TABS.map((option) => {
         const isSelected = option === selected;
 
         return (
@@ -32,7 +34,7 @@ export default function StatusTabs({
             aria-selected={isSelected}
             onClick={() => onSelect(option)}
             className={cn(
-              "flex items-center gap-3 rounded-t-md px-5 py-3 text-sm transition-colors",
+              "flex cursor-pointer items-center gap-3 rounded-t-md px-5 py-3 text-sm transition-colors",
               // Sits on the table's border so the two read as one panel.
               isSelected
                 ? "-mb-px border border-b-background bg-background font-semibold"
@@ -40,14 +42,16 @@ export default function StatusTabs({
             )}
           >
             <span>{TAB_LABEL[option]}</span>
-            <span
-              className={cn(
-                "rounded px-2 py-0.5 text-sm font-semibold tabular-nums",
-                TAB_TONE[option],
-              )}
-            >
-              {counts ? counts[option] : "—"}
-            </span>
+            {isStatusTab(option) ? (
+              <span
+                className={cn(
+                  "rounded px-2 py-0.5 text-sm font-semibold tabular-nums",
+                  TAB_TONE[option],
+                )}
+              >
+                {counts ? counts[option] : "—"}
+              </span>
+            ) : null}
           </button>
         );
       })}

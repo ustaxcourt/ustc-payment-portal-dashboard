@@ -13,7 +13,7 @@ const row: TransactionLogEntry = {
   transactionReferenceId: "550e8400-e29b-41d4-a716-446655440000",
   paymentStatus: "failed",
   transactionStatus: "pending_settlement",
-  paymentMethod: "plastic_card",
+  paymentMethod: "Credit/Debit Card",
   returnCode: 102,
   returnDetail: "Insufficient funds",
   // 23:30 UTC on Aug 17 is 19:30 on Aug 17 in Court time (EDT).
@@ -89,7 +89,7 @@ describe("exportColumns", () => {
 
   it("keeps Amount a raw number and labels human-readable", () => {
     expect(cell("all", "Amount")).toBe(1234.56);
-    expect(cell("all", "Payment method")).toBe("Plastic card");
+    expect(cell("all", "Payment method")).toBe("Credit/Debit Card");
     expect(cell("all", "Payment status")).toBe("Failed");
     expect(cell("all", "Transaction status")).toBe("Pending settlement");
   });

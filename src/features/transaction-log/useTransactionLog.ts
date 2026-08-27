@@ -4,18 +4,20 @@ import { useQuery } from "@tanstack/react-query";
 import { type AppliedDateRange, courtDayIsoBounds } from "./dateRange";
 import type {
   TransactionLogResponse,
+  TransactionSearchFilters,
   TransactionSorting,
-  TransactionTab,
+  ViewTab,
 } from "./types";
 
 // The table shows one page; the footer reports the true total and the export
 // is the path to the complete set.
 const PAGE_SIZE = 200;
 
-export const fetchTransactionLogPage = async (
-  tab: TransactionTab,
+const fetchTransactionLogPage = async (
+  tab: ViewTab,
   range: AppliedDateRange,
   sorting: TransactionSorting,
+  filters: TransactionSearchFilters | undefined,
   page: number,
   pageSize: number,
   signal?: AbortSignal,
@@ -29,7 +31,14 @@ export const fetchTransactionLogPage = async (
     sort: sorting.sort,
     to: bounds.to,
   });
-  if (tab !== "all") params.set("status", tab);
+  if (tab !== "all" && tab !== "search") params.set("status", tab);
+
+  if (filters?.feeType) params.set("fee", filters.feeType);
+  if (filters?.payType) params.set("paymentMethod", filters.payType);
+  if (filters?.paymentStatus) params.set("status", filters.paymentStatus);
+  if (filters?.transactionStatus) {
+    params.set("transactionStatus", filters.transactionStatus);
+  }
 
   const response = await fetch(`/api/transactions?${params}`, { signal });
 
@@ -41,9 +50,11 @@ export const fetchTransactionLogPage = async (
 };
 
 export const useTransactionLog = (
-  tab: TransactionTab,
+  tab: ViewTab,
   range: AppliedDateRange,
   sorting: TransactionSorting,
+  filters?: TransactionSearchFilters,
+  enabled = true,
 ) =>
   useQuery({
     queryKey: [
@@ -53,8 +64,13 @@ export const useTransactionLog = (
       range.to,
       sorting.sort,
       sorting.order,
+      filters?.feeType,
+      filters?.payType,
+      filters?.paymentStatus,
+      filters?.transactionStatus,
     ],
     queryFn: ({ signal }) =>
-      fetchTransactionLogPage(tab, range, sorting, 1, PAGE_SIZE, signal),
-    placeholderData: (previous) => previous,
+      fetchTransactionLogPage(tab, range, sorting, filters, 1, PAGE_SIZE, signal),
+    placeholderData: (previous) => (enabled ? previous : undefined),
+    enabled,
   });
