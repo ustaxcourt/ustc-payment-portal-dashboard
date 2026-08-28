@@ -1,24 +1,19 @@
 import { NextResponse } from "next/server";
 import type {
-  PriorYearPeriod,
-  PriorYearTotalsSnapshot,
   TotalsSnapshot,
+  YoYTrend,
+  YoYTrendSnapshot,
 } from "@/features/revenue-totals/types";
 import { getSigned } from "@/lib/paymentPortalApi";
 import { hasDashboardSession } from "@/lib/serverSession";
 import { TOTAL_PERIODS } from "@/features/revenue-totals/types";
 import type { TotalPeriod } from "@/features/revenue-totals/types";
-import type {
-  TransactionLogEntry,
-  TransactionLogResponse,
-} from "@/features/transaction-log/types";
 
 // Per-request: the periods are relative to now, so a cached response goes stale.
 export const dynamic = "force-dynamic";
 
 // The log rows are discarded; only the aggregate is wanted.
 const UPSTREAM_QUERY = { includeTotals: "true", pageSize: "1" };
-const EXPORT_PAGE_SIZE = 5000;
 
 /**
  * Presence is not enough: an unparseable `from` or `to` reaches `Intl.format`,
@@ -38,104 +33,16 @@ const isPeriod = (value: unknown): value is TotalPeriod => {
   );
 };
 
-const isTransactionEntry = (value: unknown): value is TransactionLogEntry => {
+const isYoYTrend = (value: unknown): value is YoYTrend => {
   if (!value || typeof value !== "object") return false;
-  const { paymentStatus, transactionAmount } =
-    value as Partial<TransactionLogEntry>;
+  const { current, previous, difference, percentChange } =
+    value as Partial<YoYTrend>;
   return (
-    typeof paymentStatus === "string" && typeof transactionAmount === "number"
+    typeof current === "number" &&
+    typeof previous === "number" &&
+    typeof difference === "number" &&
+    (percentChange === null || typeof percentChange === "number")
   );
-};
-
-const isTransactionPage = (value: unknown): value is TransactionLogResponse => {
-  if (!value || typeof value !== "object") return false;
-  const { data, page, pageSize } = value as Partial<TransactionLogResponse>;
-  return (
-    Array.isArray(data) &&
-    data.every(isTransactionEntry) &&
-    typeof page === "number" &&
-    typeof pageSize === "number"
-  );
-};
-
-const shiftIsoYear = (iso: string, years: number): string => {
-  const shifted = new Date(iso);
-  shifted.setUTCFullYear(shifted.getUTCFullYear() + years);
-  return shifted.toISOString();
-};
-
-/**
- * The upstream totals already encode the dashboard's fiscal boundaries, so the
- * prior-year comparator is the same exact elapsed window shifted back one year.
- * For FYTD, that means Oct 1 of the prior fiscal year through the equivalent
- * in-progress date one calendar year earlier.
- */
-const priorYearRangeFor = ({
-  from,
-  to,
-}: TotalPeriod): Pick<TotalPeriod, "from" | "to"> => ({
-  from: shiftIsoYear(from, -1),
-  to: shiftIsoYear(to, -1),
-});
-
-const fetchPriorYearTotalForRange = async (
-  range: Pick<TotalPeriod, "from" | "to">,
-): Promise<PriorYearPeriod> => {
-  let page = 1;
-  let total = 0;
-  let hasData = false;
-
-  while (true) {
-    const upstream = await getSigned(
-      "/transaction-log",
-      new URLSearchParams({
-        export: "true",
-        from: range.from,
-        order: "asc",
-        page: String(page),
-        pageSize: String(EXPORT_PAGE_SIZE),
-        sort: "createdAt",
-        to: range.to,
-      }),
-    );
-
-    if (upstream.status === 404) {
-      return { ...range, total: 0, hasData: false };
-    }
-
-    if (!upstream.ok) {
-      console.error(
-        `[dashboard] prior-year totals upstream responded ${upstream.status}`,
-      );
-      throw new Error("Unable to load the prior-year totals");
-    }
-
-    const body: unknown = await upstream.json();
-    if (!isTransactionPage(body)) {
-      console.error(
-        "[dashboard] prior-year totals response missing transaction data",
-      );
-      throw new Error("Unable to load the prior-year totals");
-    }
-
-    hasData ||= body.data.length > 0;
-
-    total += body.data.reduce(
-      (sum, entry) =>
-        entry.paymentStatus === "success" ? sum + entry.transactionAmount : sum,
-      0,
-    );
-
-    if (body.data.length === 0 || body.data.length < body.pageSize) {
-      return { ...range, total, hasData };
-    }
-
-    if (typeof body.total === "number" && page * body.pageSize >= body.total) {
-      return { ...range, total, hasData };
-    }
-
-    page += 1;
-  }
 };
 
 export async function GET() {
@@ -164,9 +71,16 @@ export async function GET() {
     // `totals` is optional upstream, so the optionality is resolved here rather
     // than left for the components to guard.
     const totals = body?.totals;
-    if (!totals || TOTAL_PERIODS.some((period) => !isPeriod(totals[period]))) {
+    const yoyTrends = body?.yoyTrends;
+    if (
+      !totals ||
+      !yoyTrends ||
+      TOTAL_PERIODS.some(
+        (period) => !isPeriod(totals[period]) || !isYoYTrend(yoyTrends[period]),
+      )
+    ) {
       console.error(
-        "[dashboard] totals missing or malformed on the transaction log",
+        "[dashboard] totals or yoy trends missing or malformed on the transaction log",
       );
       return NextResponse.json(
         { message: "Unable to load the totals" },
@@ -175,18 +89,9 @@ export async function GET() {
     }
 
     const current = totals as TotalsSnapshot;
-    const priorYear = Object.fromEntries(
-      await Promise.all(
-        TOTAL_PERIODS.map(async (period) => {
-          const range = priorYearRangeFor(current[period]);
-          const total = await fetchPriorYearTotalForRange(range);
+    const validatedTrends = yoyTrends as YoYTrendSnapshot;
 
-          return [period, total] as const;
-        }),
-      ),
-    ) as PriorYearTotalsSnapshot;
-
-    return NextResponse.json({ current, priorYear });
+    return NextResponse.json({ current, yoyTrends: validatedTrends });
   } catch (err) {
     console.error("[dashboard] totals request failed:", err);
     return NextResponse.json(

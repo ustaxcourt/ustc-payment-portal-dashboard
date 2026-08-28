@@ -22,20 +22,27 @@ export type TotalPeriod = {
 
 export type TotalsSnapshot = Record<TotalPeriodName, TotalPeriod>;
 
-export type PriorYearPeriod = TotalPeriod & {
-  /** Distinguishes a true zero total from a period with no prior-year rows. */
-  hasData: boolean;
+export type YoYTrend = {
+  current: number;
+  previous: number;
+  difference: number;
+  percentChange: number | null;
 };
 
-export type PriorYearTotalsSnapshot = Record<TotalPeriodName, PriorYearPeriod>;
+export type YoYTrendSnapshot = Record<TotalPeriodName, YoYTrend>;
 
 export type TotalsResponse = {
   current: TotalsSnapshot;
-  priorYear: PriorYearTotalsSnapshot;
+  yoyTrends: YoYTrendSnapshot;
 };
 
 export const fiscalYearLabel = (period: TotalPeriod): string =>
   periodSubtitle(period, "fiscalYear");
+
+export const priorFiscalYearLabel = (period: TotalPeriod): string => {
+  const fiscalYear = Number(fiscalYearLabel(period).replace("FY", ""));
+  return `FY${String(fiscalYear - 1).padStart(2, "0")}`;
+};
 
 export const PERIOD_LABEL: Record<TotalPeriodName, string> = {
   day: "Today",

@@ -8,10 +8,10 @@ import {
   PERIOD_LABEL,
   periodRange,
   periodSubtitle,
+  priorFiscalYearLabel,
   SUBTITLE_IS_DATED,
   TOTAL_PERIODS,
-  type PriorYearPeriod,
-  type TotalPeriod,
+  type YoYTrend,
 } from "./types";
 import { useTotals } from "./useTotals";
 
@@ -26,6 +26,14 @@ const formatTrendAmount = (amount: number): string => {
   return `${direction}${formatCurrency(Math.abs(amount))}`;
 };
 
+const formatTrendPercent = (percentChange: number | null): string | null => {
+  if (typeof percentChange !== "number" || !Number.isFinite(percentChange)) {
+    return null;
+  }
+
+  return `${Math.round(Math.abs(percentChange))}%`;
+};
+
 const trendStyles = (amount: number): string =>
   amount > 0
     ? "text-green-700 dark:text-green-400"
@@ -34,23 +42,23 @@ const trendStyles = (amount: number): string =>
       : "text-muted-foreground";
 
 function TrendCell({
-  current,
-  priorYear,
+  trend,
 }: {
-  current: TotalPeriod;
-  priorYear: PriorYearPeriod;
+  trend: YoYTrend;
 }) {
-  if (!priorYear.hasData) {
+  if (trend.previous <= 0) {
     return <td className={cn(CELL, "text-lg text-muted-foreground")}>N/A</td>;
   }
 
-  const amount = current.total - priorYear.total;
+  const amount = trend.difference;
+  const percent = formatTrendPercent(trend.percentChange);
   const indicator = amount > 0 ? "▲" : amount < 0 ? "▼" : "•";
 
   return (
     <td className={cn(CELL, "text-lg tabular-nums")}>
       <span className={cn("font-semibold", trendStyles(amount))}>{indicator}</span>{" "}
       <span className="tabular-nums">{formatTrendAmount(amount)}</span>
+      {percent ? ` (${percent})` : ""}
     </td>
   );
 }
@@ -99,7 +107,7 @@ export default function RevenueTotals() {
   }
 
   const currentFiscalYear = fiscalYearLabel(data.current.fiscalYear);
-  const priorYearFiscalYear = fiscalYearLabel(data.priorYear.fiscalYear);
+  const priorYearFiscalYear = priorFiscalYearLabel(data.current.fiscalYear);
 
   return (
     <Panel>
@@ -144,13 +152,12 @@ export default function RevenueTotals() {
               scope="row"
               className={cn(CELL, "border-0 text-right text-sm font-normal")}
             >
-              {`Year-over-Year Change (${currentFiscalYear} vs ${priorYearFiscalYear})`}
+              {`YoY Trend (${currentFiscalYear} vs ${priorYearFiscalYear})`}
             </th>
             {TOTAL_PERIODS.map((period) => (
               <TrendCell
                 key={period}
-                current={data.current[period]}
-                priorYear={data.priorYear[period]}
+                trend={data.yoyTrends[period]}
               />
             ))}
           </tr>
