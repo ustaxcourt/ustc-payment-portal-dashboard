@@ -104,6 +104,14 @@ export type TransactionCounts = {
   pending: number;
 };
 
+/** Mirrors `TransactionFeeBreakdownRow` in the payment portal. */
+export type FeeBreakdownRow = {
+  fee: string;
+  feeName: string;
+  qty: number;
+  subtotal: number;
+};
+
 export type TransactionLogResponse = {
   data: TransactionLogEntry[];
   /** Absent on export requests for pages after the first. */
@@ -116,4 +124,6 @@ export type TransactionLogResponse = {
   order: SortOrder;
   /** Absent on export requests for pages after the first. */
   total?: number;
+  /** Present when requested with `includeFeeBreakdown=true`. */
+  feeBreakdown?: FeeBreakdownRow[];
 };
