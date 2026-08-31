@@ -89,8 +89,10 @@ export default function PaymentBreakdownPane() {
           </TableCaption>
           <TableHeader className="bg-totals-header">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8">Fee</TableHead>
-              <TableHead className={cn("h-8 w-16", NUMERIC)}>Qty</TableHead>
+              <TableHead className="h-8 border-r">Fee</TableHead>
+              <TableHead className={cn("h-8 w-16 border-r", NUMERIC)}>
+                Qty
+              </TableHead>
               <TableHead className={cn("h-8 w-32", NUMERIC)}>
                 Subtotal
               </TableHead>
@@ -99,10 +101,10 @@ export default function PaymentBreakdownPane() {
           <TableBody>
             {data.rows.map((row) => (
               <TableRow key={row.fee}>
-                <TableCell className="whitespace-normal py-1.5">
+                <TableCell className="whitespace-normal border-r py-1.5">
                   {row.feeName}
                 </TableCell>
-                <TableCell className={cn("py-1.5", NUMERIC)}>
+                <TableCell className={cn("border-r py-1.5", NUMERIC)}>
                   {row.qty === 0 ? "—" : row.qty.toLocaleString("en-US")}
                 </TableCell>
                 <TableCell className={cn("py-1.5", NUMERIC)}>
