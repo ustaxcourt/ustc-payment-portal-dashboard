@@ -89,8 +89,16 @@ export default function PaymentBreakdownPane() {
           </TableCaption>
           <TableHeader className="bg-totals-header">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8 border-r">Fee</TableHead>
-              <TableHead className={cn("h-8 w-16 border-r", NUMERIC)}>
+              {/* The default border vanishes against the header tint. */}
+              <TableHead className="h-8 border-r border-muted-foreground/40">
+                Fee
+              </TableHead>
+              <TableHead
+                className={cn(
+                  "h-8 w-16 border-r border-muted-foreground/40",
+                  NUMERIC,
+                )}
+              >
                 Qty
               </TableHead>
               <TableHead className={cn("h-8 w-32", NUMERIC)}>
