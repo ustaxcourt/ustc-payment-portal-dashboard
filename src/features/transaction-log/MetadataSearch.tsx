@@ -5,7 +5,6 @@ import { type FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import FilterSelect from "@/components/ui/FilterSelect";
 import { Label } from "@/components/ui/label";
-import RadioGroup from "@/components/ui/RadioGroup";
 import {
   FEE_METADATA_KEYS,
   type FeeType,
@@ -26,7 +25,8 @@ type Props = {
 /**
  * Direct-lookup control for the Search tab: pick one metadata key tied to the
  * selected fee, type a value, and commit it on Search / Enter. Remounted by a
- * `key` on the fee type, so drafts reset when the available keys change.
+ * `key` on the fee type, so drafts reset when the available keys change. A fee
+ * with a single metadata key shows a static label; two or more show a dropdown.
  */
 export default function MetadataSearch({
   feeType,
@@ -73,13 +73,6 @@ export default function MetadataSearch({
         <Label htmlFor="metadata-search-input">
           {METADATA_KEY_LABEL[keys[0]]}
         </Label>
-      ) : keys.length === 2 ? (
-        <RadioGroup
-          label="Search by"
-          value={selectedKey}
-          options={options}
-          onChange={(value) => setSelectedKey(value as MetadataKey)}
-        />
       ) : (
         <FilterSelect
           id="metadata-search-key"
