@@ -1,12 +1,15 @@
 "use client";
 
+import { useMemo } from "react";
 import FilterSelect from "@/components/ui/FilterSelect";
 import { formatLabel } from "@/lib/format";
-import { getColumns } from "./columns";
+import { getColumns, metadataColumns } from "./columns";
+import MetadataSearch from "./MetadataSearch";
 import TransactionTable from "./TransactionTable";
 import {
   FEE_TYPE_LABEL,
   FEE_TYPES,
+  type MetadataKey,
   PAY_TYPES,
   PAYMENT_STATUSES,
   TRANSACTION_STATUSES,
@@ -67,6 +70,7 @@ const FILTER_CONFIG: {
 type Props = {
   filters: TransactionSearchFilters;
   onFilterChange: (key: FilterKey, value: string | null) => void;
+  onMetadataSearch: (key: MetadataKey | null, value: string | null) => void;
   rows: TransactionLogEntry[];
   sorting: TransactionSorting;
   onSortingChange: (next: TransactionSorting) => void;
@@ -76,11 +80,19 @@ type Props = {
 export default function TransactionSearch({
   filters,
   onFilterChange,
+  onMetadataSearch,
   rows,
   sorting,
   onSortingChange,
   emptyMessage,
 }: Props) {
+  // Metadata columns follow the selected fee; memoized so react-table keeps
+  // seeing a stable columns reference between renders.
+  const columns = useMemo(
+    () => [...getColumns("search"), ...metadataColumns(filters.feeType)],
+    [filters.feeType],
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-y-6 rounded-md border bg-background p-4 lg:grid-cols-2 lg:gap-y-0 lg:divide-x">
@@ -102,13 +114,21 @@ export default function TransactionSearch({
           </div>
         </div>
 
-        {/* Expand this div to store Search input in PAY-394 */}
-        <div className="flex flex-col gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 lg:pl-6" />
+        <div className="flex flex-col gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 lg:pl-6">
+          <h3 className="text-sm font-semibold">Direct Lookup</h3>
+          <MetadataSearch
+            key={filters.feeType ?? "none"}
+            feeType={filters.feeType}
+            metadataKey={filters.metadataKey}
+            metadataValue={filters.metadataValue}
+            onSearch={onMetadataSearch}
+          />
+        </div>
       </div>
 
       <TransactionTable
         rows={rows}
-        columns={getColumns("search")}
+        columns={columns}
         caption="Transaction log, Search results"
         headerTone="bg-slate-50"
         sorting={sorting}

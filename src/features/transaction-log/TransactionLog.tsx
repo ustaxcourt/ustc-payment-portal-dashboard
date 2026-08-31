@@ -16,6 +16,8 @@ import {
   DEFAULT_ORDER,
   DEFAULT_SORT,
   FEE_TYPES,
+  type FeeType,
+  METADATA_KEYS,
   PAY_TYPES,
   PAYMENT_STATUSES,
   SORT_ORDERS,
@@ -40,6 +42,8 @@ export default function TransactionLog() {
       payType: parseAsStringLiteral(PAY_TYPES),
       paymentStatus: parseAsStringLiteral(PAYMENT_STATUSES),
       transactionStatus: parseAsStringLiteral(TRANSACTION_STATUSES),
+      metadataKey: parseAsStringLiteral(METADATA_KEYS),
+      metadataValue: parseAsString,
     },
     {
       clearOnDefault: true,
@@ -73,6 +77,8 @@ export default function TransactionLog() {
           payType: params.payType,
           paymentStatus: params.paymentStatus,
           transactionStatus: params.transactionStatus,
+          metadataKey: params.metadataKey,
+          metadataValue: params.metadataValue,
         }
       : undefined;
 
@@ -80,7 +86,8 @@ export default function TransactionLog() {
     searchFilters?.feeType ||
       searchFilters?.payType ||
       searchFilters?.paymentStatus ||
-      searchFilters?.transactionStatus,
+      searchFilters?.transactionStatus ||
+      searchFilters?.metadataValue,
   );
 
   const clearSearch = () =>
@@ -89,6 +96,8 @@ export default function TransactionLog() {
       payType: null,
       paymentStatus: null,
       transactionStatus: null,
+      metadataKey: null,
+      metadataValue: null,
     });
 
   const { data, isPending, isError, error, refetch } = useTransactionLog(
@@ -159,12 +168,25 @@ export default function TransactionLog() {
                 payType: params.payType,
                 paymentStatus: params.paymentStatus,
                 transactionStatus: params.transactionStatus,
+                metadataKey: params.metadataKey,
+                metadataValue: params.metadataValue,
               }}
               onFilterChange={(key, value) =>
-                setParams({ [key]: value } as Pick<
-                  TransactionSearchFilters,
-                  typeof key
-                >)
+                setParams(
+                  key === "feeType"
+                    ? {
+                        feeType: value as FeeType | null,
+                        metadataKey: null,
+                        metadataValue: null,
+                      }
+                    : ({ [key]: value } as Pick<
+                        TransactionSearchFilters,
+                        typeof key
+                      >),
+                )
+              }
+              onMetadataSearch={(metadataKey, metadataValue) =>
+                setParams({ metadataKey, metadataValue })
               }
               rows={hasSearchCriteria ? (data?.data ?? []) : []}
               sorting={activeSorting}

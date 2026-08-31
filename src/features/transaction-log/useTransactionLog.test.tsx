@@ -120,6 +120,8 @@ describe("useTransactionLog", () => {
       payType: null,
       paymentStatus: null,
       transactionStatus: null,
+      metadataKey: null,
+      metadataValue: null,
     };
 
     const { result } = renderHook(
@@ -134,5 +136,51 @@ describe("useTransactionLog", () => {
     expect(url.searchParams.get("from")).toBe("2026-08-12T04:00:00.000Z");
     expect(url.searchParams.get("to")).toBe("2026-08-19T04:00:00.000Z");
     expect(url.searchParams.get("fee")).toBe("PETITION_FILING_FEE");
+  });
+
+  it("forwards a metadata lookup only when both key and value are set", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => response(),
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const base = {
+      feeType: "PETITION_FILING_FEE" as const,
+      payType: null,
+      paymentStatus: null,
+      transactionStatus: null,
+    };
+
+    const { result, rerender } = renderHook(
+      ({ metadataKey, metadataValue }) =>
+        useTransactionLog(
+          "search",
+          range,
+          sorting,
+          { ...base, metadataKey, metadataValue },
+          true,
+        ),
+      {
+        wrapper,
+        initialProps: {
+          metadataKey: "docketNumber" as const,
+          metadataValue: null as string | null,
+        },
+      },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    let url = new URL(fetchMock.mock.calls[0][0], "http://localhost");
+    expect(url.searchParams.get("metadataKey")).toBeNull();
+    expect(url.searchParams.get("metadataValue")).toBeNull();
+
+    rerender({ metadataKey: "docketNumber", metadataValue: "123-26" });
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    url = new URL(fetchMock.mock.calls[1][0], "http://localhost");
+    expect(url.searchParams.get("metadataKey")).toBe("docketNumber");
+    expect(url.searchParams.get("metadataValue")).toBe("123-26");
   });
 });

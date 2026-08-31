@@ -35,6 +35,29 @@ export const FEE_TYPE_LABEL: Record<FeeType, string> = {
   NONATTORNEY_EXAM_REGISTRATION_FEE: "Non-Attorney Exam Registration Fee",
 };
 
+/** Mirrors `TRANSACTION_LOG_METADATA_KEYS` in the payment portal. */
+export const METADATA_KEYS = [
+  "docketNumber",
+  "email",
+  "fullName",
+  "accessCode",
+] as const;
+
+export type MetadataKey = (typeof METADATA_KEYS)[number];
+
+export const METADATA_KEY_LABEL: Record<MetadataKey, string> = {
+  docketNumber: "Docket Number",
+  email: "Email",
+  fullName: "Full Name",
+  accessCode: "Access Code",
+};
+
+/** Which metadata keys each fee collects; the lookup picker is scoped to the selected fee. */
+export const FEE_METADATA_KEYS: Record<FeeType, readonly MetadataKey[]> = {
+  PETITION_FILING_FEE: ["docketNumber"],
+  NONATTORNEY_EXAM_REGISTRATION_FEE: ["email", "fullName", "accessCode"],
+};
+
 /** Mirrors the payment portal's `paymentMethod` label enum. */
 export const PAY_TYPES = ["Credit/Debit Card", "ACH", "PayPal"] as const;
 
@@ -45,6 +68,9 @@ export type TransactionSearchFilters = {
   payType: PayType | null;
   paymentStatus: PaymentStatus | null;
   transactionStatus: TransactionStatus | null;
+  /** Paired with `metadataValue`; a lookup runs only when both are set. */
+  metadataKey: MetadataKey | null;
+  metadataValue: string | null;
 };
 
 /** Mirrors `TRANSACTION_LOG_SORT_FIELDS` in the payment portal. */
@@ -95,6 +121,8 @@ export type TransactionLogEntry = {
   returnDetail?: string | null;
   createdAt: string;
   lastUpdatedAt: string;
+  /** Free-form key/value bag; keys collected depend on the fee. */
+  metadata?: Record<string, string> | null;
 };
 
 export type TransactionCounts = {

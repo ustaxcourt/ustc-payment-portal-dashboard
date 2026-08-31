@@ -1,3 +1,15 @@
 # PAY-394 Implementation Plan
 
 We will be adding Search functionality to the Search Tab, starting on line 105 on `src/features/transaction-log/TransactionSearch.tsx`. Depending on which `Fee Type` filter is selected, we will show a Search input, along with radio buttons that can be clicked to select which piece of metadata we want to search on. Metadata will be an object containing **N** number of parameters. If there's only 1 parameter in metadata, the Search Input will simply be for that single parameter. If there's 2 parameters, a radio group is shown that lets the user select which parameter to search on from the metadata. If 3 or more parameters exist, we instead use a dropdown menu (see select UI component) to allow the user to pick which parameter to search on. This will allow us to account for our currently expected metadata objects, as well as leave room for ones that may come in future for the US Tax Court. Currently we are expecting two fees, Petition Filing Fee and Non-Attorney Exam Registration Fee. For Petition Fee we only expect one parameter in the metadata object, `docketNumber` as a string. For the  Non-Attorney Exam Registration Fee, the metadata object will have `email`, `fullName`, and `accessCode`.
+
+## Backend Changes
+
+
+
+## Acceptance Criteria
+- Meta keys that we collect are searchable in the Direct Lookup section (Docket Number, Email, etc.)
+- User can enter in a value for a meta key
+- If the user selects a certain Fee to filter by, only meta keys that are associated with that Fee are visible and available to search
+- Clicking search queries the database and shows the transactions associated with the specified meta key-value pairs
+
+

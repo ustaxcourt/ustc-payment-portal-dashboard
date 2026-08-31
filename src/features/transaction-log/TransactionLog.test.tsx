@@ -186,6 +186,63 @@ describe("TransactionLog", () => {
     },
   );
 
+  it("runs a metadata lookup carried in the durable URL", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=foo@example.com",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = new URL(
+      String(fetchMock.mock.calls[0][0]),
+      "http://localhost",
+    );
+    expect(requested.searchParams.get("metadataKey")).toBe("email");
+    expect(requested.searchParams.get("metadataValue")).toBe("foo@example.com");
+    expect(screen.getByLabelText("Search by Email")).toHaveValue(
+      "foo@example.com",
+    );
+  });
+
+  it("does not query for a metadata key with no value in the URL", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=PETITION_FILING_FEE&metadataKey=docketNumber",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = String(fetchMock.mock.calls[0][0]);
+    expect(requested).toContain("fee=PETITION_FILING_FEE");
+    expect(requested).not.toContain("metadataKey");
+    expect(requested).not.toContain("metadataValue");
+  });
+
+  it("drops the metadata params from the URL when the Fee Type changes", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=foo",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    fetchMock.mockClear();
+
+    await userEvent.click(screen.getByLabelText("Fee Type"));
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Petition Filing Fee" }),
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const requested = String(fetchMock.mock.calls.at(-1)?.[0]);
+    expect(requested).toContain("fee=PETITION_FILING_FEE");
+    expect(requested).not.toContain("metadataKey");
+    expect(requested).not.toContain("metadataValue");
+  });
+
   it("changing the timeframe while a filter is active keeps the filter and updates the range", async () => {
     const fetchMock = mockFetch(response());
 

@@ -39,6 +39,10 @@ const fetchTransactionLogPage = async (
   if (filters?.transactionStatus) {
     params.set("transactionStatus", filters.transactionStatus);
   }
+  if (filters?.metadataKey && filters?.metadataValue) {
+    params.set("metadataKey", filters.metadataKey);
+    params.set("metadataValue", filters.metadataValue);
+  }
 
   const response = await fetch(`/api/transactions?${params}`, { signal });
 
@@ -68,6 +72,8 @@ export const useTransactionLog = (
       filters?.payType,
       filters?.paymentStatus,
       filters?.transactionStatus,
+      filters?.metadataKey,
+      filters?.metadataValue,
     ],
     queryFn: ({ signal }) =>
       fetchTransactionLogPage(tab, range, sorting, filters, 1, PAGE_SIZE, signal),
