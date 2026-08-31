@@ -12,7 +12,7 @@ const row = (id: number): TransactionLogEntry => ({
   transactionReferenceId: `ref-${id}`,
   paymentStatus: "success",
   transactionStatus: "settled",
-  paymentMethod: "plastic_card",
+  paymentMethod: "Credit/Debit Card",
   createdAt: "2026-08-17T12:00:00.000Z",
   lastUpdatedAt: "2026-08-17T13:00:00.000Z",
 });

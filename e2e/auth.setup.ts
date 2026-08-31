@@ -36,6 +36,9 @@ setup("mint a dashboard session", async () => {
         name: "End To End",
         image: "",
       },
+      // Outlives any test run so the jwt callback never attempts a refresh.
+      accessToken: "e2e-access-token",
+      accessTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     },
   });
 

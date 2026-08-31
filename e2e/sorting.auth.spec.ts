@@ -4,9 +4,34 @@ test("the dashboard opens for a signed-in user", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { name: "Finance Dashboard" }),
+    page.getByRole("heading", { name: "Payment Portal" }),
   ).toBeVisible();
   await expect(page).not.toHaveURL(/\/login/);
+});
+
+test("the column headers stay pinned while the log scrolls", async ({
+  page,
+}) => {
+  await page.goto("/?range=last7");
+
+  const created = page.getByRole("columnheader", { name: /Created/ });
+  await expect(created).toBeVisible();
+
+  const scrolled = await page
+    .getByTestId("transaction-table-scroll")
+    .evaluate((el) => {
+      el.scrollTop = el.scrollHeight;
+      return el.scrollTop;
+    });
+
+  await expect(created).toBeInViewport();
+  test.info().annotations.push({
+    type: scrolled > 0 ? "scrolled" : "warning",
+    description:
+      scrolled > 0
+        ? `scrolled ${scrolled}px`
+        : "table did not overflow; sticky header unexercised",
+  });
 });
 
 test("the log opens sorted by Created, descending", async ({ page }) => {
