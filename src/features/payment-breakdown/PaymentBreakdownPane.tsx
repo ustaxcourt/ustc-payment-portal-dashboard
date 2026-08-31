@@ -18,23 +18,41 @@ import { usePaymentBreakdown } from "./usePaymentBreakdown";
 const HEADING_ID = "payment-breakdown-heading";
 const NUMERIC = "text-right tabular-nums";
 
-function Pane({ children }: { children: React.ReactNode }) {
+function Pane({
+  total,
+  children,
+}: {
+  total?: string;
+  children: React.ReactNode;
+}) {
   return (
     <section
       aria-labelledby={HEADING_ID}
       data-testid="payment-breakdown-pane"
       className="flex min-h-0 flex-col gap-3"
     >
-      <h2 id={HEADING_ID} className="text-xl font-bold tracking-tight">
-        Payment Breakdown
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id={HEADING_ID} className="text-xl font-bold tracking-tight">
+          Payment Breakdown
+        </h2>
+        {total === undefined ? null : (
+          <p
+            data-testid="payment-breakdown-total"
+            className="rounded-md bg-totals-header px-4 py-1.5"
+          >
+            Total:{" "}
+            <span className="text-lg font-bold tabular-nums">{total}</span>
+          </p>
+        )}
+      </div>
       {children}
     </section>
   );
 }
 
 /** Successful payments in the active timeframe, per fee, with a grand total.
- *  Ignores the status tab and search filters. */
+ *  Ignores the status tab and search filters. The rows come from the API, so
+ *  a fee added to the backend appears here with no frontend change. */
 export default function PaymentBreakdownPane() {
   const { appliedRange } = useTransactionLogParams();
   const { data, isPending, isError, error, refetch } =
@@ -63,7 +81,7 @@ export default function PaymentBreakdownPane() {
   }
 
   return (
-    <Pane>
+    <Pane total={formatCurrency(data.grandTotal)}>
       <div className="overflow-hidden rounded-md border-2 border-muted-foreground">
         <Table>
           <TableCaption className="sr-only">
@@ -85,23 +103,16 @@ export default function PaymentBreakdownPane() {
                   {row.feeName}
                 </TableCell>
                 <TableCell className={cn("py-1.5", NUMERIC)}>
-                  {row.qty.toLocaleString("en-US")}
+                  {row.qty === 0 ? "—" : row.qty.toLocaleString("en-US")}
                 </TableCell>
                 <TableCell className={cn("py-1.5", NUMERIC)}>
-                  {formatCurrency(row.subtotal)}
+                  {row.qty === 0 ? "—" : formatCurrency(row.subtotal)}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-
-      <p className="flex items-center justify-between rounded-md border-2 border-muted-foreground bg-totals-header px-4 py-2">
-        <span className="font-bold">Total</span>
-        <span className="text-lg font-bold tabular-nums">
-          {formatCurrency(data.grandTotal)}
-        </span>
-      </p>
     </Pane>
   );
 }

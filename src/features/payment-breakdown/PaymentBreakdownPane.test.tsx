@@ -99,8 +99,8 @@ describe("PaymentBreakdownPane", () => {
     expect(petitionRow).toHaveTextContent("2");
     expect(petitionRow).toHaveTextContent("$120.00");
 
-    expect(screen.getByText("Total").parentElement).toHaveTextContent(
-      "$370.00",
+    expect(screen.getByTestId("payment-breakdown-total")).toHaveTextContent(
+      "Total: $370.00",
     );
 
     const requested = String(fetchMock.mock.calls[0][0]);
@@ -127,8 +127,8 @@ describe("PaymentBreakdownPane", () => {
       await screen.findByText("Petition Filing Fee")
     ).closest("tr");
     expect(petitionRow).toHaveTextContent("$120.00");
-    expect(screen.getByText("Total").parentElement).toHaveTextContent(
-      "$120.00",
+    expect(screen.getByTestId("payment-breakdown-total")).toHaveTextContent(
+      "Total: $120.00",
     );
 
     await waitFor(() => {
@@ -137,6 +137,28 @@ describe("PaymentBreakdownPane", () => {
       );
       expect(String(fallbackCall?.[0])).toContain("status=success");
     });
+  });
+
+  it("shows dashes, not zeros, for a fee with no payments", async () => {
+    mockFetch(
+      response({
+        feeBreakdown: [
+          feeBreakdown[0],
+          { ...feeBreakdown[1], qty: 0, subtotal: 0 },
+        ],
+      }),
+    );
+
+    renderPane();
+
+    const petitionRow = (
+      await screen.findByText("Petition Filing Fee")
+    ).closest("tr");
+    expect(petitionRow).toHaveTextContent("—");
+    expect(petitionRow).not.toHaveTextContent("$0.00");
+    expect(screen.getByTestId("payment-breakdown-total")).toHaveTextContent(
+      "Total: $250.00",
+    );
   });
 
   it("shows an error panel when the request fails", async () => {
