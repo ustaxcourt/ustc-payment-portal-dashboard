@@ -101,9 +101,21 @@ export async function GET() {
       }
     }
 
+    const fallbackTrends = Object.fromEntries(
+      TOTAL_PERIODS.map((period) => [
+        period,
+        {
+          current: current[period].total,
+          previous: 0,
+          difference: current[period].total,
+          percentChange: null,
+        },
+      ]),
+    ) as YoYTrendSnapshot;
+
     return NextResponse.json({
       current,
-      yoyTrends: validatedTrends,
+      yoyTrends: validatedTrends ?? fallbackTrends,
     });
   } catch (err) {
     console.error("[dashboard] totals request failed:", err);
