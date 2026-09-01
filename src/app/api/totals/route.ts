@@ -72,15 +72,10 @@ export async function GET() {
     // than left for the components to guard.
     const totals = body?.totals;
     const yoyTrends = body?.yoyTrends;
-    if (
-      !totals ||
-      !yoyTrends ||
-      TOTAL_PERIODS.some(
-        (period) => !isPeriod(totals[period]) || !isYoYTrend(yoyTrends[period]),
-      )
-    ) {
+
+    if (!totals || TOTAL_PERIODS.some((period) => !isPeriod(totals[period]))) {
       console.error(
-        "[dashboard] totals or yoy trends missing or malformed on the transaction log",
+        "[dashboard] totals missing or malformed on the transaction log",
       );
       return NextResponse.json(
         { message: "Unable to load the totals" },
@@ -89,9 +84,27 @@ export async function GET() {
     }
 
     const current = totals as TotalsSnapshot;
-    const validatedTrends = yoyTrends as YoYTrendSnapshot;
 
-    return NextResponse.json({ current, yoyTrends: validatedTrends });
+    let validatedTrends: YoYTrendSnapshot | null = null;
+
+    if (yoyTrends) {
+      const valid = TOTAL_PERIODS.every((period) =>
+        isYoYTrend(yoyTrends[period]),
+      );
+
+      if (!valid) {
+        console.warn(
+          "[dashboard] yoy trends malformed on the transaction log; falling back to N/A",
+        );
+      } else {
+        validatedTrends = yoyTrends as YoYTrendSnapshot;
+      }
+    }
+
+    return NextResponse.json({
+      current,
+      yoyTrends: validatedTrends,
+    });
   } catch (err) {
     console.error("[dashboard] totals request failed:", err);
     return NextResponse.json(
