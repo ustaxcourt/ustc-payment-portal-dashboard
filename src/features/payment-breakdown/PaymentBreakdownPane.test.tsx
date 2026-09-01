@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, renderHook, screen, waitFor } from "@testing-library/react";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
@@ -8,6 +8,7 @@ import type {
   TransactionLogResponse,
 } from "../transaction-log/types";
 import PaymentBreakdownPane from "./PaymentBreakdownPane";
+import { usePaymentBreakdown } from "./usePaymentBreakdown";
 
 const response = (
   overrides: Partial<TransactionLogResponse> = {},
@@ -166,6 +167,43 @@ describe("PaymentBreakdownPane", () => {
     expect(screen.getByTestId("payment-breakdown-total")).toHaveTextContent(
       "Total: $250.00",
     );
+  });
+
+  it("re-enters the pending state when the timeframe changes, instead of keeping the previous range's data", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => response({ feeBreakdown }),
+      })
+      .mockImplementationOnce(() => new Promise(() => {}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
+
+    const { result, rerender } = renderHook(
+      ({ from, to }) =>
+        usePaymentBreakdown({
+          preset: "custom",
+          from,
+          to,
+          label: `${from} - ${to}`,
+        }),
+      { wrapper, initialProps: { from: "2026-08-01", to: "2026-08-07" } },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    rerender({ from: "2026-08-08", to: "2026-08-14" });
+
+    expect(result.current.isPending).toBe(true);
+    expect(result.current.data).toBeUndefined();
   });
 
   it("shows an error panel when the request fails", async () => {

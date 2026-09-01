@@ -63,5 +63,4 @@ export const usePaymentBreakdown = (range: AppliedDateRange) =>
   useQuery({
     queryKey: ["payment-breakdown", range.from, range.to],
     queryFn: ({ signal }) => fetchBreakdown(range, signal),
-    placeholderData: (previous) => previous,
   });
