@@ -3,25 +3,16 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   type AppliedDateRange,
-  capBoundsAtNow,
   courtDayIsoBounds,
 } from "../transaction-log/dateRange";
-import {
-  ExportTooLargeError,
-  fetchAllTransactions,
-} from "../transaction-log/exportTransactions";
-import {
-  DEFAULT_ORDER,
-  DEFAULT_SORT,
-  type TransactionLogResponse,
-} from "../transaction-log/types";
-import { aggregateByFee, type PaymentBreakdown, summarize } from "./breakdown";
+import type { TransactionLogResponse } from "../transaction-log/types";
+import { type PaymentBreakdown, summarize } from "./breakdown";
 
 const fetchBreakdown = async (
   range: AppliedDateRange,
   signal?: AbortSignal,
 ): Promise<PaymentBreakdown> => {
-  const bounds = capBoundsAtNow(courtDayIsoBounds(range), new Date());
+  const bounds = courtDayIsoBounds(range);
   const params = new URLSearchParams({
     from: bounds.from,
     to: bounds.to,
@@ -36,27 +27,10 @@ const fetchBreakdown = async (
   }
 
   const body: TransactionLogResponse = await response.json();
-  if (body.feeBreakdown) return summarize(body.feeBreakdown);
-
-  try {
-    const { rows } = await fetchAllTransactions(
-      "success",
-      range,
-      { sort: DEFAULT_SORT, order: DEFAULT_ORDER },
-      { signal },
-    );
-    const inWindow = rows.filter(
-      (row) => new Date(row.lastUpdatedAt) < new Date(bounds.to),
-    );
-    return summarize(aggregateByFee(inWindow));
-  } catch (err) {
-    if (err instanceof ExportTooLargeError) {
-      throw new Error(
-        "The timeframe has too many transactions to summarize. Narrow the timeframe and try again.",
-      );
-    }
-    throw err;
+  if (!body.feeBreakdown) {
+    throw new Error("The API returned no fee breakdown.");
   }
+  return summarize(body.feeBreakdown);
 };
 
 export const usePaymentBreakdown = (range: AppliedDateRange) =>

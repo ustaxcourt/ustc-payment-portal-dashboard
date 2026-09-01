@@ -4,7 +4,6 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   FeeBreakdownRow,
-  TransactionLogEntry,
   TransactionLogResponse,
 } from "../transaction-log/types";
 import PaymentBreakdownPane from "./PaymentBreakdownPane";
@@ -39,21 +38,6 @@ const feeBreakdown: FeeBreakdownRow[] = [
     subtotal: 120,
   },
 ];
-
-const successEntry = (
-  transactionAmount: number,
-  lastUpdatedAt = "2026-08-27T12:00:00.000Z",
-): TransactionLogEntry => ({
-  agencyTrackingId: `track-${Math.random()}`,
-  feeName: "Petition Filing Fee",
-  fee: "PETITION_FILING_FEE",
-  transactionAmount,
-  clientName: "payment-portal",
-  transactionReferenceId: "TXREF-00001",
-  paymentStatus: "success",
-  createdAt: "2026-08-27T12:00:00.000Z",
-  lastUpdatedAt,
-});
 
 const renderPane = (searchParams = "") => {
   const client = new QueryClient({
@@ -112,39 +96,17 @@ describe("PaymentBreakdownPane", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("tallies client-side when the API has no fee breakdown yet", async () => {
-    const rows = [
-      successEntry(60),
-      successEntry(60),
-      successEntry(500, "2099-01-01T12:00:00.000Z"),
-    ];
-    const fetchMock = vi.fn().mockImplementation(async (url: string) =>
-      String(url).includes("includeFeeBreakdown")
-        ? { ok: true, status: 200, json: async () => response() }
-        : {
-            ok: true,
-            status: 200,
-            json: async () => response({ data: rows, total: rows.length }),
-          },
-    );
-    vi.stubGlobal("fetch", fetchMock);
+  it("fails loudly when the API returns no fee breakdown", async () => {
+    mockFetch(response());
 
     renderPane();
 
-    const petitionRow = (
-      await screen.findByText("Petition Filing Fee")
-    ).closest("tr");
-    expect(petitionRow).toHaveTextContent("$120.00");
-    expect(screen.getByTestId("payment-breakdown-total")).toHaveTextContent(
-      "Total: $120.00",
-    );
-
-    await waitFor(() => {
-      const fallbackCall = fetchMock.mock.calls.find(
-        ([url]) => !String(url).includes("includeFeeBreakdown"),
-      );
-      expect(String(fallbackCall?.[0])).toContain("status=success");
-    });
+    expect(
+      await screen.findByText("Could not load the payment breakdown."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("The API returned no fee breakdown."),
+    ).toBeInTheDocument();
   });
 
   it("shows dashes, not zeros, for a fee with no payments", async () => {

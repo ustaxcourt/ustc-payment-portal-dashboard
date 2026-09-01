@@ -97,14 +97,6 @@ export const courtDayIsoBounds = (
   };
 };
 
-export const capBoundsAtNow = (
-  bounds: { from: string; to: string },
-  now: Date,
-): { from: string; to: string } => ({
-  from: bounds.from,
-  to: new Date(bounds.to) > now ? now.toISOString() : bounds.to,
-});
-
 const buildPresetRange = (
   preset: Exclude<DateRangePreset, "custom">,
   now = new Date(),

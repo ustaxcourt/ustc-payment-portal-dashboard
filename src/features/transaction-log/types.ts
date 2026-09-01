@@ -24,8 +24,8 @@ export type ViewTab = (typeof VIEW_TABS)[number];
 
 /** The one frontend fee registry, mirroring `staticFees` in the payment
  *  portal. When a fee is added to the backend, one entry here gives it a
- *  zero row in the breakdown and a search filter option; the breakdown table
- *  itself renders whatever fees the API returns with no change at all. */
+ *  search filter option; the breakdown table renders whatever fees the API
+ *  returns — zero rows included — with no change at all. */
 export const FEE_TYPE_LABEL = {
   PETITION_FILING_FEE: "Petition Filing Fee",
   NONATTORNEY_EXAM_REGISTRATION_FEE: "Non-Attorney Exam Registration Fee",
