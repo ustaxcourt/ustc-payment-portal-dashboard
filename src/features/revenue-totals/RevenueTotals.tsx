@@ -19,11 +19,6 @@ const CELL = "border px-4 py-1.5";
 const HEADER_ROW = "bg-totals-header";
 const HEADING_ID = "revenue-totals-heading";
 
-const formatTrendAmount = (amount: number): string => {
-  const direction = amount > 0 ? "+" : amount < 0 ? "-" : "";
-  return `${direction}${formatCurrency(Math.abs(amount))}`;
-};
-
 const formatTrendPercent = (percentChange: number | null): string | null => {
   if (typeof percentChange !== "number" || !Number.isFinite(percentChange)) {
     return null;
@@ -76,6 +71,41 @@ function Panel({ children }: { children: React.ReactNode }) {
     </section>
   );
 }
+
+type TrendTone = {
+  glyph: string;
+  sign: "+" | "-" | "";
+  className: string;
+};
+
+const getTrendTone = (amount: number): TrendTone => {
+  if (amount > 0) {
+    return {
+      glyph: "▲",
+      sign: "+",
+      className: "text-status-success-foreground",
+    };
+  }
+
+  if (amount < 0) {
+    return {
+      glyph: "▼",
+      sign: "-",
+      className: "text-status-failed-foreground",
+    };
+  }
+
+  return {
+    glyph: "•",
+    sign: "",
+    className: "text-muted-foreground",
+  };
+};
+
+const formatTrendAmount = (amount: number): string => {
+const { sign } = getTrendTone(amount);
+return `${sign}${formatCurrency(Math.abs(amount))}`;
+};
 
 export default function RevenueTotals() {
   const { data, isPending, isError, error, refetch } = useTotals();
