@@ -1,7 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { type AppliedDateRange, courtDayIsoBounds } from "../transaction-log/dateRange";
+import {
+  type AppliedDateRange,
+  courtDayIsoBounds,
+} from "../transaction-log/dateRange";
 import {
   ExportTooLargeError,
   fetchAllTransactions,
@@ -11,13 +14,18 @@ import {
   DEFAULT_SORT,
   type TransactionLogResponse,
 } from "../transaction-log/types";
-import { aggregateByFee, type PaymentBreakdown, summarize } from "./breakdown";
+import {
+  aggregateByFee,
+  capBoundsAtNow,
+  type PaymentBreakdown,
+  summarize,
+} from "./breakdown";
 
 const fetchBreakdown = async (
   range: AppliedDateRange,
   signal?: AbortSignal,
 ): Promise<PaymentBreakdown> => {
-  const bounds = courtDayIsoBounds(range);
+  const bounds = capBoundsAtNow(courtDayIsoBounds(range), new Date());
   const params = new URLSearchParams({
     from: bounds.from,
     to: bounds.to,
@@ -34,7 +42,6 @@ const fetchBreakdown = async (
   const body: TransactionLogResponse = await response.json();
   if (body.feeBreakdown) return summarize(body.feeBreakdown);
 
-  // Deployed API without `includeFeeBreakdown` yet: tally client-side.
   try {
     const { rows } = await fetchAllTransactions(
       "success",
@@ -42,7 +49,10 @@ const fetchBreakdown = async (
       { sort: DEFAULT_SORT, order: DEFAULT_ORDER },
       { signal },
     );
-    return summarize(aggregateByFee(rows));
+    const inWindow = rows.filter(
+      (row) => new Date(row.lastUpdatedAt) < new Date(bounds.to),
+    );
+    return summarize(aggregateByFee(inWindow));
   } catch (err) {
     if (err instanceof ExportTooLargeError) {
       throw new Error(
@@ -53,8 +63,6 @@ const fetchBreakdown = async (
   }
 };
 
-/** Keyed by the timeframe alone: the breakdown ignores the status tab and
- *  search filters. */
 export const usePaymentBreakdown = (range: AppliedDateRange) =>
   useQuery({
     queryKey: ["payment-breakdown", range.from, range.to],

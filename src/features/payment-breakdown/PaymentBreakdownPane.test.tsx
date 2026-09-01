@@ -39,7 +39,10 @@ const feeBreakdown: FeeBreakdownRow[] = [
   },
 ];
 
-const successEntry = (transactionAmount: number): TransactionLogEntry => ({
+const successEntry = (
+  transactionAmount: number,
+  lastUpdatedAt = "2026-08-27T12:00:00.000Z",
+): TransactionLogEntry => ({
   agencyTrackingId: `track-${Math.random()}`,
   feeName: "Petition Filing Fee",
   fee: "PETITION_FILING_FEE",
@@ -48,7 +51,7 @@ const successEntry = (transactionAmount: number): TransactionLogEntry => ({
   transactionReferenceId: "TXREF-00001",
   paymentStatus: "success",
   createdAt: "2026-08-27T12:00:00.000Z",
-  lastUpdatedAt: "2026-08-27T12:00:00.000Z",
+  lastUpdatedAt,
 });
 
 const renderPane = (searchParams = "") => {
@@ -109,7 +112,11 @@ describe("PaymentBreakdownPane", () => {
   });
 
   it("tallies client-side when the API has no fee breakdown yet", async () => {
-    const rows = [successEntry(60), successEntry(60)];
+    const rows = [
+      successEntry(60),
+      successEntry(60),
+      successEntry(500, "2099-01-01T12:00:00.000Z"),
+    ];
     const fetchMock = vi.fn().mockImplementation(async (url: string) =>
       String(url).includes("includeFeeBreakdown")
         ? { ok: true, status: 200, json: async () => response() }

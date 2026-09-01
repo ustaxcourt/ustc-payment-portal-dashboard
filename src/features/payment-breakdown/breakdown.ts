@@ -9,9 +9,14 @@ export type PaymentBreakdown = {
   rows: FeeBreakdownRow[];
   grandTotal: number;
 };
+export const capBoundsAtNow = (
+  bounds: { from: string; to: string },
+  now: Date,
+): { from: string; to: string } => ({
+  from: bounds.from,
+  to: new Date(bounds.to) > now ? now.toISOString() : bounds.to,
+});
 
-/** Orders rows by subtotal descending and totals them, summing in cents so
- *  real dollar amounts cannot drift. */
 export const summarize = (rows: FeeBreakdownRow[]): PaymentBreakdown => ({
   rows: [...rows].sort(
     (a, b) => b.subtotal - a.subtotal || a.feeName.localeCompare(b.feeName),
@@ -21,12 +26,13 @@ export const summarize = (rows: FeeBreakdownRow[]): PaymentBreakdown => ({
     100,
 });
 
-/** Client-side stand-in for the API's `feeBreakdown`, for a backend that does
- *  not provide it yet: successful payments tallied per fee, zero rows kept. */
 export const aggregateByFee = (
   entries: TransactionLogEntry[],
 ): FeeBreakdownRow[] => {
-  const cents = new Map<string, { feeName: string; qty: number; cents: number }>(
+  const cents = new Map<
+    string,
+    { feeName: string; qty: number; cents: number }
+  >(
     FEE_TYPES.map((fee) => [
       fee,
       { feeName: FEE_TYPE_LABEL[fee], qty: 0, cents: 0 },
