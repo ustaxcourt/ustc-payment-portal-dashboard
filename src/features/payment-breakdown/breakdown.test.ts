@@ -3,7 +3,7 @@ import type {
   PaymentStatus,
   TransactionLogEntry,
 } from "../transaction-log/types";
-import { aggregateByFee, capBoundsAtNow, summarize } from "./breakdown";
+import { aggregateByFee, summarize } from "./breakdown";
 
 const entry = (
   fee: string,
@@ -20,31 +20,6 @@ const entry = (
   paymentStatus,
   createdAt: "2026-08-27T12:00:00.000Z",
   lastUpdatedAt: "2026-08-27T12:00:00.000Z",
-});
-
-describe("capBoundsAtNow", () => {
-  const NOW = new Date("2026-09-01T13:36:30.000Z");
-
-  it("caps a window ending later today at now", () => {
-    expect(
-      capBoundsAtNow(
-        { from: "2026-09-01T04:00:00.000Z", to: "2026-09-02T04:00:00.000Z" },
-        NOW,
-      ),
-    ).toEqual({
-      from: "2026-09-01T04:00:00.000Z",
-      to: "2026-09-01T13:36:30.000Z",
-    });
-  });
-
-  it("leaves a window that already ended untouched", () => {
-    const past = {
-      from: "2026-08-01T04:00:00.000Z",
-      to: "2026-08-08T04:00:00.000Z",
-    };
-
-    expect(capBoundsAtNow(past, NOW)).toEqual(past);
-  });
 });
 
 describe("summarize", () => {

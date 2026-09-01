@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   type AppliedDateRange,
+  capBoundsAtNow,
   courtDayIsoBounds,
 } from "../transaction-log/dateRange";
 import {
@@ -14,12 +15,7 @@ import {
   DEFAULT_SORT,
   type TransactionLogResponse,
 } from "../transaction-log/types";
-import {
-  aggregateByFee,
-  capBoundsAtNow,
-  type PaymentBreakdown,
-  summarize,
-} from "./breakdown";
+import { aggregateByFee, type PaymentBreakdown, summarize } from "./breakdown";
 
 const fetchBreakdown = async (
   range: AppliedDateRange,

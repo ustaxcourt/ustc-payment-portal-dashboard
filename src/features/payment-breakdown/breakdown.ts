@@ -9,13 +9,6 @@ export type PaymentBreakdown = {
   rows: FeeBreakdownRow[];
   grandTotal: number;
 };
-export const capBoundsAtNow = (
-  bounds: { from: string; to: string },
-  now: Date,
-): { from: string; to: string } => ({
-  from: bounds.from,
-  to: new Date(bounds.to) > now ? now.toISOString() : bounds.to,
-});
 
 export const summarize = (rows: FeeBreakdownRow[]): PaymentBreakdown => ({
   rows: [...rows].sort(

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  capBoundsAtNow,
   courtDayIsoBounds,
   fromDatePickerValue,
   getCourtCalendarDate,
@@ -217,5 +218,30 @@ describe("courtDayIsoBounds", () => {
       from: "garbage",
       to: "08/19/2026",
     });
+  });
+});
+
+describe("capBoundsAtNow", () => {
+  const NOW = new Date("2026-09-01T13:36:30.000Z");
+
+  it("caps a window ending later today at now", () => {
+    expect(
+      capBoundsAtNow(
+        { from: "2026-09-01T04:00:00.000Z", to: "2026-09-02T04:00:00.000Z" },
+        NOW,
+      ),
+    ).toEqual({
+      from: "2026-09-01T04:00:00.000Z",
+      to: "2026-09-01T13:36:30.000Z",
+    });
+  });
+
+  it("leaves a window that already ended untouched", () => {
+    const past = {
+      from: "2026-08-01T04:00:00.000Z",
+      to: "2026-08-08T04:00:00.000Z",
+    };
+
+    expect(capBoundsAtNow(past, NOW)).toEqual(past);
   });
 });
