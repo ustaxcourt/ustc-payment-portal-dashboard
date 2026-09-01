@@ -15,6 +15,6 @@ export default withAuth({
 // a JSON 401 — a redirect would hand fetch clients an HTML login page.
 export const config = {
   matcher: [
-    "/((?!$|api/|login(?:/|$)|_next/static|_next/image|favicon[.]ico$).*)",
+    "/((?!$|api/|login(?:/|$)|_next/static|_next/image|favicon[.]ico$|icon[.]png$).*)",
   ],
 };

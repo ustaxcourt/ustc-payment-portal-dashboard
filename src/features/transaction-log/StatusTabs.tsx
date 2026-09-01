@@ -34,18 +34,19 @@ export default function StatusTabs({
             aria-selected={isSelected}
             onClick={() => onSelect(option)}
             className={cn(
-              "flex cursor-pointer items-center gap-3 rounded-t-md px-5 py-3 text-sm transition-colors",
+              // Fixed size so tab dimensions never track the count widths.
+              "flex h-12 w-44 cursor-pointer items-center justify-between rounded-t-md px-5 text-sm transition-colors",
               // Sits on the table's border so the two read as one panel.
               isSelected
-                ? "-mb-px border border-b-background bg-background font-semibold"
-                : "border border-transparent bg-muted text-muted-foreground underline hover:bg-muted/70",
+                ? "-mb-0.5 h-[50px] border-2 border-b-0 border-muted-foreground bg-background font-semibold"
+                : "border-2 border-b-0 border-border bg-muted text-muted-foreground underline hover:bg-muted/70",
             )}
           >
             <span>{TAB_LABEL[option]}</span>
             {isStatusTab(option) ? (
               <span
                 className={cn(
-                  "rounded px-2 py-0.5 text-sm font-semibold tabular-nums",
+                  "inline-block min-w-9 rounded px-2 py-0.5 text-center text-sm font-semibold tabular-nums",
                   TAB_TONE[option],
                 )}
               >

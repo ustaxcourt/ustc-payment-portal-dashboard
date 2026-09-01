@@ -94,8 +94,9 @@ export default function TransactionSearch({
   );
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid gap-y-6 rounded-md border bg-background p-4 lg:grid-cols-2 lg:gap-y-0 lg:divide-x">
+    // Shares one frame with the results; the tab rule forms the top edge.
+    <div className="flex min-h-0 flex-1 flex-col rounded-b-md border-2 border-t-0 border-muted-foreground">
+      <div className="grid gap-y-6 border-b bg-background p-4 lg:grid-cols-2 lg:gap-y-0 lg:divide-x">
         <div className="lg:pr-6">
           <h3 className="text-sm font-semibold">Filter by Type</h3>
           <div className="mt-3 flex flex-col gap-3">
@@ -130,11 +131,11 @@ export default function TransactionSearch({
         rows={rows}
         columns={columns}
         caption="Transaction log, Search results"
-        headerTone="bg-slate-50"
+        headerTone="bg-status-neutral-subtle"
         sorting={sorting}
         onSortingChange={onSortingChange}
         emptyMessage={emptyMessage}
-        wrapperClassName="max-h-[60vh] overflow-auto rounded-md border"
+        wrapperClassName="min-h-0 flex-1 overflow-auto"
       />
     </div>
   );

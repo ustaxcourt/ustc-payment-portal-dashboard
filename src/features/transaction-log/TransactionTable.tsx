@@ -33,7 +33,7 @@ export default function TransactionTable({
   sorting,
   onSortingChange,
   emptyMessage,
-  wrapperClassName = "max-h-[60vh] overflow-auto rounded-b-md border border-t-0",
+  wrapperClassName = "min-h-0 flex-1 overflow-auto rounded-b-md border-2 border-t-0 border-muted-foreground",
 }: {
   rows: TransactionLogEntry[];
   columns: ColumnDef<TransactionLogEntry>[];
@@ -70,7 +70,7 @@ export default function TransactionTable({
   });
 
   return (
-    <div className={wrapperClassName}>
+    <div data-testid="transaction-table-scroll" className={wrapperClassName}>
       <Table>
         <TableCaption className="sr-only">{caption}</TableCaption>
         <TableHeader className={cn("sticky top-0 z-10", headerTone)}>
@@ -84,7 +84,10 @@ export default function TransactionTable({
                       ? ariaSort(header.column.getIsSorted())
                       : undefined
                   }
-                  className={cellBorder(index, headerGroup.headers.length)}
+                  className={cn(
+                    "h-8",
+                    cellBorder(index, headerGroup.headers.length),
+                  )}
                 >
                   {flexRender(
                     header.column.columnDef.header,
@@ -111,7 +114,10 @@ export default function TransactionTable({
                 {row.getVisibleCells().map((cell, index) => (
                   <TableCell
                     key={cell.id}
-                    className={cellBorder(index, row.getVisibleCells().length)}
+                    className={cn(
+                      "py-1",
+                      cellBorder(index, row.getVisibleCells().length),
+                    )}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>

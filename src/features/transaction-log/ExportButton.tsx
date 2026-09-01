@@ -65,12 +65,11 @@ export default function ExportButton({
       await saveWorkbook(destination, buffer, filename);
       setPhase({ step: "idle" });
     } catch (err) {
-      // The picker creates an empty file at pick time; clean it up on any
-      // outcome that never wrote it.
       if (destination) void discardSaveDestination(destination);
       if (isAbort(err)) {
         setPhase({ step: "idle" });
       } else {
+        console.error("Export failed:", err);
         setPhase({
           step: "error",
           message:
