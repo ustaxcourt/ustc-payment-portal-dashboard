@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import ErrorPanel from "@/components/ui/ErrorPanel";
 import { COLUMN_LABEL, getColumns } from "./columns";
@@ -33,6 +34,13 @@ export default function TransactionLog() {
     queryEnabled,
   );
 
+  // Badge counts cover the whole timeframe, so an empty search (which disables
+  // its own query) shouldn't blank out the other tabs' counts.
+  const countsRef = useRef(data?.counts);
+  if (data?.counts) {
+    countsRef.current = data.counts;
+  }
+
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
       <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
@@ -56,7 +64,7 @@ export default function TransactionLog() {
           <div className="flex items-end justify-between gap-3 border-b-2 border-muted-foreground">
             <StatusTabs
               selected={tab}
-              counts={data?.counts}
+              counts={countsRef.current}
               onSelect={selectTab}
             />
             {tab === "search" ? (

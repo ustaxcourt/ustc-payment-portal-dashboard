@@ -374,4 +374,27 @@ describe("TransactionLog", () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("keeps the other tabs' badge counts after Clear All empties the search", async () => {
+    mockFetch(
+      response({ counts: { all: 12, success: 5, failed: 4, pending: 3 } }),
+    );
+
+    renderLog("?status=search&feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: /All/ })).toHaveTextContent("12");
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Choose a filter to search transactions."),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("tab", { name: /All/ })).toHaveTextContent("12");
+    expect(screen.getByRole("tab", { name: /Pending/ })).toHaveTextContent("3");
+  });
 });
