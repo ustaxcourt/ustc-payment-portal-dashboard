@@ -78,7 +78,7 @@ export const useTransactionLogParams = () => {
       searchFilters?.payType ||
       searchFilters?.paymentStatus ||
       searchFilters?.transactionStatus ||
-      searchFilters?.metadataValue,
+      (searchFilters?.metadataKey && searchFilters.metadataValue)
   );
 
   const clearSearch = () =>
