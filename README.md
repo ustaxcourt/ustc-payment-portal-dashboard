@@ -21,13 +21,15 @@ The app runs at http://localhost:3000.
 
 ## Scripts
 
-| Script          | Purpose                  |
-| --------------- | ------------------------ |
-| `npm run dev`   | Local dev server         |
-| `npm run build` | Production build         |
-| `npm run start` | Serve a production build |
-| `npm run lint`  | Biome lint               |
-| `npm run tsc`   | Type check (no emit)     |
+| Script              | Purpose                            |
+| ------------------- | ---------------------------------- |
+| `npm run dev`       | Local dev server                   |
+| `npm run build`     | Production build                   |
+| `npm run start`     | Serve a production build           |
+| `npm run lint`      | Biome lint                         |
+| `npm run tsc`       | Type check (no emit)               |
+| `npm run test`      | Vitest unit tests                  |
+| `npm run test:a11y` | Playwright axe accessibility suite |
 
 ## Stack
 
@@ -60,6 +62,9 @@ npm run dev
 
 Then sign in at http://localhost:3000. Note `npm run build` and `npm run dev`
 share `.next`, so running a build while the dev server is up will break it.
+
+Accessibility test setup and workflow notes live in
+[docs/accessibility-testing.md](docs/accessibility-testing.md).
 
 The dashboard requests the Microsoft refresh-token scope (`offline_access`) and
 refreshes Entra access tokens server-side inside the NextAuth JWT callback.

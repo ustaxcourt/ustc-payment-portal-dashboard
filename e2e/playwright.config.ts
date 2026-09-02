@@ -12,7 +12,10 @@ export default defineConfig({
   testMatch: ["**/*.spec.ts", "**/*.setup.ts"],
   workers: 1,
   retries: 0,
-  reporter: [["list"], ["html", { open: "never", outputFolder: path.join(__dirname, "report") }]],
+  reporter: [
+    ["list"],
+    ["html", { open: "never", outputFolder: path.join(__dirname, "report") }],
+  ],
   outputDir: path.join(__dirname, "results"),
 
   webServer: {
@@ -32,17 +35,34 @@ export default defineConfig({
   projects: [
     {
       name: "anonymous",
-      testMatch: /.*\.anon\.spec\.ts/,
+      testMatch: /.*\.anon\.spec\.ts$/,
+      testIgnore: /.*\.a11y\.(anon|auth)\.spec\.ts$/,
       use: { ...devices["Desktop Edge"], channel: BROWSER_CHANNEL },
     },
     {
       name: "setup",
-      testMatch: /auth\.setup\.ts/,
+      testMatch: /auth\.setup\.ts$/,
       use: { ...devices["Desktop Edge"], channel: BROWSER_CHANNEL },
     },
     {
       name: "authenticated",
-      testMatch: /.*\.auth\.spec\.ts/,
+      testMatch: /.*\.auth\.spec\.ts$/,
+      testIgnore: /.*\.a11y\.(anon|auth)\.spec\.ts$/,
+      dependencies: ["setup"],
+      use: {
+        ...devices["Desktop Edge"],
+        channel: BROWSER_CHANNEL,
+        storageState: STORAGE_STATE,
+      },
+    },
+    {
+      name: "accessibility-anonymous",
+      testMatch: /.*\.a11y\.anon\.spec\.ts$/,
+      use: { ...devices["Desktop Edge"], channel: BROWSER_CHANNEL },
+    },
+    {
+      name: "accessibility-authenticated",
+      testMatch: /.*\.a11y\.auth\.spec\.ts$/,
       dependencies: ["setup"],
       use: {
         ...devices["Desktop Edge"],
