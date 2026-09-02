@@ -2,8 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { TAB_LABEL, TAB_TONE } from "./statusStyles";
-import { VIEW_TABS } from "./types";
 import type { TransactionCounts, TransactionTab, ViewTab } from "./types";
+import { VIEW_TABS } from "./types";
 
 const isStatusTab = (tab: ViewTab): tab is TransactionTab => tab !== "search";
 

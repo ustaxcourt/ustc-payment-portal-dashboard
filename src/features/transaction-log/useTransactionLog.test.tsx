@@ -3,12 +3,12 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AppliedDateRange } from "./dateRange";
-import { useTransactionLog } from "./useTransactionLog";
 import type {
   TransactionLogEntry,
   TransactionLogResponse,
   TransactionSorting,
 } from "./types";
+import { useTransactionLog } from "./useTransactionLog";
 
 const range: AppliedDateRange = {
   preset: "last7",
