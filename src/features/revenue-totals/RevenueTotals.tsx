@@ -34,23 +34,23 @@ const trendStyles = (amount: number): string =>
       ? "text-status-failed-foreground"
       : "text-muted-foreground";
 
-function TrendCell({
-  trend,
-}: {
-  trend: YoYTrend;
-}) {
+function TrendCell({ trend }: { trend: YoYTrend }) {
   if (trend.previous <= 0) {
     return <td className={cn(CELL, "text-lg text-muted-foreground")}>N/A</td>;
   }
 
   const amount = trend.difference;
   const percent = formatTrendPercent(trend.percentChange);
-  const indicator = amount > 0 ? "▲" : amount < 0 ? "▼" : "•";
+  const tone = getTrendTone(amount);
 
   return (
     <td className={cn(CELL, "text-lg tabular-nums")}>
-      <span className={cn("font-semibold", trendStyles(amount))}>{indicator}</span>{" "}
-      <span className="tabular-nums">{formatTrendAmount(amount)}</span>
+      <span className={cn("font-semibold", tone.className)}>
+        {tone.glyph}
+      </span>{" "}
+      <span className="tabular-nums">
+        {formatTrendAmount(amount)}
+      </span>
       {percent ? ` (${percent})` : ""}
     </td>
   );
@@ -103,8 +103,8 @@ const getTrendTone = (amount: number): TrendTone => {
 };
 
 const formatTrendAmount = (amount: number): string => {
-const { sign } = getTrendTone(amount);
-return `${sign}${formatCurrency(Math.abs(amount))}`;
+  const tone = getTrendTone(amount);
+  return `${tone.sign}${formatCurrency(Math.abs(amount))}`;
 };
 
 export default function RevenueTotals() {
