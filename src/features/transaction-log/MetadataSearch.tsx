@@ -1,7 +1,7 @@
 "use client";
 
 import { XIcon } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import FilterSelect from "@/components/ui/FilterSelect";
 import { Label } from "@/components/ui/label";
@@ -55,7 +55,7 @@ export default function MetadataSearch({
     label: METADATA_KEY_LABEL[key],
   }));
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = draft.trim();
     onSearch(trimmed ? selectedKey : null, trimmed || null);
