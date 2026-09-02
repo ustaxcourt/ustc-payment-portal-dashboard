@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import ErrorPanel from "@/components/ui/ErrorPanel";
 import { COLUMN_LABEL, getColumns } from "./columns";
@@ -9,6 +8,7 @@ import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
 import TransactionSearch from "./TransactionSearch";
 import TransactionTable from "./TransactionTable";
 import type { FeeType, TransactionSearchFilters } from "./types";
+import { useRetainedCounts } from "./useRetainedCounts";
 import { useTransactionLog } from "./useTransactionLog";
 import { useTransactionLogParams } from "./useTransactionLogParams";
 
@@ -34,12 +34,13 @@ export default function TransactionLog() {
     queryEnabled,
   );
 
-  // Badge counts cover the whole timeframe, so an empty search (which disables
-  // its own query) shouldn't blank out the other tabs' counts.
-  const countsRef = useRef(data?.counts);
-  if (data?.counts) {
-    countsRef.current = data.counts;
-  }
+  // Badge counts span the whole timeframe, but an empty search disables its own
+  // query, so retain the last counts we saw — scoped to their range, so a
+  // timeframe change blanks the badges instead of stranding the old window's.
+  const counts = useRetainedCounts(
+    data?.counts,
+    `${appliedRange.from}..${appliedRange.to}`,
+  );
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
@@ -62,11 +63,7 @@ export default function TransactionLog() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-end justify-between gap-3 border-b-2 border-muted-foreground">
-            <StatusTabs
-              selected={tab}
-              counts={countsRef.current}
-              onSelect={selectTab}
-            />
+            <StatusTabs selected={tab} counts={counts} onSelect={selectTab} />
             {tab === "search" ? (
               <Button
                 type="button"
