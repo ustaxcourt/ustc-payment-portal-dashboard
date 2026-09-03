@@ -1,4 +1,6 @@
-import { COURT_TIME_ZONE } from "@/lib/format";
+import { courtMidnightUtc, getCourtCalendarDate } from "@/lib/courtCalendar";
+
+export { getCourtCalendarDate };
 
 export const DATE_RANGE_PRESETS = [
   "today",
@@ -20,13 +22,6 @@ export type AppliedDateRange = {
 
 export const MIN_CUSTOM_RANGE_YEAR = 2026;
 
-const courtDayParts = new Intl.DateTimeFormat("en-US", {
-  timeZone: COURT_TIME_ZONE,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-});
-
 const PRESET_LABEL: Record<Exclude<DateRangePreset, "custom">, string> = {
   today: "Today",
   last7: "Last 7 days",
@@ -34,15 +29,6 @@ const PRESET_LABEL: Record<Exclude<DateRangePreset, "custom">, string> = {
 };
 
 const pad = (value: number) => String(value).padStart(2, "0");
-
-export const getCourtCalendarDate = (value = new Date()): Date => {
-  const parts = courtDayParts.formatToParts(value);
-  const year = Number(parts.find((part) => part.type === "year")?.value);
-  const month = Number(parts.find((part) => part.type === "month")?.value);
-  const day = Number(parts.find((part) => part.type === "day")?.value);
-
-  return new Date(Date.UTC(year, month - 1, day));
-};
 
 const shiftUtcDays = (value: Date, days: number): Date => {
   const shifted = new Date(value);
@@ -56,29 +42,6 @@ const toInputDate = (value: Date): string => {
   const year = value.getUTCFullYear();
 
   return `${month}/${day}/${year}`;
-};
-
-/** UTC instant of Court-time midnight on the given calendar day. ET midnight
- *  is 04:00Z under EDT or 05:00Z under EST; the 04:00Z candidate lands on the
- *  requested Court calendar day only when EDT is in effect. */
-const courtMidnightUtc = (calendarDay: Date): Date => {
-  const edt = new Date(
-    Date.UTC(
-      calendarDay.getUTCFullYear(),
-      calendarDay.getUTCMonth(),
-      calendarDay.getUTCDate(),
-      4,
-    ),
-  );
-  if (getCourtCalendarDate(edt).getTime() === calendarDay.getTime()) return edt;
-  return new Date(
-    Date.UTC(
-      calendarDay.getUTCFullYear(),
-      calendarDay.getUTCMonth(),
-      calendarDay.getUTCDate(),
-      5,
-    ),
-  );
 };
 
 /** The applied range as exact ISO instants — inclusive Court-midnight start,
