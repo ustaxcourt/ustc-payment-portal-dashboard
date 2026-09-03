@@ -38,6 +38,13 @@ const currency = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
+const wholeCurrency = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
 export const formatCourtDateTime = (iso: string | null | undefined): string =>
   iso ? dateTime.format(new Date(iso)) : "—";
 
@@ -48,11 +55,18 @@ export const formatCourtStamp = (
   iso: string | null | undefined,
 ): { date: string; time: string } =>
   iso
-    ? { date: stampDate.format(new Date(iso)), time: stampTime.format(new Date(iso)) }
+    ? {
+        date: stampDate.format(new Date(iso)),
+        time: stampTime.format(new Date(iso)),
+      }
     : { date: "—", time: "" };
 
 export const formatCurrency = (amount: number | null | undefined): string =>
   typeof amount === "number" ? currency.format(amount) : "—";
+
+export const formatWholeCurrency = (
+  amount: number | null | undefined,
+): string => (typeof amount === "number" ? wholeCurrency.format(amount) : "—");
 
 export const formatLabel = (value: string | null | undefined): string =>
   value ? value.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()) : "—";

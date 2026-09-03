@@ -1,5 +1,5 @@
 import { courtMidnightUtc, getCourtCalendarDate } from "@/lib/courtCalendar";
-import type { TotalPeriodName } from "./types";
+import type { TotalPeriod, TotalPeriodName } from "./types";
 
 /** The instant the period closes, anchored to the server's `from`. The calendar
  *  day is advanced in UTC-day space; `courtMidnightUtc` absorbs DST. */
@@ -22,4 +22,16 @@ export const periodEnd = (period: TotalPeriodName, from: string): Date => {
     default:
       return courtMidnightUtc(new Date(Date.UTC(year + 1, 9, 1)));
   }
+};
+
+export const projectedTotal = (
+  period: TotalPeriodName,
+  { from, to, total }: TotalPeriod,
+): number => {
+  const opened = Date.parse(from);
+  const elapsed = Date.parse(to) - opened;
+  if (elapsed <= 0) return total;
+
+  const full = periodEnd(period, from).getTime() - opened;
+  return Math.round((total * full) / elapsed);
 };
