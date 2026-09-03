@@ -1,8 +1,9 @@
 "use client";
 
 import ErrorPanel from "@/components/ui/ErrorPanel";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatWholeCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { projectedTotal } from "./projection";
 import {
   fiscalYearLabel,
   PERIOD_LABEL,
@@ -186,6 +187,22 @@ export default function RevenueTotals() {
                 key={period}
                 trend={data.yoyTrends[period]}
               />
+            ))}
+          </tr>
+          <tr>
+            <th
+              scope="row"
+              className={cn(CELL, "border-0 text-right text-sm font-normal whitespace-nowrap")}
+            >
+              Projected Total
+              <span className="sr-only">
+                , estimated from the rate collected so far
+              </span>
+            </th>
+            {TOTAL_PERIODS.map((period) => (
+              <td key={period} className={cn(CELL, "text-lg tabular-nums")}>
+                {formatWholeCurrency(projectedTotal(period, data.current[period]))}
+              </td>
             ))}
           </tr>
         </tbody>
