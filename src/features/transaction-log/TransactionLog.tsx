@@ -26,19 +26,22 @@ export default function TransactionLog() {
     queryEnabled,
   } = useTransactionLogParams();
 
-  const { data, isPending, isError, error, refetch } = useTransactionLog(
-    tab,
-    appliedRange,
-    activeSorting,
-    searchFilters,
-    queryEnabled,
-  );
+  const { data, isPending, isPlaceholderData, isError, error, refetch } =
+    useTransactionLog(
+      tab,
+      appliedRange,
+      activeSorting,
+      searchFilters,
+      queryEnabled,
+    );
 
   // Badge counts span the whole timeframe, but an empty search disables its own
   // query, so retain the last counts we saw — scoped to their range, so a
   // timeframe change blanks the badges instead of stranding the old window's.
+  // Placeholder data is the prior range's response held during the refetch;
+  // feeding it in would cache stale counts under the new range and defeat that.
   const counts = useRetainedCounts(
-    data?.counts,
+    isPlaceholderData ? undefined : data?.counts,
     `${appliedRange.from}..${appliedRange.to}`,
   );
 

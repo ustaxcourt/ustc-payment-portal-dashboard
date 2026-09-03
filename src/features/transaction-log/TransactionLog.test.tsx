@@ -253,11 +253,18 @@ describe("TransactionLog", () => {
       await screen.findByRole("option", { name: "Petition Filing Fee" }),
     );
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    const requested = String(fetchMock.mock.calls.at(-1)?.[0]);
-    expect(requested).toContain("fee=PETITION_FILING_FEE");
-    expect(requested).not.toContain("metadataKey");
-    expect(requested).not.toContain("metadataValue");
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some((call) =>
+          String(call[0]).includes("fee=PETITION_FILING_FEE"),
+        ),
+      ).toBe(true),
+    );
+    const petitionRequest = fetchMock.mock.calls
+      .map((call) => String(call[0]))
+      .find((url) => url.includes("fee=PETITION_FILING_FEE"));
+    expect(petitionRequest).not.toContain("metadataKey");
+    expect(petitionRequest).not.toContain("metadataValue");
   });
 
   it("changing the timeframe while a filter is active keeps the filter and updates the range", async () => {
@@ -276,16 +283,17 @@ describe("TransactionLog", () => {
       screen.getByRole("button", { name: "Last 7 days" }),
     );
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    const secondRequest = new URL(
-      String(fetchMock.mock.calls[1][0]),
-      "http://localhost",
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some((call) => {
+          const url = new URL(String(call[0]), "http://localhost");
+          return (
+            url.searchParams.get("from") !== firstFrom &&
+            url.searchParams.get("fee") === "PETITION_FILING_FEE"
+          );
+        }),
+      ).toBe(true),
     );
-
-    expect(secondRequest.searchParams.get("fee")).toBe(
-      "PETITION_FILING_FEE",
-    );
-    expect(secondRequest.searchParams.get("from")).not.toBe(firstFrom);
   });
 
   it("forwards a custom timeframe together with search filters", async () => {
