@@ -32,24 +32,26 @@ function TrendCell({
 }: {
   trend: YoYTrend;
 }) {
-  if (trend.previous <= 0) {
-    return <td className={cn(CELL, "text-lg text-muted-foreground")}>N/A</td>;
-  }
-
   const amount = trend.difference;
   const percent = formatTrendPercent(trend.percentChange);
   const { glyph, sign, className } = getTrendTone(amount);
+  const showGlyph = amount !== 0;
 
   return (
     <td className={cn(CELL, "text-lg tabular-nums")}>
-      <span className={cn("font-semibold", className)}>
-        {glyph}
-      </span>{" "}
+      {showGlyph && (
+        <>
+          <span className={cn("font-semibold", className)}>
+            {glyph}
+          </span>{" "}
+        </>
+      )}
+
       <span className="tabular-nums">
         {sign}
         {formatCurrency(Math.abs(amount))}
-      </span>
-      {percent ? ` (${percent})` : ""}
+      </span>{" "}
+      ({percent ?? "N/A"})
     </td>
   );
 }
