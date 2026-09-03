@@ -106,9 +106,10 @@ export async function GET() {
         period,
         {
           current: current[period].total,
-          previous: 0,
-          difference: current[period].total,
+          previous: null,
+          difference: null,
           percentChange: null,
+          available: false,
         },
       ]),
     ) as YoYTrendSnapshot;

@@ -15,22 +15,22 @@ const totals = (): TotalsResponse => ({
     fiscalYear: { from: "2025-10-01T04:00:00.000Z", to: NOW, total: 458500 },
   },
   yoyTrends: {
-    day: { current: 4500, previous: 3800, difference: 700, percentChange: 18.42 },
-    week: { current: 22000, previous: 20000, difference: 2000, percentChange: 10 },
-    month: { current: 98125, previous: 96500, difference: 1625, percentChange: 1.68 },
-    quarter: { current: 158500, previous: 160375, difference: -1875, percentChange: -1.17 },
-    fiscalYear: { current: 458500, previous: 488450, difference: -29950, percentChange: -6.13 },
+    day: { current: 4500, previous: 3800, difference: 700, percentChange: 18.42, available: true },
+    week: { current: 22000, previous: 20000, difference: 2000, percentChange: 10, available: true },
+    month: { current: 98125, previous: 96500, difference: 1625, percentChange: 1.68, available: true },
+    quarter: { current: 158500, previous: 160375, difference: -1875, percentChange: -1.17, available: true },
+    fiscalYear: { current: 458500, previous: 488450, difference: -29950, percentChange: -6.13, available: true },
   },
 });
 
 const totalsWithoutYoYHistory = (): TotalsResponse => ({
   ...totals(),
   yoyTrends: {
-    day: { current: 4500, previous: 0, difference: 4500, percentChange: null },
-    week: { current: 22000, previous: 0, difference: 22000, percentChange: null },
-    month: { current: 98125, previous: 0, difference: 98125, percentChange: null },
-    quarter: { current: 158500, previous: 0, difference: 158500, percentChange: null },
-    fiscalYear: { current: 458500, previous: 0, difference: 458500, percentChange: null },
+    day: { current: 4500, previous: 0, difference: 4500, percentChange: null, available: true },
+    week: { current: 22000, previous: 0, difference: 22000, percentChange: null, available: true },
+    month: { current: 98125, previous: 0, difference: 98125, percentChange: null, available: true },
+    quarter: { current: 158500, previous: 0, difference: 158500, percentChange: null, available: true },
+    fiscalYear: { current: 458500, previous: 0, difference: 458500, percentChange: null, available: true },
   },
 });
 
