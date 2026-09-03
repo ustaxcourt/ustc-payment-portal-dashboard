@@ -100,7 +100,7 @@ describe("RevenueTotals", () => {
 
     renderTotals();
 
-    expect(await screen.findAllByText("N/A")).toHaveLength(5);
+    expect(await screen.findAllByText("(N/A)")).toHaveLength(5);
     expect(screen.getByText("$458,500.00")).toBeInTheDocument();
   });
 
