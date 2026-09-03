@@ -106,13 +106,17 @@ export default function TransactionLog() {
               onMetadataSearch={(metadataKey, metadataValue) =>
                 setParams({ metadataKey, metadataValue })
               }
-              rows={hasSearchCriteria ? (data?.data ?? []) : []}
+              rows={
+                hasSearchCriteria && !isPlaceholderData
+                  ? (data?.data ?? [])
+                  : []
+              }
               sorting={activeSorting}
               onSortingChange={setParams}
               emptyMessage={
                 !hasSearchCriteria
                   ? "Choose a filter to search transactions."
-                  : isPending
+                  : isPending || isPlaceholderData
                     ? "Searching…"
                     : "No transactions match your search."
               }
