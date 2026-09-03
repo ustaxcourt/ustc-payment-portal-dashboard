@@ -35,13 +35,14 @@ const isPeriod = (value: unknown): value is TotalPeriod => {
 
 const isYoYTrend = (value: unknown): value is YoYTrend => {
   if (!value || typeof value !== "object") return false;
-  const { current, previous, difference, percentChange } =
+  const { current, previous, difference, percentChange, available } =
     value as Partial<YoYTrend>;
   return (
     typeof current === "number" &&
-    typeof previous === "number" &&
-    typeof difference === "number" &&
-    (percentChange === null || typeof percentChange === "number")
+    (previous === null || typeof previous === "number") &&
+    (difference === null || typeof difference === "number") &&
+    (percentChange === null || typeof percentChange === "number") &&
+    typeof available === "boolean"
   );
 };
 
