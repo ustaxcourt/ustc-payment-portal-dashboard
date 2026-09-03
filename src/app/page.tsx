@@ -1,5 +1,5 @@
-import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth/next";
 import { Suspense } from "react";
 import LogoutButton from "@/components/ui/LogoutButton";
 import PaymentBreakdownPane from "@/features/payment-breakdown/PaymentBreakdownPane";
@@ -66,7 +66,9 @@ export default async function Home({
       </Suspense>
 
       <main className="grid min-h-0 flex-1 grid-cols-3 gap-6 p-6 sm:p-8">
-        <PaymentBreakdownPane />
+        <Suspense fallback={<div aria-hidden="true" />}>
+          <PaymentBreakdownPane />
+        </Suspense>
         <div className="col-span-2 flex min-h-0 flex-col">
           <Suspense
             fallback={
