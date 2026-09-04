@@ -1,7 +1,7 @@
 "use client";
 
 import { XIcon } from "lucide-react";
-import { type SubmitEvent, useState } from "react";
+import { type SubmitEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import FilterSelect from "@/components/ui/FilterSelect";
 import { Label } from "@/components/ui/label";
@@ -25,8 +25,10 @@ type Props = {
 /**
  * Direct-lookup control for the Search tab: pick one metadata key tied to the
  * selected fee, type a value, and commit it on Search / Enter. Remounted by a
- * `key` on the fee type, so drafts reset when the available keys change. A fee
- * with a single metadata key shows a static label; two or more show a dropdown.
+ * `key` on the fee type, so drafts reset when the available keys change; an
+ * effect covers Back/Forward navigation that changes the committed key/value
+ * without changing the fee. A fee with a single metadata key shows a static
+ * label; two or more show a dropdown.
  */
 export default function MetadataSearch({
   feeType,
@@ -39,6 +41,13 @@ export default function MetadataSearch({
     metadataKey && keys.includes(metadataKey) ? metadataKey : (keys[0] ?? null),
   );
   const [draft, setDraft] = useState(metadataValue ?? "");
+
+  useEffect(() => {
+    setSelectedKey(
+      metadataKey && keys.includes(metadataKey) ? metadataKey : (keys[0] ?? null),
+    );
+    setDraft(metadataValue ?? "");
+  }, [metadataKey, metadataValue, keys]);
 
   if (!feeType) {
     return (

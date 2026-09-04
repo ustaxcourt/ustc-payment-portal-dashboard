@@ -147,4 +147,50 @@ describe("MetadataSearch", () => {
       "foo@example.com",
     );
   });
+
+  it("syncs the draft when Back/Forward changes the value for the same fee", () => {
+    const { rerender } = renderMetadataSearch({
+      feeType: "PETITION_FILING_FEE",
+      metadataKey: "docketNumber",
+      metadataValue: "123-26",
+    });
+
+    expect(screen.getByLabelText("Docket Number")).toHaveValue("123-26");
+
+    rerender(
+      <MetadataSearch
+        feeType="PETITION_FILING_FEE"
+        metadataKey="docketNumber"
+        metadataValue="999-99"
+        onSearch={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Docket Number")).toHaveValue("999-99");
+  });
+
+  it("syncs the selected key and draft when Back/Forward changes both for the same fee", () => {
+    const { rerender } = renderMetadataSearch({
+      feeType: "NONATTORNEY_EXAM_REGISTRATION_FEE",
+      metadataKey: "email",
+      metadataValue: "foo@example.com",
+    });
+
+    expect(screen.getByLabelText("Search by Email")).toHaveValue(
+      "foo@example.com",
+    );
+
+    rerender(
+      <MetadataSearch
+        feeType="NONATTORNEY_EXAM_REGISTRATION_FEE"
+        metadataKey="fullName"
+        metadataValue="Jane Doe"
+        onSearch={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Search by Full Name")).toHaveValue(
+      "Jane Doe",
+    );
+  });
 });
