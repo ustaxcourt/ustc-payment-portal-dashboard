@@ -33,6 +33,9 @@ const isPeriod = (value: unknown): value is TotalPeriod => {
   );
 };
 
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
 const isYoYTrend = (value: unknown): value is YoYTrend => {
   if (!value || typeof value !== "object") return false;
 
@@ -40,10 +43,10 @@ const isYoYTrend = (value: unknown): value is YoYTrend => {
     value as Partial<YoYTrend>;
 
   return (
-    typeof current === "number" &&
-    (previous === null || typeof previous === "number") &&
-    (difference === null || typeof difference === "number") &&
-    (percentChange === null || typeof percentChange === "number")
+    isFiniteNumber(current) &&
+    (previous === null || isFiniteNumber(previous)) &&
+    (difference === null || isFiniteNumber(difference)) &&
+    (percentChange === null || isFiniteNumber(percentChange))
   );
 };
 
