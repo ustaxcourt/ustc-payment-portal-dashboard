@@ -35,10 +35,8 @@ export default function MetadataSearch({
   onSearch,
 }: Props) {
   const keys: readonly MetadataKey[] = feeType ? FEE_METADATA_KEYS[feeType] : [];
-  const [selectedKey, setSelectedKey] = useState<MetadataKey>(
-    metadataKey && keys.includes(metadataKey)
-      ? metadataKey
-      : (keys[0] ?? "docketNumber"),
+  const [selectedKey, setSelectedKey] = useState<MetadataKey | null>(
+    metadataKey && keys.includes(metadataKey) ? metadataKey : (keys[0] ?? null),
   );
   const [draft, setDraft] = useState(metadataValue ?? "");
 
@@ -57,6 +55,7 @@ export default function MetadataSearch({
 
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!selectedKey) return;
     const trimmed = draft.trim();
     onSearch(trimmed ? selectedKey : null, trimmed || null);
   };
@@ -69,7 +68,11 @@ export default function MetadataSearch({
 
   return (
     <form className="flex flex-col gap-3" onSubmit={submit}>
-      {keys.length === 1 ? (
+      {keys.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          This fee has no searchable fields.
+        </p>
+      ) : keys.length === 1 ? (
         <Label htmlFor="metadata-search-input">
           {METADATA_KEY_LABEL[keys[0]]}
         </Label>
@@ -77,7 +80,7 @@ export default function MetadataSearch({
         <FilterSelect
           id="metadata-search-key"
           label="Search by"
-          value={selectedKey}
+          value={selectedKey ?? ""}
           options={options}
           onChange={(value) => setSelectedKey(value as MetadataKey)}
         />
@@ -91,7 +94,10 @@ export default function MetadataSearch({
             className="h-8 w-full rounded-lg border border-input bg-transparent py-2 pr-8 pl-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            aria-label={`Search by ${METADATA_KEY_LABEL[selectedKey]}`}
+            disabled={!selectedKey}
+            aria-label={
+              selectedKey ? `Search by ${METADATA_KEY_LABEL[selectedKey]}` : "Search"
+            }
           />
           {draft ? (
             <button
@@ -104,7 +110,9 @@ export default function MetadataSearch({
             </button>
           ) : null}
         </div>
-        <Button type="submit">Search</Button>
+        <Button type="submit" disabled={!selectedKey}>
+          Search
+        </Button>
       </div>
     </form>
   );
