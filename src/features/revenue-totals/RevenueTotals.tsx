@@ -32,15 +32,15 @@ function TrendCell({
 }: {
   trend: YoYTrend;
 }) {
-  const { difference, percentChange, available } = trend;
+  const { difference, percentChange } = trend;
 
   const percent =
-    available && percentChange !== null
-      ? formatTrendPercent(percentChange)
-      : "N/A";
+    percentChange === null
+      ? "N/A"
+      : formatTrendPercent(percentChange);
 
   const { glyph, sign, className } = getTrendTone(difference ?? 0);
-  const showGlyph = difference !== 0;
+  const showGlyph = (difference ?? 0) !== 0;
 
   return (
     <td className={cn(CELL, "text-lg tabular-nums")}>
