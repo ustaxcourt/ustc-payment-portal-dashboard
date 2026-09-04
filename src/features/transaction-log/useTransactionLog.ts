@@ -13,9 +13,6 @@ import type {
 // is the path to the complete set.
 const PAGE_SIZE = 200;
 
-// The API only accepts key and value together — a key with no value (or vice
-// versa, reachable by hand-editing the URL) is sent as no metadata filter at
-// all, so treat it that way here too, before it ever reaches the query key.
 const pairedMetadata = (filters?: TransactionSearchFilters) =>
   filters?.metadataKey && filters?.metadataValue
     ? { key: filters.metadataKey, value: filters.metadataValue }
