@@ -24,9 +24,10 @@ export type TotalsSnapshot = Record<TotalPeriodName, TotalPeriod>;
 
 export type YoYTrend = {
   current: number;
-  previous: number;
-  difference: number;
+  previous: number | null;
+  difference: number | null;
   percentChange: number | null;
+  available: boolean;
 };
 
 export type YoYTrendSnapshot = Record<TotalPeriodName, YoYTrend>;
@@ -41,7 +42,7 @@ export const fiscalYearLabel = (period: TotalPeriod): string =>
 
 export const priorFiscalYearLabel = (period: TotalPeriod): string => {
   const fiscalYear = Number(fiscalYearLabel(period).replace("FY", ""));
-  return `FY${String(fiscalYear - 1).padStart(2, "0")}`;
+  return `FY${String((fiscalYear + 99) % 100).padStart(2, "0")}`;
 };
 
 export const PERIOD_LABEL: Record<TotalPeriodName, string> = {

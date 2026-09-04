@@ -33,15 +33,20 @@ const isPeriod = (value: unknown): value is TotalPeriod => {
   );
 };
 
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
 const isYoYTrend = (value: unknown): value is YoYTrend => {
   if (!value || typeof value !== "object") return false;
+
   const { current, previous, difference, percentChange } =
     value as Partial<YoYTrend>;
+
   return (
-    typeof current === "number" &&
-    typeof previous === "number" &&
-    typeof difference === "number" &&
-    (percentChange === null || typeof percentChange === "number")
+    isFiniteNumber(current) &&
+    (previous === null || isFiniteNumber(previous)) &&
+    (difference === null || isFiniteNumber(difference)) &&
+    (percentChange === null || isFiniteNumber(percentChange))
   );
 };
 
@@ -97,7 +102,14 @@ export async function GET() {
           "[dashboard] yoy trends malformed on the transaction log; falling back to N/A",
         );
       } else {
-        validatedTrends = yoyTrends as YoYTrendSnapshot;
+        validatedTrends = Object.fromEntries(
+          TOTAL_PERIODS.map((period) => [
+            period,
+            {
+              ...yoyTrends[period],
+            },
+          ]),
+        ) as YoYTrendSnapshot;
       }
     }
 
@@ -106,9 +118,10 @@ export async function GET() {
         period,
         {
           current: current[period].total,
-          previous: 0,
-          difference: current[period].total,
+          previous: null,
+          difference: null,
           percentChange: null,
+          available: false,
         },
       ]),
     ) as YoYTrendSnapshot;
