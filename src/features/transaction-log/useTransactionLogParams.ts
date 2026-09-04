@@ -7,6 +7,7 @@ import {
   DEFAULT_ORDER,
   DEFAULT_SORT,
   FEE_TYPES,
+  METADATA_KEYS,
   PAY_TYPES,
   PAYMENT_STATUSES,
   SORT_ORDERS,
@@ -32,6 +33,8 @@ export const useTransactionLogParams = () => {
       payType: parseAsStringLiteral(PAY_TYPES),
       paymentStatus: parseAsStringLiteral(PAYMENT_STATUSES),
       transactionStatus: parseAsStringLiteral(TRANSACTION_STATUSES),
+      metadataKey: parseAsStringLiteral(METADATA_KEYS),
+      metadataValue: parseAsString,
     },
     {
       clearOnDefault: true,
@@ -65,6 +68,8 @@ export const useTransactionLogParams = () => {
           payType: params.payType,
           paymentStatus: params.paymentStatus,
           transactionStatus: params.transactionStatus,
+          metadataKey: params.metadataKey,
+          metadataValue: params.metadataValue,
         }
       : undefined;
 
@@ -72,7 +77,8 @@ export const useTransactionLogParams = () => {
     searchFilters?.feeType ||
       searchFilters?.payType ||
       searchFilters?.paymentStatus ||
-      searchFilters?.transactionStatus,
+      searchFilters?.transactionStatus ||
+      (searchFilters?.metadataKey && searchFilters.metadataValue)
   );
 
   const clearSearch = () =>
@@ -81,6 +87,8 @@ export const useTransactionLogParams = () => {
       payType: null,
       paymentStatus: null,
       transactionStatus: null,
+      metadataKey: null,
+      metadataValue: null,
     });
 
   // The search tab fetches nothing until a filter is chosen.

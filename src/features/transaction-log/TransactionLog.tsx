@@ -7,7 +7,8 @@ import StatusTabs from "./StatusTabs";
 import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
 import TransactionSearch from "./TransactionSearch";
 import TransactionTable from "./TransactionTable";
-import type { TransactionSearchFilters } from "./types";
+import type { FeeType, TransactionSearchFilters } from "./types";
+import { useRetainedCounts } from "./useRetainedCounts";
 import { useTransactionLog } from "./useTransactionLog";
 import { useTransactionLogParams } from "./useTransactionLogParams";
 
@@ -25,13 +26,34 @@ export default function TransactionLog() {
     queryEnabled,
   } = useTransactionLogParams();
 
-  const { data, isPending, isError, error, refetch } = useTransactionLog(
-    tab,
-    appliedRange,
-    activeSorting,
-    searchFilters,
-    queryEnabled,
+  const { data, isPending, isPlaceholderData, isError, error, refetch } =
+    useTransactionLog(
+      tab,
+      appliedRange,
+      activeSorting,
+      searchFilters,
+      queryEnabled,
+    );
+
+  // Badge counts span the whole timeframe, but an empty search disables its own
+  // query, so retain the last counts we saw — scoped to their range, so a
+  // timeframe change blanks the badges instead of stranding the old window's.
+  // Placeholder data is the prior range's response held during the refetch;
+  // feeding it in would cache stale counts under the new range and defeat that.
+  const counts = useRetainedCounts(
+    isPlaceholderData ? undefined : data?.counts,
+    `${appliedRange.from}..${appliedRange.to}`,
   );
+
+  // On the search tab, placeholder data is the previous search's response —
+  // hide it from both the table and the footer so a new search in flight
+  // doesn't pair an empty/"Searching…" table with a stale transaction count.
+  const visibleData =
+    tab === "search"
+      ? hasSearchCriteria && !isPlaceholderData
+        ? data
+        : undefined
+      : data;
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
@@ -54,11 +76,7 @@ export default function TransactionLog() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-end justify-between gap-3 border-b-2 border-muted-foreground">
-            <StatusTabs
-              selected={tab}
-              counts={data?.counts}
-              onSelect={selectTab}
-            />
+            <StatusTabs selected={tab} counts={counts} onSelect={selectTab} />
             {tab === "search" ? (
               <Button
                 type="button"
@@ -78,20 +96,33 @@ export default function TransactionLog() {
                 payType: params.payType,
                 paymentStatus: params.paymentStatus,
                 transactionStatus: params.transactionStatus,
+                metadataKey: params.metadataKey,
+                metadataValue: params.metadataValue,
               }}
               onFilterChange={(key, value) =>
-                setParams({ [key]: value } as Pick<
-                  TransactionSearchFilters,
-                  typeof key
-                >)
+                setParams(
+                  key === "feeType"
+                    ? {
+                        feeType: value as FeeType | null,
+                        metadataKey: null,
+                        metadataValue: null,
+                      }
+                    : ({ [key]: value } as Pick<
+                        TransactionSearchFilters,
+                        typeof key
+                      >),
+                )
               }
-              rows={hasSearchCriteria ? (data?.data ?? []) : []}
+              onMetadataSearch={(metadataKey, metadataValue) =>
+                setParams({ metadataKey, metadataValue })
+              }
+              rows={visibleData?.data ?? []}
               sorting={activeSorting}
               onSortingChange={setParams}
               emptyMessage={
                 !hasSearchCriteria
                   ? "Choose a filter to search transactions."
-                  : isPending
+                  : isPending || isPlaceholderData
                     ? "Searching…"
                     : "No transactions match your search."
               }
@@ -109,11 +140,12 @@ export default function TransactionLog() {
               }
             />
           )}
-          {data ? (
+          {visibleData ? (
             <p className="mt-2 text-right text-sm text-muted-foreground">
-              {typeof data.total === "number" && data.data.length < data.total
-                ? `Showing ${data.data.length} of ${data.total} transactions — export to get the full set`
-                : `${data.data.length} ${data.data.length === 1 ? "transaction" : "transactions"}`}
+              {typeof visibleData.total === "number" &&
+              visibleData.data.length < visibleData.total
+                ? `Showing ${visibleData.data.length} of ${visibleData.total} transactions — export to get the full set`
+                : `${visibleData.data.length} ${visibleData.data.length === 1 ? "transaction" : "transactions"}`}
             </p>
           ) : null}
         </div>

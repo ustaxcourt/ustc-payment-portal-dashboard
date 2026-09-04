@@ -16,6 +16,8 @@ const FORWARDED = [
   "fee",
   "paymentMethod",
   "transactionStatus",
+  "metadataKey",
+  "metadataValue",
   "export",
   "includeFeeBreakdown",
 ] as const;

@@ -2,8 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { TAB_LABEL, TAB_TONE } from "./statusStyles";
-import { VIEW_TABS } from "./types";
 import type { TransactionCounts, TransactionTab, ViewTab } from "./types";
+import { VIEW_TABS } from "./types";
 
 const isStatusTab = (tab: ViewTab): tab is TransactionTab => tab !== "search";
 
@@ -39,10 +39,12 @@ export default function StatusTabs({
               // Sits on the table's border so the two read as one panel.
               isSelected
                 ? "-mb-0.5 h-[50px] border-2 border-b-0 border-muted-foreground bg-background font-semibold"
-                : "border-2 border-b-0 border-border bg-muted text-muted-foreground underline hover:bg-muted/70",
+                : "border-2 border-b-0 border-border bg-muted text-muted-foreground hover:bg-muted/70",
             )}
           >
-            <span>{TAB_LABEL[option]}</span>
+            <span className={isSelected ? undefined : "underline"}>
+              {TAB_LABEL[option]}
+            </span>
             {isStatusTab(option) ? (
               <span
                 className={cn(
