@@ -32,21 +32,15 @@ function TrendCell({
 }: {
   trend: YoYTrend;
 }) {
-  if (
-    trend.previous === null ||
-    trend.difference === null
-  ) {
-    return (
-      <td className={cn(CELL, "text-lg tabular-nums")}>
-        N/A
-      </td>
-    );
-  }
+  const { difference, percentChange, available } = trend;
 
-  const amount = trend.difference;
-  const percent = formatTrendPercent(trend.percentChange);
-  const { glyph, sign, className } = getTrendTone(amount);
-  const showGlyph = amount !== 0;
+  const percent =
+    available && percentChange !== null
+      ? formatTrendPercent(percentChange)
+      : "N/A";
+
+  const { glyph, sign, className } = getTrendTone(difference ?? 0);
+  const showGlyph = difference !== 0;
 
   return (
     <td className={cn(CELL, "text-lg tabular-nums")}>
@@ -60,9 +54,9 @@ function TrendCell({
 
       <span className="tabular-nums">
         {sign}
-        {formatCurrency(Math.abs(amount))}
+        {formatCurrency(Math.abs(difference ?? 0))}
       </span>{" "}
-      ({percent ?? "N/A"})
+      ({percent})
     </td>
   );
 }

@@ -35,14 +35,15 @@ const isPeriod = (value: unknown): value is TotalPeriod => {
 
 const isYoYTrend = (value: unknown): value is YoYTrend => {
   if (!value || typeof value !== "object") return false;
-  const { current, previous, difference, percentChange, available } =
+
+  const { current, previous, difference, percentChange } =
     value as Partial<YoYTrend>;
+
   return (
     typeof current === "number" &&
     (previous === null || typeof previous === "number") &&
     (difference === null || typeof difference === "number") &&
-    (percentChange === null || typeof percentChange === "number") &&
-    typeof available === "boolean"
+    (percentChange === null || typeof percentChange === "number")
   );
 };
 
@@ -98,7 +99,14 @@ export async function GET() {
           "[dashboard] yoy trends malformed on the transaction log; falling back to N/A",
         );
       } else {
-        validatedTrends = yoyTrends as YoYTrendSnapshot;
+        validatedTrends = Object.fromEntries(
+          TOTAL_PERIODS.map((period) => [
+            period,
+            {
+              ...yoyTrends[period],
+            },
+          ]),
+        ) as YoYTrendSnapshot;
       }
     }
 
