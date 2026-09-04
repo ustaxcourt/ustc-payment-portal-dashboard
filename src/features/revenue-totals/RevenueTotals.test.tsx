@@ -88,6 +88,49 @@ describe("RevenueTotals", () => {
     expect(screen.getByText(hasText("▼ -$29,950.00 (6%)"))).toBeInTheDocument();
   });
 
+  it("renders Projected Total as the third row, per the AC", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    await screen.findByText("$4,500.00");
+    const rowHeaders = screen.getAllByRole("rowheader");
+    expect(rowHeaders.map((header) => header.textContent)).toEqual([
+      "Current Total",
+      "YoY Trend (FY26 vs FY25)",
+      "Projected Total, estimated from the rate collected so far",
+    ]);
+  });
+
+  it("projects each period over its full length, in whole dollars", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    // Day: $4,500 over 15 of 24 hours. Week: $22,000 over 87 of 168 hours.
+    expect(await screen.findByText("$7,200")).toBeInTheDocument();
+    expect(screen.getByText("$42,483")).toBeInTheDocument();
+  });
+
+  it("projects a period with nothing collected as $0", async () => {
+    const body = totals();
+    body.current.day.total = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => body }),
+    );
+
+    renderTotals();
+
+    expect(await screen.findByText("$0")).toBeInTheDocument();
+  });
+
   it("shows N/A when the upstream trend has no prior-year baseline", async () => {
     vi.stubGlobal(
       "fetch",

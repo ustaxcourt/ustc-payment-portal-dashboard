@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { projectedTotal } from "./projection";
 import { periodRange, periodSubtitle } from "./types";
 
 /**
@@ -21,5 +22,9 @@ describe("an unparseable date reaches Intl and throws", () => {
     expect(() =>
       periodSubtitle({ from: "", to: "", total: 0 }, "month"),
     ).toThrow(RangeError);
+  });
+
+  it("throws from the projection", () => {
+    expect(() => projectedTotal("day", broken)).toThrow(RangeError);
   });
 });
