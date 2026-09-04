@@ -100,6 +100,7 @@ export default function MetadataSearch({
           <input
             id="metadata-search-input"
             type="text"
+            maxLength={200}
             className="h-8 w-full rounded-lg border border-input bg-transparent py-2 pr-8 pl-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
