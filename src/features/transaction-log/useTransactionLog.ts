@@ -13,6 +13,14 @@ import type {
 // is the path to the complete set.
 const PAGE_SIZE = 200;
 
+// The API only accepts key and value together — a key with no value (or vice
+// versa, reachable by hand-editing the URL) is sent as no metadata filter at
+// all, so treat it that way here too, before it ever reaches the query key.
+const pairedMetadata = (filters?: TransactionSearchFilters) =>
+  filters?.metadataKey && filters?.metadataValue
+    ? { key: filters.metadataKey, value: filters.metadataValue }
+    : null;
+
 const fetchTransactionLogPage = async (
   tab: ViewTab,
   range: AppliedDateRange,
@@ -39,9 +47,10 @@ const fetchTransactionLogPage = async (
   if (filters?.transactionStatus) {
     params.set("transactionStatus", filters.transactionStatus);
   }
-  if (filters?.metadataKey && filters?.metadataValue) {
-    params.set("metadataKey", filters.metadataKey);
-    params.set("metadataValue", filters.metadataValue);
+  const metadata = pairedMetadata(filters);
+  if (metadata) {
+    params.set("metadataKey", metadata.key);
+    params.set("metadataValue", metadata.value);
   }
 
   const response = await fetch(`/api/transactions?${params}`, { signal });
@@ -59,8 +68,10 @@ export const useTransactionLog = (
   sorting: TransactionSorting,
   filters?: TransactionSearchFilters,
   enabled = true,
-) =>
-  useQuery({
+) => {
+  const metadata = pairedMetadata(filters);
+
+  return useQuery({
     queryKey: [
       "transaction-log",
       tab,
@@ -72,11 +83,12 @@ export const useTransactionLog = (
       filters?.payType,
       filters?.paymentStatus,
       filters?.transactionStatus,
-      filters?.metadataKey,
-      filters?.metadataValue,
+      metadata?.key ?? null,
+      metadata?.value ?? null,
     ],
     queryFn: ({ signal }) =>
       fetchTransactionLogPage(tab, range, sorting, filters, 1, PAGE_SIZE, signal),
     placeholderData: (previous) => (enabled ? previous : undefined),
     enabled,
   });
+};
