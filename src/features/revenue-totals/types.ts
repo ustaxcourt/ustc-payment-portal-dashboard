@@ -20,7 +20,30 @@ export type TotalPeriod = {
   total: number;
 };
 
-export type TotalsResponse = Record<TotalPeriodName, TotalPeriod>;
+export type TotalsSnapshot = Record<TotalPeriodName, TotalPeriod>;
+
+export type YoYTrend = {
+  current: number;
+  previous: number | null;
+  difference: number | null;
+  percentChange: number | null;
+  available: boolean;
+};
+
+export type YoYTrendSnapshot = Record<TotalPeriodName, YoYTrend>;
+
+export type TotalsResponse = {
+  current: TotalsSnapshot;
+  yoyTrends: YoYTrendSnapshot;
+};
+
+export const fiscalYearLabel = (period: TotalPeriod): string =>
+  periodSubtitle(period, "fiscalYear");
+
+export const priorFiscalYearLabel = (period: TotalPeriod): string => {
+  const fiscalYear = Number(fiscalYearLabel(period).replace("FY", ""));
+  return `FY${String((fiscalYear + 99) % 100).padStart(2, "0")}`;
+};
 
 export const PERIOD_LABEL: Record<TotalPeriodName, string> = {
   day: "Today",
@@ -64,7 +87,10 @@ export const periodRange = ({ from, to }: TotalPeriod): string =>
   `${formatCourtDate(from)} to ${formatCourtDate(to)}`;
 
 /** Labels the instants the server reported; no boundary is recomputed here. */
-export const periodSubtitle = ({ from, to }: TotalPeriod, period: TotalPeriodName): string => {
+export const periodSubtitle = (
+  { from, to }: TotalPeriod,
+  period: TotalPeriodName,
+): string => {
   const opened = new Date(from);
   const parts = courtParts.formatToParts(opened);
   const month = Number(parts.find((part) => part.type === "month")?.value);
