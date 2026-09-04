@@ -346,6 +346,62 @@ describe("TransactionLog", () => {
     expect(screen.queryByText(/of 4213 transactions/)).not.toBeInTheDocument();
   });
 
+  it("hides the previous search's transaction count while a new search is in flight", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => response({ total: 4213 }),
+    });
+
+    let resolveSecond!: (value: {
+      ok: boolean;
+      status: number;
+      json: () => Promise<TransactionLogResponse>;
+    }) => void;
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveSecond = resolve;
+        }),
+    );
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => response({ total: 10 }),
+    });
+
+    renderLog("?status=search&feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => {
+      expect(screen.getByText(/of 4213 transactions/)).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByLabelText("Fee Type"));
+    await userEvent.click(
+      await screen.findByRole("option", {
+        name: "Non-Attorney Exam Registration Fee",
+      }),
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    expect(screen.getByText("Searching…")).toBeInTheDocument();
+    expect(screen.queryByText(/of 4213 transactions/)).not.toBeInTheDocument();
+
+    resolveSecond({
+      ok: true,
+      status: 200,
+      json: async () => response({ total: 10 }),
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/10 transactions/)).toBeInTheDocument();
+    });
+  });
+
   it("only shows Clear All on the search tab", async () => {
     const fetchMock = mockFetch(response());
 

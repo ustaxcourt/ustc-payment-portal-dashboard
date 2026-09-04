@@ -45,6 +45,16 @@ export default function TransactionLog() {
     `${appliedRange.from}..${appliedRange.to}`,
   );
 
+  // On the search tab, placeholder data is the previous search's response —
+  // hide it from both the table and the footer so a new search in flight
+  // doesn't pair an empty/"Searching…" table with a stale transaction count.
+  const visibleData =
+    tab === "search"
+      ? hasSearchCriteria && !isPlaceholderData
+        ? data
+        : undefined
+      : data;
+
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
       <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
@@ -106,11 +116,7 @@ export default function TransactionLog() {
               onMetadataSearch={(metadataKey, metadataValue) =>
                 setParams({ metadataKey, metadataValue })
               }
-              rows={
-                hasSearchCriteria && !isPlaceholderData
-                  ? (data?.data ?? [])
-                  : []
-              }
+              rows={visibleData?.data ?? []}
               sorting={activeSorting}
               onSortingChange={setParams}
               emptyMessage={
@@ -134,11 +140,12 @@ export default function TransactionLog() {
               }
             />
           )}
-          {data ? (
+          {visibleData ? (
             <p className="mt-2 text-right text-sm text-muted-foreground">
-              {typeof data.total === "number" && data.data.length < data.total
-                ? `Showing ${data.data.length} of ${data.total} transactions — export to get the full set`
-                : `${data.data.length} ${data.data.length === 1 ? "transaction" : "transactions"}`}
+              {typeof visibleData.total === "number" &&
+              visibleData.data.length < visibleData.total
+                ? `Showing ${visibleData.data.length} of ${visibleData.total} transactions — export to get the full set`
+                : `${visibleData.data.length} ${visibleData.data.length === 1 ? "transaction" : "transactions"}`}
             </p>
           ) : null}
         </div>
