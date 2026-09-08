@@ -20,7 +20,7 @@ export type AppliedDateRange = {
   requestedTo?: string | null;
 };
 
-export const MIN_CUSTOM_RANGE_YEAR = 2026;
+export const MIN_CUSTOM_RANGE_YEAR = 2024;
 
 const PRESET_LABEL: Record<Exclude<DateRangePreset, "custom">, string> = {
   today: "Today",
