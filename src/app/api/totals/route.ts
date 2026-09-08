@@ -74,20 +74,30 @@ export async function GET() {
     const body = await upstream.json();
     console.log(
       "[dashboard] totals upstream response",
-      JSON.stringify(
-        {
-          totals: body?.totals,
-          yoyTrends: body?.yoyTrends,
-        },
-        null,
-        2,
-      ),
+      JSON.stringify(body, null, 2),
     );
 
     // `totals` is optional upstream, so the optionality is resolved here rather
     // than left for the components to guard.
     const totals = body?.totals;
     const yoyTrends = body?.yoyTrends;
+
+    console.log(
+      "[dashboard] totals validation",
+      JSON.stringify(
+        {
+          hasTotals: !!body?.totals,
+          hasYoYTrends: !!body?.yoyTrends,
+          periods: TOTAL_PERIODS.map((period) => ({
+            period,
+            totalExists: !!body?.totals?.[period],
+            trendExists: !!body?.yoyTrends?.[period],
+          })),
+        },
+        null,
+        2,
+      ),
+    );
 
     if (!totals || TOTAL_PERIODS.some((period) => !isPeriod(totals[period]))) {
       console.error(
@@ -136,6 +146,10 @@ export async function GET() {
         },
       ]),
     ) as YoYTrendSnapshot;
+    console.log(
+      "[dashboard] validated trends",
+      JSON.stringify(validatedTrends, null, 2),
+    );
 
     return NextResponse.json({
       current,
