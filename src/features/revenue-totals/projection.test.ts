@@ -105,6 +105,12 @@ describe("periodEnd", () => {
       ).toBe("2026-10-01T04:00:00.000Z");
     });
   });
+
+  it("throws on a period it has no end for", () => {
+    expect(() =>
+      periodEnd("century" as never, "2026-02-18T05:00:00.000Z"),
+    ).toThrow('No period end defined for "century"');
+  });
 });
 
 const period = (total: number, from: string, to: string): TotalPeriod => ({

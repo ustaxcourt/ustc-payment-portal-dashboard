@@ -19,30 +19,36 @@ export const periodEnd = (period: TotalPeriodName, from: string): Date => {
     case "quarter":
       // Fiscal quarters open Oct 1, Jan 1, Apr 1, Jul 1; the year closes on the next Oct 1.
       return courtMidnightUtc(new Date(Date.UTC(year, month + 3, 1)));
-    default:
+    case "fiscalYear":
       return courtMidnightUtc(new Date(Date.UTC(year + 1, 9, 1)));
+    default:
+      throw new Error(`No period end defined for "${period satisfies never}"`);
   }
+};
+
+const timeElapsed = (from: string, to: string) => {
+  const opened = Date.parse(from);
+  return { opened, elapsed: Date.parse(to) - opened };
 };
 
 export const projectedTotal = (
   period: TotalPeriodName,
   { from, to, total }: TotalPeriod,
 ): number => {
-  const opened = Date.parse(from);
-  const elapsed = Date.parse(to) - opened;
+  const { opened, elapsed } = timeElapsed(from, to);
   if (elapsed <= 0) return total;
 
   const full = periodEnd(period, from).getTime() - opened;
   return Math.round((total * full) / elapsed);
 };
+
 export const projectedFees = (
   period: TotalPeriodName,
   { from, to, fees }: TotalPeriod,
 ): number | null => {
   if (!fees) return null;
 
-  const opened = Date.parse(from);
-  const elapsed = Date.parse(to) - opened;
+  const { opened, elapsed } = timeElapsed(from, to);
   const collected = fees.reduce((sum, row) => sum + row.subtotal, 0);
   if (elapsed <= 0) return collected;
 
