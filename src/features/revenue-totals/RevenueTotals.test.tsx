@@ -8,7 +8,15 @@ const NOW = "2026-02-18T20:00:00.000Z";
 
 const totals = (): TotalsResponse => ({
   current: {
-    day: { from: "2026-02-18T05:00:00.000Z", to: NOW, total: 4500 },
+    day: {
+      from: "2026-02-18T05:00:00.000Z",
+      to: NOW,
+      total: 4500,
+      fees: [
+        { fee: "NON_ATTORNEY_EXAM", feeName: "Non-Attorney Exam Registration Fee", qty: 12, subtotal: 3000 },
+        { fee: "PETITION_FILING", feeName: "Petition Filing Fee", qty: 25, subtotal: 1500 },
+      ],
+    },
     week: { from: "2026-02-15T05:00:00.000Z", to: NOW, total: 22000 },
     month: { from: "2026-02-01T05:00:00.000Z", to: NOW, total: 98125 },
     quarter: { from: "2026-01-01T05:00:00.000Z", to: NOW, total: 158500 },
@@ -105,7 +113,7 @@ describe("RevenueTotals", () => {
     ]);
   });
 
-  it("projects each period over its full length, in whole dollars", async () => {
+  it("projects whole fee counts when the breakdown is present, dollars when not", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
@@ -113,14 +121,16 @@ describe("RevenueTotals", () => {
 
     renderTotals();
 
-    // Day: $4,500 over 15 of 24 hours. Week: $22,000 over 87 of 168 hours.
-    expect(await screen.findByText("$7,200")).toBeInTheDocument();
+    // Day (has fees, 15 of 24 hours): 12 exams → 19, 25 petitions → 40 = $7,150.
+    // Week (no breakdown): dollar fallback, $22,000 over 87 of 168 hours.
+    expect(await screen.findByText("$7,150")).toBeInTheDocument();
     expect(screen.getByText("$42,483")).toBeInTheDocument();
   });
 
   it("projects a period with nothing collected as $0", async () => {
     const body = totals();
     body.current.day.total = 0;
+    body.current.day.fees = [];
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => body }),

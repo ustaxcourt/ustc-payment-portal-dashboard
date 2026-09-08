@@ -3,7 +3,7 @@
 import ErrorPanel from "@/components/ui/ErrorPanel";
 import { formatCurrency, formatWholeCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { projectedTotal } from "./projection";
+import { projectedFees, projectedTotal } from "./projection";
 import {
   fiscalYearLabel,
   PERIOD_LABEL,
@@ -212,7 +212,10 @@ export default function RevenueTotals() {
                 key={period}
                 className={cn(CELL, "bg-muted text-sm tabular-nums italic text-muted-foreground")}
               >
-                {formatWholeCurrency(projectedTotal(period, data.current[period]))}
+                {formatWholeCurrency(
+                  projectedFees(period, data.current[period]) ??
+                    projectedTotal(period, data.current[period]),
+                )}
               </td>
             ))}
           </tr>

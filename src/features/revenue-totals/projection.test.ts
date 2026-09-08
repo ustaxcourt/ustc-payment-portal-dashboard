@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { periodEnd, projectedTotal } from "./projection";
+import { periodEnd, projectedFees, projectedTotal } from "./projection";
 import type { TotalPeriod } from "./types";
+
+const exam = (qty: number) => ({
+  fee: "NON_ATTORNEY_EXAM",
+  feeName: "Non-Attorney Exam Registration Fee",
+  qty,
+  subtotal: qty * 250,
+});
+
+const petition = (qty: number) => ({
+  fee: "PETITION_FILING",
+  feeName: "Petition Filing Fee",
+  qty,
+  subtotal: qty * 60,
+});
 
 /** Court-local midnight is 04:00Z in EDT and 05:00Z in EST; in 2026, EDT runs
  *  Mar 8 – Nov 1, so DST days are 23 or 25 hours long. */
@@ -168,5 +182,49 @@ describe("projectedTotal", () => {
     const end = periodEnd("quarter", from).getTime();
     const midpoint = new Date((Date.parse(from) + end) / 2).toISOString();
     expect(projectedTotal("quarter", period(1000, from, midpoint))).toBe(2000);
+  });
+});
+
+describe("projectedFees", () => {
+  const NOON = period(560, "2026-02-18T05:00:00.000Z", "2026-02-18T17:00:00.000Z");
+
+  it("doubles each fee count at noon and prices the whole filings", () => {
+    // 2 exams and 1 petition become 4 and 2: 4×$250 + 2×$60.
+    expect(
+      projectedFees("day", { ...NOON, fees: [exam(2), petition(1)] }),
+    ).toBe(1120);
+  });
+
+  it("rounds each fee to whole filings before pricing", () => {
+    // 15 of 24 hours elapsed: 12 exams × 1.6 = 19.2 → 19; 25 petitions × 1.6 = 40.
+    const fifteenHours = period(
+      4500,
+      "2026-02-18T05:00:00.000Z",
+      "2026-02-18T20:00:00.000Z",
+    );
+    expect(
+      projectedFees("day", { ...fifteenHours, fees: [exam(12), petition(25)] }),
+    ).toBe(19 * 250 + 40 * 60);
+  });
+
+  it("returns null without a breakdown, so the caller can fall back", () => {
+    expect(projectedFees("day", NOON)).toBeNull();
+  });
+
+  it("projects an empty breakdown as $0", () => {
+    expect(projectedFees("day", { ...NOON, fees: [] })).toBe(0);
+  });
+
+  it("returns the collected subtotals when no time has elapsed", () => {
+    const opening = period(560, "2026-02-18T05:00:00.000Z", "2026-02-18T05:00:00.000Z");
+    expect(
+      projectedFees("day", { ...opening, fees: [exam(2), petition(1)] }),
+    ).toBe(560);
+  });
+
+  it("skips a zero-quantity row rather than dividing by it", () => {
+    expect(
+      projectedFees("day", { ...NOON, fees: [exam(0), petition(1)] }),
+    ).toBe(120);
   });
 });

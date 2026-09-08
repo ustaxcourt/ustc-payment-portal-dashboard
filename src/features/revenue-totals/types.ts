@@ -1,3 +1,4 @@
+import type { FeeBreakdownRow } from "@/features/transaction-log/types";
 import { COURT_TIME_ZONE, formatCourtDate } from "@/lib/format";
 
 /** Mirrors `TransactionTotalsSchema` in the payment portal. */
@@ -18,6 +19,8 @@ export type TotalPeriod = {
   to: string;
   /** Summed transaction amounts in USD, successful payments only. */
   total: number;
+  /** Per-fee counts for the window; absent when the breakdown fetch fails. */
+  fees?: FeeBreakdownRow[];
 };
 
 export type TotalsSnapshot = Record<TotalPeriodName, TotalPeriod>;

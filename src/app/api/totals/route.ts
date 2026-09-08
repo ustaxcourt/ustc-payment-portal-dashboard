@@ -8,6 +8,7 @@ import { getSigned } from "@/lib/paymentPortalApi";
 import { hasDashboardSession } from "@/lib/serverSession";
 import { TOTAL_PERIODS } from "@/features/revenue-totals/types";
 import type { TotalPeriod } from "@/features/revenue-totals/types";
+import type { FeeBreakdownRow } from "@/features/transaction-log/types";
 
 // Per-request: the periods are relative to now, so a cached response goes stale.
 export const dynamic = "force-dynamic";
@@ -35,6 +36,41 @@ const isPeriod = (value: unknown): value is TotalPeriod => {
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
+
+const isFeeRow = (value: unknown): value is FeeBreakdownRow => {
+  if (!value || typeof value !== "object") return false;
+  const { fee, feeName, qty, subtotal } = value as Partial<FeeBreakdownRow>;
+
+  return (
+    typeof fee === "string" &&
+    typeof feeName === "string" &&
+    isFiniteNumber(qty) &&
+    isFiniteNumber(subtotal)
+  );
+};
+
+const fetchPeriodFees = async ({
+  from,
+  to,
+}: TotalPeriod): Promise<FeeBreakdownRow[] | undefined> => {
+  try {
+    const upstream = await getSigned(
+      "/transaction-log",
+      new URLSearchParams({
+        from,
+        to,
+        pageSize: "1",
+        includeFeeBreakdown: "true",
+      }),
+    );
+    if (!upstream.ok) return undefined;
+
+    const rows = (await upstream.json())?.feeBreakdown;
+    return Array.isArray(rows) && rows.every(isFeeRow) ? rows : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 const isYoYTrend = (value: unknown): value is YoYTrend => {
   if (!value || typeof value !== "object") return false;
@@ -89,6 +125,13 @@ export async function GET() {
     }
 
     const current = totals as TotalsSnapshot;
+
+    const periodFees = await Promise.all(
+      TOTAL_PERIODS.map((period) => fetchPeriodFees(current[period])),
+    );
+    TOTAL_PERIODS.forEach((period, index) => {
+      if (periodFees[index]) current[period].fees = periodFees[index];
+    });
 
     let validatedTrends: YoYTrendSnapshot | null = null;
 

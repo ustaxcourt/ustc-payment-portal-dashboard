@@ -35,3 +35,20 @@ export const projectedTotal = (
   const full = periodEnd(period, from).getTime() - opened;
   return Math.round((total * full) / elapsed);
 };
+export const projectedFees = (
+  period: TotalPeriodName,
+  { from, to, fees }: TotalPeriod,
+): number | null => {
+  if (!fees) return null;
+
+  const opened = Date.parse(from);
+  const elapsed = Date.parse(to) - opened;
+  const collected = fees.reduce((sum, row) => sum + row.subtotal, 0);
+  if (elapsed <= 0) return collected;
+
+  const ratio = (periodEnd(period, from).getTime() - opened) / elapsed;
+  return fees.reduce((sum, { qty, subtotal }) => {
+    if (qty <= 0) return sum;
+    return sum + Math.round(qty * ratio) * (subtotal / qty);
+  }, 0);
+};
