@@ -5,10 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
 import SortableHeader from "./SortableHeader";
 import { TAB_LABEL, TAB_TONE } from "./statusStyles";
-import type {
-  TransactionLogEntry,
-  TransactionSortField,
-  ViewTab,
+import {
+  FEE_METADATA_KEYS,
+  type FeeType,
+  METADATA_KEY_LABEL,
+  type TransactionLogEntry,
+  type TransactionSortField,
+  type ViewTab,
 } from "./types";
 
 export const COLUMN_LABEL: Record<TransactionSortField, string> = {
@@ -140,3 +143,16 @@ export const getColumns = (
   tab === "failed" || tab === "all" || tab === "search"
     ? COLUMNS_WITH_FAILURE_REASON
     : BASE_COLUMNS;
+
+// One column per metadata key of the selected fee. Kept out of the sortable
+// set on purpose: the API cannot ORDER BY a JSON key. Callers memoize on
+// feeType so react-table still sees a stable columns reference.
+export const metadataColumns = (
+  feeType: FeeType | null,
+): ColumnDef<TransactionLogEntry>[] =>
+  (feeType ? FEE_METADATA_KEYS[feeType] : []).map((key) => ({
+    id: `metadata.${key}`,
+    header: METADATA_KEY_LABEL[key],
+    enableSorting: false,
+    cell: ({ row }) => row.original.metadata?.[key] ?? "—",
+  }));
