@@ -18,7 +18,7 @@ export type AppliedDateRange = {
   requestedTo?: string | null;
 };
 
-export const MIN_CUSTOM_RANGE_YEAR = 2026;
+export const MIN_CUSTOM_RANGE_YEAR = 2024;
 
 const courtDayParts = new Intl.DateTimeFormat("en-US", {
   timeZone: COURT_TIME_ZONE,

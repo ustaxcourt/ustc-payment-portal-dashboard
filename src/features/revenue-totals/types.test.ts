@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { periodRange, periodSubtitle } from "./types";
 import type { TotalPeriod } from "./types";
+import { periodRange, periodSubtitle, priorFiscalYearLabel } from "./types";
 
 /** Court-local midnight is 04:00Z in EDT and 05:00Z in EST. */
-const period = (from: string, to = "2026-02-18T20:00:00.000Z"): TotalPeriod => ({
+const period = (
+  from: string,
+  to = "2026-02-18T20:00:00.000Z",
+): TotalPeriod => ({
   from,
   to,
   total: 0,
@@ -48,6 +51,12 @@ describe("periodSubtitle", () => {
     expect(
       periodSubtitle(period("2026-10-01T04:00:00.000Z"), "fiscalYear"),
     ).toBe("FY27");
+  });
+
+  it("wraps the prior fiscal year label at FY00", () => {
+    expect(priorFiscalYearLabel(period("2099-10-01T04:00:00.000Z"))).toBe(
+      "FY99",
+    );
   });
 });
 
