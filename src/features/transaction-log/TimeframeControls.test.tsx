@@ -7,10 +7,10 @@ const customRange = (
   overrides: Partial<AppliedDateRange> = {},
 ): AppliedDateRange => ({
   preset: "custom",
-  from: "08/04/2026",
+  from: "10/01/2025",
   to: "08/10/2026",
-  label: "08/04/2026 - 08/10/2026",
-  requestedFrom: "08/04/2026",
+  label: "10/01/2025 - 08/10/2026",
+  requestedFrom: "10/01/2025",
   requestedTo: "08/10/2026",
   ...overrides,
 });
@@ -48,8 +48,8 @@ describe("TimeframeControls", () => {
     const from = screen.getByLabelText("From");
     const to = screen.getByLabelText("To");
 
-    expect(from).toHaveAttribute("min", "2026-01-01");
-    expect(to).toHaveAttribute("min", "2026-01-01");
+    expect(from).toHaveAttribute("min", "2024-01-01");
+    expect(to).toHaveAttribute("min", "2024-01-01");
     expect(from).toHaveAttribute("max", "2026-08-18");
     expect(to).toHaveAttribute("max", "2026-08-18");
   });

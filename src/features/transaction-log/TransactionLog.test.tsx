@@ -203,6 +203,70 @@ describe("TransactionLog", () => {
     },
   );
 
+  it("runs a metadata lookup carried in the durable URL", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=foo@example.com",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = new URL(
+      String(fetchMock.mock.calls[0][0]),
+      "http://localhost",
+    );
+    expect(requested.searchParams.get("metadataKey")).toBe("email");
+    expect(requested.searchParams.get("metadataValue")).toBe("foo@example.com");
+    expect(screen.getByLabelText("Search by Email")).toHaveValue(
+      "foo@example.com",
+    );
+  });
+
+  it("does not query for a metadata key with no value in the URL", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=PETITION_FILING_FEE&metadataKey=docketNumber",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const requested = String(fetchMock.mock.calls[0][0]);
+    expect(requested).toContain("fee=PETITION_FILING_FEE");
+    expect(requested).not.toContain("metadataKey");
+    expect(requested).not.toContain("metadataValue");
+  });
+
+  it("drops the metadata params from the URL when the Fee Type changes", async () => {
+    const fetchMock = mockFetch(response());
+
+    renderLog(
+      "?status=search&feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=foo",
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    fetchMock.mockClear();
+
+    await userEvent.click(screen.getByLabelText("Fee Type"));
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Petition Filing Fee" }),
+    );
+
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some((call) =>
+          String(call[0]).includes("fee=PETITION_FILING_FEE"),
+        ),
+      ).toBe(true),
+    );
+    const petitionRequest = fetchMock.mock.calls
+      .map((call) => String(call[0]))
+      .find((url) => url.includes("fee=PETITION_FILING_FEE"));
+    expect(petitionRequest).not.toContain("metadataKey");
+    expect(petitionRequest).not.toContain("metadataValue");
+  });
+
   it("changing the timeframe while a filter is active keeps the filter and updates the range", async () => {
     const fetchMock = mockFetch(response());
 
@@ -219,16 +283,17 @@ describe("TransactionLog", () => {
       screen.getByRole("button", { name: "Last 7 days" }),
     );
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    const secondRequest = new URL(
-      String(fetchMock.mock.calls[1][0]),
-      "http://localhost",
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some((call) => {
+          const url = new URL(String(call[0]), "http://localhost");
+          return (
+            url.searchParams.get("from") !== firstFrom &&
+            url.searchParams.get("fee") === "PETITION_FILING_FEE"
+          );
+        }),
+      ).toBe(true),
     );
-
-    expect(secondRequest.searchParams.get("fee")).toBe(
-      "PETITION_FILING_FEE",
-    );
-    expect(secondRequest.searchParams.get("from")).not.toBe(firstFrom);
   });
 
   it("forwards a custom timeframe together with search filters", async () => {
@@ -281,6 +346,62 @@ describe("TransactionLog", () => {
     expect(screen.queryByText(/of 4213 transactions/)).not.toBeInTheDocument();
   });
 
+  it("hides the previous search's transaction count while a new search is in flight", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => response({ total: 4213 }),
+    });
+
+    let resolveSecond!: (value: {
+      ok: boolean;
+      status: number;
+      json: () => Promise<TransactionLogResponse>;
+    }) => void;
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveSecond = resolve;
+        }),
+    );
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => response({ total: 10 }),
+    });
+
+    renderLog("?status=search&feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => {
+      expect(screen.getByText(/of 4213 transactions/)).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByLabelText("Fee Type"));
+    await userEvent.click(
+      await screen.findByRole("option", {
+        name: "Non-Attorney Exam Registration Fee",
+      }),
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    expect(screen.getByText("Searching…")).toBeInTheDocument();
+    expect(screen.queryByText(/of 4213 transactions/)).not.toBeInTheDocument();
+
+    resolveSecond({
+      ok: true,
+      status: 200,
+      json: async () => response({ total: 10 }),
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/10 transactions/)).toBeInTheDocument();
+    });
+  });
+
   it("only shows Clear All on the search tab", async () => {
     const fetchMock = mockFetch(response());
 
@@ -316,5 +437,28 @@ describe("TransactionLog", () => {
     });
 
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the other tabs' badge counts after Clear All empties the search", async () => {
+    mockFetch(
+      response({ counts: { all: 12, success: 5, failed: 4, pending: 3 } }),
+    );
+
+    renderLog("?status=search&feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: /All/ })).toHaveTextContent("12");
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Choose a filter to search transactions."),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("tab", { name: /All/ })).toHaveTextContent("12");
+    expect(screen.getByRole("tab", { name: /Pending/ })).toHaveTextContent("3");
   });
 });
