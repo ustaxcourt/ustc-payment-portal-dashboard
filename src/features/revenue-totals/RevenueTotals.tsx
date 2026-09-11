@@ -1,20 +1,66 @@
 "use client";
 
 import ErrorPanel from "@/components/ui/ErrorPanel";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatWholeCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { projectedFees } from "./projection";
 import {
+  fiscalYearLabel,
   PERIOD_LABEL,
   periodRange,
   periodSubtitle,
+  priorFiscalYearLabel,
   SUBTITLE_IS_DATED,
   TOTAL_PERIODS,
+  type YoYTrend,
 } from "./types";
 import { useTotals } from "./useTotals";
 
-const CELL = "border px-4 py-1.5";
+const CELL = "border px-3 py-0.5";
 const HEADER_ROW = "bg-totals-header";
 const HEADING_ID = "revenue-totals-heading";
+
+const formatTrendPercent = (percentChange: number | null): string | null => {
+  if (typeof percentChange !== "number" || !Number.isFinite(percentChange)) {
+    return null;
+  }
+
+  return `${Math.round(Math.abs(percentChange))}%`;
+};
+
+function TrendCell({
+  trend,
+}: {
+  trend: YoYTrend;
+}) {
+  const { difference, percentChange } = trend;
+
+  const percent =
+    percentChange === null
+      ? "N/A"
+      : formatTrendPercent(percentChange);
+
+  const { glyph, sign, className } = getTrendTone(difference ?? 0);
+  const showGlyph = (difference ?? 0) !== 0;
+
+  return (
+    <td className={cn(CELL, "text-sm tabular-nums")}>
+      {showGlyph && (
+        <>
+          <span className={cn("font-semibold", className)}>
+            {glyph}
+          </span>{" "}
+        </>
+      )}
+
+      <span className="tabular-nums">
+        {sign}
+        {formatCurrency(Math.abs(difference ?? 0))}
+      </span>{" "}
+      ({percent})
+    </td>
+  );
+}
 
 /** Mirrors the transaction log's section/h2, so the page has one outline. */
 function Panel({ children }: { children: React.ReactNode }) {
@@ -31,6 +77,36 @@ function Panel({ children }: { children: React.ReactNode }) {
     </section>
   );
 }
+
+type TrendTone = {
+  glyph: string;
+  sign: "+" | "-" | "";
+  className: string;
+};
+
+const getTrendTone = (amount: number): TrendTone => {
+  if (amount > 0) {
+    return {
+      glyph: "▲",
+      sign: "+",
+      className: "text-status-success-foreground",
+    };
+  }
+
+  if (amount < 0) {
+    return {
+      glyph: "▼",
+      sign: "-",
+      className: "text-status-failed-foreground",
+    };
+  }
+
+  return {
+    glyph: "•",
+    sign: "",
+    className: "text-muted-foreground",
+  };
+};
 
 export default function RevenueTotals() {
   const { data, isPending, isError, error, refetch } = useTotals();
@@ -59,6 +135,9 @@ export default function RevenueTotals() {
     );
   }
 
+  const currentFiscalYear = fiscalYearLabel(data.current.fiscalYear);
+  const priorYearFiscalYear = priorFiscalYearLabel(data.current.fiscalYear);
+
   return (
     <Panel>
       <div className="overflow-x-auto">
@@ -77,11 +156,11 @@ export default function RevenueTotals() {
                 className={cn(CELL, "min-w-32 text-sm font-normal")}
               >
                 <span className="font-bold">{PERIOD_LABEL[period]}</span>
-                {` - ${periodSubtitle(data[period], period)}`}
+                {` - ${periodSubtitle(data.current[period], period)}`}
                 {/* The design shows only the subtitle; the summed window still
                     reads out where the subtitle alone doesn't date it. */}
                 {SUBTITLE_IS_DATED.has(period) ? null : (
-                  <span className="sr-only">{periodRange(data[period])}</span>
+                  <span className="sr-only">{periodRange(data.current[period])}</span>
                 )}
               </th>
             ))}
@@ -96,8 +175,46 @@ export default function RevenueTotals() {
               Current Total
             </th>
             {TOTAL_PERIODS.map((period) => (
-              <td key={period} className={cn(CELL, "text-lg tabular-nums")}>
-                {formatCurrency(data[period].total)}
+              <td key={period} className={cn(CELL, "text-base tabular-nums")}>
+                {formatCurrency(data.current[period].total)}
+              </td>
+            ))}
+          </tr>
+          <tr>
+            <th
+              scope="row"
+              className={cn(CELL, "border-0 text-right text-sm font-normal")}
+            >
+              {`YoY Trend (${currentFiscalYear} vs ${priorYearFiscalYear})`}
+            </th>
+            {TOTAL_PERIODS.map((period) => (
+              <TrendCell
+                key={period}
+                trend={data.yoyTrends[period]}
+              />
+            ))}
+          </tr>
+          <tr>
+            <th
+              scope="row"
+              className={cn(
+                CELL,
+                "border-0 text-right text-sm font-normal whitespace-nowrap italic text-muted-foreground",
+              )}
+            >
+              Projected Total
+              <span className="sr-only">
+                , estimated from the rate collected so far
+              </span>
+            </th>
+            {TOTAL_PERIODS.map((period) => (
+              <td
+                key={period}
+                className={cn(CELL, "bg-muted text-sm tabular-nums italic text-muted-foreground")}
+              >
+                {formatWholeCurrency(
+                  projectedFees(period, data.current[period]),
+                )}
               </td>
             ))}
           </tr>
