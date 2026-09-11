@@ -8,6 +8,12 @@ import { STORAGE_STATE } from "./playwright.config";
 /** Conditional Access blocks automated sign-in, so the session is minted from
  *  NEXTAUTH_SECRET. Sign-in itself is therefore not covered. */
 const readLocalEnv = (key: string): string => {
+  const directValue = process.env[key];
+
+  if (directValue) {
+    return directValue;
+  }
+
   const file = path.join(__dirname, "..", ".env.local");
 
   if (!fs.existsSync(file)) {

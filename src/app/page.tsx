@@ -65,14 +65,17 @@ export default async function Home({
         <TimeframeBar />
       </Suspense>
 
-      <main className="grid min-h-0 flex-1 grid-cols-3 gap-6 p-6 sm:p-8">
+      <main
+        id="main-content"
+        className="grid min-h-0 flex-1 grid-cols-3 gap-6 p-6 sm:p-8"
+      >
         <Suspense fallback={<div aria-hidden="true" />}>
           <PaymentBreakdownPane />
         </Suspense>
         <div className="col-span-2 flex min-h-0 flex-col">
           <Suspense
             fallback={
-              <p className="text-sm text-muted-foreground">
+              <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
                 Loading transaction log…
               </p>
             }
