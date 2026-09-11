@@ -16,7 +16,10 @@ const FORWARDED = [
   "fee",
   "paymentMethod",
   "transactionStatus",
+  "metadataKey",
+  "metadataValue",
   "export",
+  "includeFeeBreakdown",
 ] as const;
 
 // Mirrors the API's caps; the API remains the authority.
