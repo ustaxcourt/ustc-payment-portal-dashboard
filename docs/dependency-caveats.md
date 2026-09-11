@@ -65,8 +65,6 @@ enough context that the next person doesn't have to re-derive the decision.
   provisioning and SSR compute hangs. We were exposed to that failure by default: Next 16
   makes Turbopack the default build engine, so a plain `next build` produced
   `▲ Next.js 16.2.12 (Turbopack)` with no opt-in. On 15.5.22 the build runs on webpack.
-  This app uses no Next 16 feature — it is a placeholder landing page — so the pin costs
-  nothing and removes the largest delivery risk in PAY-330.
 - **Plan:** Upgrade when Amplify documents Next 16 support and the Turbopack bundler
   issue is closed. Pinned exactly rather than `^15` so the major cannot drift back in
   through a lockfile refresh. **This pin is contingent on the Amplify hosting decision
