@@ -121,7 +121,11 @@ const period = (total: number, from: string, to: string): TotalPeriod => ({
 });
 
 describe("projectedFees", () => {
-  const NOON = period(560, "2026-02-18T05:00:00.000Z", "2026-02-18T17:00:00.000Z");
+  const NOON = period(
+    560,
+    "2026-02-18T05:00:00.000Z",
+    "2026-02-18T17:00:00.000Z",
+  );
 
   it("doubles each fee count at noon and prices the whole filings", () => {
     // 2 exams and 1 petition become 4 and 2: 4×$250 + 2×$60.
@@ -147,7 +151,11 @@ describe("projectedFees", () => {
   });
 
   it("returns the collected subtotals when no time has elapsed", () => {
-    const opening = period(560, "2026-02-18T05:00:00.000Z", "2026-02-18T05:00:00.000Z");
+    const opening = period(
+      560,
+      "2026-02-18T05:00:00.000Z",
+      "2026-02-18T05:00:00.000Z",
+    );
     expect(
       projectedFees("day", { ...opening, fees: [exam(2), petition(1)] }),
     ).toBe(560);
@@ -157,5 +165,39 @@ describe("projectedFees", () => {
     expect(
       projectedFees("day", { ...NOON, fees: [exam(0), petition(1)] }),
     ).toBe(120);
+  });
+
+  it("projects over the spring-forward day's real 23 hours", () => {
+    const springForward = period(
+      660,
+      "2026-03-08T05:00:00.000Z",
+      "2026-03-08T16:00:00.000Z",
+    );
+    expect(
+      projectedFees("day", { ...springForward, fees: [petition(11)] }),
+    ).toBe(23 * 60);
+  });
+
+  it("doubles every count at the midpoint of any period", () => {
+    const from = "2026-01-01T05:00:00.000Z";
+    const end = periodEnd("quarter", from).getTime();
+    const midpoint = new Date((Date.parse(from) + end) / 2).toISOString();
+    expect(
+      projectedFees("quarter", {
+        ...period(1050, from, midpoint),
+        fees: [exam(3), petition(5)],
+      }),
+    ).toBe(6 * 250 + 10 * 60);
+  });
+
+  it("equals the collected fees once the period has fully elapsed", () => {
+    const fullDay = period(
+      560,
+      "2026-02-18T05:00:00.000Z",
+      "2026-02-19T05:00:00.000Z",
+    );
+    expect(
+      projectedFees("day", { ...fullDay, fees: [exam(2), petition(1)] }),
+    ).toBe(560);
   });
 });
