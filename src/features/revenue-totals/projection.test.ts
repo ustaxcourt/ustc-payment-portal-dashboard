@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { periodEnd, projectedFees, projectedTotal } from "./projection";
+import { periodEnd, projectedFees } from "./projection";
 import type { TotalPeriod } from "./types";
 
 const exam = (qty: number) => ({
@@ -117,78 +117,7 @@ const period = (total: number, from: string, to: string): TotalPeriod => ({
   from,
   to,
   total,
-});
-
-describe("projectedTotal", () => {
-  it("projects $500 by noon to $1,000 for the day (the ticket's example)", () => {
-    expect(
-      projectedTotal(
-        "day",
-        period(500, "2026-02-18T05:00:00.000Z", "2026-02-18T17:00:00.000Z"),
-      ),
-    ).toBe(1000);
-  });
-
-  it("projects $0 collected as $0", () => {
-    expect(
-      projectedTotal(
-        "day",
-        period(0, "2026-02-18T05:00:00.000Z", "2026-02-18T17:00:00.000Z"),
-      ),
-    ).toBe(0);
-  });
-
-  it("extrapolates a refund-heavy negative net honestly", () => {
-    expect(
-      projectedTotal(
-        "day",
-        period(-200, "2026-02-18T05:00:00.000Z", "2026-02-18T17:00:00.000Z"),
-      ),
-    ).toBe(-400);
-  });
-
-  it("rounds to the nearest whole dollar", () => {
-    expect(
-      projectedTotal(
-        "day",
-        period(100, "2026-02-18T05:00:00.000Z", "2026-02-18T12:00:00.000Z"),
-      ),
-    ).toBe(343);
-  });
-
-  it("returns the total as-is when no time has elapsed", () => {
-    expect(
-      projectedTotal(
-        "day",
-        period(60, "2026-02-18T05:00:00.000Z", "2026-02-18T05:00:00.000Z"),
-      ),
-    ).toBe(60);
-  });
-
-  it("equals the total once the period has fully elapsed", () => {
-    expect(
-      projectedTotal(
-        "day",
-        period(750, "2026-02-18T05:00:00.000Z", "2026-02-19T05:00:00.000Z"),
-      ),
-    ).toBe(750);
-  });
-
-  it("projects over the spring-forward day's real 23 hours", () => {
-    expect(
-      projectedTotal(
-        "day",
-        period(500, "2026-03-08T05:00:00.000Z", "2026-03-08T16:00:00.000Z"),
-      ),
-    ).toBe(1045);
-  });
-
-  it("doubles the total at the midpoint of any period", () => {
-    const from = "2026-01-01T05:00:00.000Z";
-    const end = periodEnd("quarter", from).getTime();
-    const midpoint = new Date((Date.parse(from) + end) / 2).toISOString();
-    expect(projectedTotal("quarter", period(1000, from, midpoint))).toBe(2000);
-  });
+  fees: [],
 });
 
 describe("projectedFees", () => {
@@ -211,10 +140,6 @@ describe("projectedFees", () => {
     expect(
       projectedFees("day", { ...fifteenHours, fees: [exam(12), petition(25)] }),
     ).toBe(19 * 250 + 40 * 60);
-  });
-
-  it("returns null without a breakdown, so the caller can fall back", () => {
-    expect(projectedFees("day", NOON)).toBeNull();
   });
 
   it("projects an empty breakdown as $0", () => {

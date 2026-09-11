@@ -31,23 +31,10 @@ const timeElapsed = (from: string, to: string) => {
   return { opened, elapsed: Date.parse(to) - opened };
 };
 
-export const projectedTotal = (
-  period: TotalPeriodName,
-  { from, to, total }: TotalPeriod,
-): number => {
-  const { opened, elapsed } = timeElapsed(from, to);
-  if (elapsed <= 0) return total;
-
-  const full = periodEnd(period, from).getTime() - opened;
-  return Math.round((total * full) / elapsed);
-};
-
 export const projectedFees = (
   period: TotalPeriodName,
   { from, to, fees }: TotalPeriod,
-): number | null => {
-  if (!fees) return null;
-
+): number => {
   const { opened, elapsed } = timeElapsed(from, to);
   const collected = fees.reduce((sum, row) => sum + row.subtotal, 0);
   if (elapsed <= 0) return collected;

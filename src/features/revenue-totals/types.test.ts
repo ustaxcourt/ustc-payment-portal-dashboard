@@ -10,6 +10,7 @@ const period = (
   from,
   to,
   total: 0,
+  fees: [],
 });
 
 describe("periodSubtitle", () => {

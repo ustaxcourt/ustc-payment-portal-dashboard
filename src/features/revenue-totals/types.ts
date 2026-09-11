@@ -19,8 +19,8 @@ export type TotalPeriod = {
   to: string;
   /** Summed transaction amounts in USD, successful payments only. */
   total: number;
-  /** Per-fee counts for the window; absent when the breakdown fetch fails. */
-  fees?: FeeBreakdownRow[];
+  /** Per-fee counts for the window, computed from the same tallies as `total`. */
+  fees: FeeBreakdownRow[];
 };
 
 export type TotalsSnapshot = Record<TotalPeriodName, TotalPeriod>;

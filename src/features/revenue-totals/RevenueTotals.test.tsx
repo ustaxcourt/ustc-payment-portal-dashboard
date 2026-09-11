@@ -17,10 +17,30 @@ const totals = (): TotalsResponse => ({
         { fee: "PETITION_FILING", feeName: "Petition Filing Fee", qty: 25, subtotal: 1500 },
       ],
     },
-    week: { from: "2026-02-15T05:00:00.000Z", to: NOW, total: 22000 },
-    month: { from: "2026-02-01T05:00:00.000Z", to: NOW, total: 98125 },
-    quarter: { from: "2026-01-01T05:00:00.000Z", to: NOW, total: 158500 },
-    fiscalYear: { from: "2025-10-01T04:00:00.000Z", to: NOW, total: 458500 },
+    week: {
+      from: "2026-02-15T05:00:00.000Z",
+      to: NOW,
+      total: 22000,
+      fees: [{ fee: "PETITION_FILING", feeName: "Petition Filing Fee", qty: 1, subtotal: 22000 }],
+    },
+    month: {
+      from: "2026-02-01T05:00:00.000Z",
+      to: NOW,
+      total: 98125,
+      fees: [{ fee: "PETITION_FILING", feeName: "Petition Filing Fee", qty: 1, subtotal: 98125 }],
+    },
+    quarter: {
+      from: "2026-01-01T05:00:00.000Z",
+      to: NOW,
+      total: 158500,
+      fees: [{ fee: "PETITION_FILING", feeName: "Petition Filing Fee", qty: 1, subtotal: 158500 }],
+    },
+    fiscalYear: {
+      from: "2025-10-01T04:00:00.000Z",
+      to: NOW,
+      total: 458500,
+      fees: [{ fee: "PETITION_FILING", feeName: "Petition Filing Fee", qty: 1, subtotal: 458500 }],
+    },
   },
   yoyTrends: {
     day: { current: 4500, previous: 3800, difference: 700, percentChange: 18.42, available: true },
@@ -113,7 +133,7 @@ describe("RevenueTotals", () => {
     ]);
   });
 
-  it("projects whole fee counts when the breakdown is present, dollars when not", async () => {
+  it("projects whole fee counts from the breakdown", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
@@ -121,10 +141,8 @@ describe("RevenueTotals", () => {
 
     renderTotals();
 
-    // Day (has fees, 15 of 24 hours): 12 exams → 19, 25 petitions → 40 = $7,150.
-    // Week (no breakdown): dollar fallback, $22,000 over 87 of 168 hours.
+    // Day (15 of 24 hours): 12 exams → 19, 25 petitions → 40 = $7,150.
     expect(await screen.findByText("$7,150")).toBeInTheDocument();
-    expect(screen.getByText("$42,483")).toBeInTheDocument();
   });
 
   it("projects a period with nothing collected as $0", async () => {

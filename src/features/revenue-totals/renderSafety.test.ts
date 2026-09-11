@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { projectedTotal } from "./projection";
+import { projectedFees } from "./projection";
 import { periodRange, periodSubtitle } from "./types";
 
 /**
@@ -8,7 +8,7 @@ import { periodRange, periodSubtitle } from "./types";
  * than as a blank dashboard.
  */
 describe("an unparseable date reaches Intl and throws", () => {
-  const broken = { from: "not-a-date", to: "also-not-a-date", total: 0 };
+  const broken = { from: "not-a-date", to: "also-not-a-date", total: 0, fees: [] };
 
   it("throws from the range", () => {
     expect(() => periodRange(broken)).toThrow(RangeError);
@@ -20,11 +20,11 @@ describe("an unparseable date reaches Intl and throws", () => {
 
   it("throws on an empty from, which formatCourtDate alone would tolerate", () => {
     expect(() =>
-      periodSubtitle({ from: "", to: "", total: 0 }, "month"),
+      periodSubtitle({ from: "", to: "", total: 0, fees: [] }, "month"),
     ).toThrow(RangeError);
   });
 
   it("throws from the projection", () => {
-    expect(() => projectedTotal("day", broken)).toThrow(RangeError);
+    expect(() => projectedFees("day", broken)).toThrow(RangeError);
   });
 });
