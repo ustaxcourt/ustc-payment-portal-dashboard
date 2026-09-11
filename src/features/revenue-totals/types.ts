@@ -41,8 +41,11 @@ export const fiscalYearLabel = (period: TotalPeriod): string =>
   periodSubtitle(period, "fiscalYear");
 
 export const priorFiscalYearLabel = (period: TotalPeriod): string => {
-  const fiscalYear = Number(fiscalYearLabel(period).replace("FY", ""));
-  return `FY${String((fiscalYear + 99) % 100).padStart(2, "0")}`;
+  const opened = new Date(period.from);
+  const parts = courtParts.formatToParts(opened);
+  const year = Number(parts.find((part) => part.type === "year")?.value);
+
+  return `FY${String(year).slice(-2)}`;
 };
 
 export const PERIOD_LABEL: Record<TotalPeriodName, string> = {

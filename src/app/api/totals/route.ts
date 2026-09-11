@@ -72,10 +72,6 @@ export async function GET() {
     }
 
     const body = await upstream.json();
-    console.log(
-      "[dashboard] totals upstream response",
-      JSON.stringify(body, null, 2),
-    );
 
     // `totals` is optional upstream, so the optionality is resolved here rather
     // than left for the components to guard.
