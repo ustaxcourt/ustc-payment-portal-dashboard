@@ -26,6 +26,9 @@ test.describe("dashboard accessibility", () => {
           page.getByRole("table", { name: /Transaction log, All/i }),
         ).toBeVisible();
         await expect(
+          page.getByRole("table", { name: /Revenue totals/i }),
+        ).toBeVisible();
+        await expect(
           page.getByRole("button", { name: "Export" }),
         ).toBeEnabled();
       },
