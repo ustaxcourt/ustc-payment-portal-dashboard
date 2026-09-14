@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "biome lint .",
     "lint:ci": "biome lint --reporter=github .",
-    "tsc": "tsc --noEmit",
+    "tsc": "node ./node_modules/@typescript/native/bin/tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test --config e2e/playwright.config.ts --project=anonymous",
@@ -52,7 +52,8 @@
     "jsdom": "^29.1.1",
     "shadcn": "^4.15.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vitest": "^4.1.10"
   }
 }
