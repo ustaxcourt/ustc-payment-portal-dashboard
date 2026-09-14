@@ -57,6 +57,12 @@ test.describe("dashboard accessibility", () => {
         await expect(
           page.getByRole("table", { name: /Transaction log, Failed/i }),
         ).toBeVisible();
+        await expect(
+          page.getByRole("table", { name: /Revenue totals/i }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("table", { name: /Successful payments by fee/i }),
+        ).toBeVisible();
       },
     });
   });
