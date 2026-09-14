@@ -9,7 +9,7 @@ to scan fully rendered pages for WCAG 2.1 Level A and AA violations.
 2. Install a Playwright browser. CI uses Chromium:
 
    ```bash
-   npx playwright install chromium
+   npx playwright install --with-deps chromium
    ```
 
 3. Ensure auth variables are available for the authenticated dashboard scan.
