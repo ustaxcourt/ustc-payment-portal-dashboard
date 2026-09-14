@@ -90,7 +90,7 @@ export default function PaymentBreakdownPane() {
           <TableHeader className="bg-totals-header">
             <TableRow className="hover:bg-transparent">
               {/* The default border vanishes against the header tint. */}
-              <TableHead className="h-8 border-r border-muted-foreground/40">
+              <TableHead scope="row" className="h-auto whitespace-normal border-r py-1.5 font-normal">
                 Fee
               </TableHead>
               <TableHead
@@ -108,7 +108,7 @@ export default function PaymentBreakdownPane() {
           </TableHeader>
           <TableBody>
             {data.rows.map((row) => (
-              <TableRow scope="row" key={row.fee}>
+              <TableRow key={row.fee}>
                 <TableCell className="whitespace-normal border-r py-1.5">
                   {row.feeName}
                 </TableCell>
