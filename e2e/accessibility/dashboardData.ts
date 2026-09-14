@@ -145,6 +145,17 @@ export async function stubDashboardResponses(page: Page): Promise<void> {
       body: JSON.stringify(
         response({
           data: rows,
+          feeBreakdown:
+            requestUrl.searchParams.get("includeFeeBreakdown") === "true"
+              ? [
+                  {
+                    fee: "PETITION_FILING_FEE",
+                    feeName: "Petition Filing Fee",
+                    qty: 1,
+                    subtotal: 60,
+                  },
+                ]
+              : undefined,
           sort: asSortField(requestUrl.searchParams.get("sort")),
           order: asOrder(requestUrl.searchParams.get("order")),
           total: rows.length,
