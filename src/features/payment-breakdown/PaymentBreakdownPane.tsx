@@ -73,7 +73,7 @@ export default function PaymentBreakdownPane() {
   if (isPending) {
     return (
       <Pane>
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
           Loading payment breakdown…
         </p>
       </Pane>
@@ -108,7 +108,7 @@ export default function PaymentBreakdownPane() {
           </TableHeader>
           <TableBody>
             {data.rows.map((row) => (
-              <TableRow key={row.fee}>
+              <TableRow scope="row" key={row.fee}>
                 <TableCell className="whitespace-normal border-r py-1.5">
                   {row.feeName}
                 </TableCell>
