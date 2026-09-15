@@ -32,6 +32,12 @@ export default function RootLayout({
       className={`${sourceSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex h-dvh min-w-[800px] flex-col">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground"
+        >
+          Skip to main content
+        </a>
         <Providers>{children}</Providers>
       </body>
     </html>

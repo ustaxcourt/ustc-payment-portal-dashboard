@@ -73,7 +73,7 @@ export default function PaymentBreakdownPane() {
   if (isPending) {
     return (
       <Pane>
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
           Loading payment breakdown…
         </p>
       </Pane>
@@ -90,7 +90,7 @@ export default function PaymentBreakdownPane() {
           <TableHeader className="bg-totals-header">
             <TableRow className="hover:bg-transparent">
               {/* The default border vanishes against the header tint. */}
-              <TableHead className="h-8 border-r border-muted-foreground/40">
+              <TableHead className="h-auto whitespace-normal border-r py-1.5 font-normal">
                 Fee
               </TableHead>
               <TableHead

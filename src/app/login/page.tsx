@@ -18,7 +18,7 @@ export default async function LoginPage({
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center p-8">
+     <main id="main-content" className="flex flex-1 items-center justify-center p-8">
       <div className="max-w-md text-center">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           Sign in to the dashboard
