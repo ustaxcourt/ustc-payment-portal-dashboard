@@ -142,10 +142,6 @@ export async function GET() {
         },
       ]),
     ) as YoYTrendSnapshot;
-    console.log(
-      "[dashboard] validated trends",
-      JSON.stringify(validatedTrends, null, 2),
-    );
 
     return NextResponse.json({
       current,
