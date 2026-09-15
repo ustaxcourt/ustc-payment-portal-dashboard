@@ -43,6 +43,24 @@ const renderTable = (
 const headerFor = (name: string) =>
   screen.getByRole("columnheader", { name: new RegExp(name) });
 
+describe("TransactionTable status rendering", () => {
+  it("renders a cancelled transaction status as Cancelled", () => {
+    renderTable({
+      rows: [
+        {
+          ...row,
+          transactionStatus: "cancelled",
+          paymentStatus: "failed",
+          returnCode: null,
+          returnDetail: null,
+        },
+      ],
+    });
+
+    expect(screen.getByRole("cell", { name: "Cancelled" })).toBeInTheDocument();
+  });
+});
+
 describe("TransactionTable sort state", () => {
   it("marks only the sorted column with a direction", () => {
     renderTable();
