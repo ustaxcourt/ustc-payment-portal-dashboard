@@ -19,7 +19,16 @@ Trivial fixes applied during the baseline audit:
 - Darkened the shared `--muted-foreground` token to bring muted text on `--muted` above AA contrast.
 - Darkened the shared `--primary` token and replaced the primary button hover alpha blend with an opaque color mix so filled buttons remain AA-compliant.
 
-## Results
+## Baseline findings
+
+The initial axe scan identified color-contrast violations caused by the shared
+`--muted-foreground` and `--primary` color tokens.
+
+| Rule ID        | Impact  | Affected pages | Resolution                                                                              |
+| -------------- | ------- | -------------- | --------------------------------------------------------------------------------------- |
+| color-contrast | Serious | /login, /      | Darkened `--muted-foreground` and `--primary` tokens and adjusted button hover styling. |
+
+## Final results
 
 No automated WCAG 2.1 Level A or AA violations remained after the contrast fix.
 

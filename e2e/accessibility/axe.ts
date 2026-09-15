@@ -57,7 +57,7 @@ export async function expectAccessiblePage({
     .withTags(WCAG_21_AA_TAGS)
     .analyze();
 
-  if (results.violations.length > 0) {
+  if (results.violations.length > 0 || results.incomplete.length > 0) {
     await test.info().attach(attachmentName(pageName), {
       body: Buffer.from(JSON.stringify(results, null, 2)),
       contentType: "application/json",
