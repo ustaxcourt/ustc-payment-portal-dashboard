@@ -7,11 +7,31 @@ import type { TotalsResponse } from "./types";
 const NOW = "2026-02-18T20:00:00.000Z";
 
 const totals = (): TotalsResponse => ({
-  day: { from: "2026-02-18T05:00:00.000Z", to: NOW, total: 4500 },
-  week: { from: "2026-02-15T05:00:00.000Z", to: NOW, total: 22000 },
-  month: { from: "2026-02-01T05:00:00.000Z", to: NOW, total: 98125 },
-  quarter: { from: "2026-01-01T05:00:00.000Z", to: NOW, total: 158500 },
-  fiscalYear: { from: "2025-10-01T04:00:00.000Z", to: NOW, total: 458500 },
+  current: {
+    day: { from: "2026-02-18T05:00:00.000Z", to: NOW, total: 4500 },
+    week: { from: "2026-02-15T05:00:00.000Z", to: NOW, total: 22000 },
+    month: { from: "2026-02-01T05:00:00.000Z", to: NOW, total: 98125 },
+    quarter: { from: "2026-01-01T05:00:00.000Z", to: NOW, total: 158500 },
+    fiscalYear: { from: "2025-10-01T04:00:00.000Z", to: NOW, total: 458500 },
+  },
+  yoyTrends: {
+    day: { current: 4500, previous: 3800, difference: 700, percentChange: 18.42, available: true },
+    week: { current: 22000, previous: 20000, difference: 2000, percentChange: 10, available: true },
+    month: { current: 98125, previous: 96500, difference: 1625, percentChange: 1.68, available: true },
+    quarter: { current: 158500, previous: 160375, difference: -1875, percentChange: -1.17, available: true },
+    fiscalYear: { current: 458500, previous: 488450, difference: -29950, percentChange: -6.13, available: true },
+  },
+});
+
+const totalsWithoutYoYHistory = (): TotalsResponse => ({
+  ...totals(),
+  yoyTrends: {
+    day: { current: 4500, previous: 0, difference: 4500, percentChange: null, available: true },
+    week: { current: 22000, previous: 0, difference: 22000, percentChange: null, available: true },
+    month: { current: 98125, previous: 0, difference: 98125, percentChange: null, available: true },
+    quarter: { current: 158500, previous: 0, difference: 158500, percentChange: null, available: true },
+    fiscalYear: { current: 458500, previous: 0, difference: 458500, percentChange: null, available: true },
+  },
 });
 
 const renderTotals = () => {
@@ -25,6 +45,9 @@ const renderTotals = () => {
     </QueryClientProvider>,
   );
 };
+
+const hasText = (expected: string) => (_: string, element: Element | null) =>
+  element?.textContent?.replace(/\s+/g, " ").trim() === expected;
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -42,6 +65,42 @@ describe("RevenueTotals", () => {
     await waitFor(() => {
       expect(screen.getByText("$4,500.00")).toBeInTheDocument();
     });
+    expect(screen.getByText("$458,500.00")).toBeInTheDocument();
+    expect(
+      screen.getByRole("rowheader", {
+        name: "YoY Trend (FY26 vs FY25)",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders a trend cell per period against the prior fiscal year", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    expect(await screen.findByText(hasText("▲ +$700.00 (18%)"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▲ +$2,000.00 (10%)"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▲ +$1,625.00 (2%)"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▼ -$1,875.00 (1%)"))).toBeInTheDocument();
+    expect(screen.getByText(hasText("▼ -$29,950.00 (6%)"))).toBeInTheDocument();
+  });
+
+  it("shows N/A when the upstream trend has no prior-year baseline", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => totalsWithoutYoYHistory(),
+      }),
+    );
+
+    renderTotals();
+
+    expect(await screen.findAllByText("(N/A)")).toHaveLength(5);
     expect(screen.getByText("$458,500.00")).toBeInTheDocument();
   });
 
