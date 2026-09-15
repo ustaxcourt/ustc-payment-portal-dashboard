@@ -10,6 +10,9 @@ export const TRANSACTION_STATUSES = [
   "processed",
   "failed",
   "pending",
+  // Abandoned Pay.gov session, swept after the 3h token TTL. Carries
+  // paymentStatus "failed", so it lands under the Failed tab.
+  "cancelled",
 ] as const;
 
 export type TransactionStatus = (typeof TRANSACTION_STATUSES)[number];
