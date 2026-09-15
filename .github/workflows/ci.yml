@@ -46,5 +46,17 @@ jobs:
           AUTH_MICROSOFT_ENTRA_ID_SECRET: ${{ secrets.AUTH_MICROSOFT_ENTRA_ID_SECRET }}
           AUTH_MICROSOFT_ENTRA_ID_ISSUER: ${{ secrets.AUTH_MICROSOFT_ENTRA_ID_ISSUER }}
           E2E_CHANNEL: chromium
-          NEXTAUTH_SECRET: accessibility-test-only-secret
+          NEXTAUTH_SECRET: ${{ secrets. NEXTAUTH_SECRET }}
           NEXTAUTH_URL: http://localhost:3000
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-accessibility-artifacts
+          path: |
+            playwright-report
+            test-results
+            e2e/report
+          if-no-files-found: ignore
+
