@@ -90,7 +90,7 @@ export default function PaymentBreakdownPane() {
           <TableHeader className="bg-totals-header">
             <TableRow className="hover:bg-transparent">
               {/* The default border vanishes against the header tint. */}
-              <TableHead className="h-auto whitespace-normal border-r py-1.5 font-normal">
+              <TableHead className="h-auto whitespace-normal border-r border-muted-foreground/40 py-1.5 font-normal">
                 Fee
               </TableHead>
               <TableHead
