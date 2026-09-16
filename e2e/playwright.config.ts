@@ -36,7 +36,7 @@ export default defineConfig({
     {
       name: "anonymous",
       testMatch: /.*\.anon\.spec\.ts$/,
-      testIgnore: /.*\.a11y\.(anon|auth)\.spec\.ts$/,
+      testIgnore: /.*\.a11y\..*\.spec\.ts$/,
       use: { ...devices["Desktop Edge"], channel: BROWSER_CHANNEL },
     },
     {
@@ -47,7 +47,7 @@ export default defineConfig({
     {
       name: "authenticated",
       testMatch: /.*\.auth\.spec\.ts$/,
-      testIgnore: /.*\.a11y\.(anon|auth)\.spec\.ts$/,
+      testIgnore: /.*\.a11y\..*\.spec\.ts$/,
       dependencies: ["setup"],
       use: {
         ...devices["Desktop Edge"],
