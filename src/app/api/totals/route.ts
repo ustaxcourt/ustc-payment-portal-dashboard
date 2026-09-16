@@ -78,23 +78,6 @@ export async function GET() {
     const totals = body?.totals;
     const yoyTrends = body?.yoyTrends;
 
-    console.log(
-      "[dashboard] totals validation",
-      JSON.stringify(
-        {
-          hasTotals: !!body?.totals,
-          hasYoYTrends: !!body?.yoyTrends,
-          periods: TOTAL_PERIODS.map((period) => ({
-            period,
-            totalExists: !!body?.totals?.[period],
-            trendExists: !!body?.yoyTrends?.[period],
-          })),
-        },
-        null,
-        2,
-      ),
-    );
-
     if (!totals || TOTAL_PERIODS.some((period) => !isPeriod(totals[period]))) {
       console.error(
         "[dashboard] totals missing or malformed on the transaction log",

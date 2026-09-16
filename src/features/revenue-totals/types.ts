@@ -37,15 +37,38 @@ export type TotalsResponse = {
   yoyTrends: YoYTrendSnapshot;
 };
 
-export const fiscalYearLabel = (period: TotalPeriod): string =>
-  periodSubtitle(period, "fiscalYear");
-
-export const priorFiscalYearLabel = (period: TotalPeriod): string => {
-  const opened = new Date(period.from);
+const fiscalYearFromDate = (from: string, offset: number): string => {
+  const opened = new Date(from);
   const parts = courtParts.formatToParts(opened);
   const year = Number(parts.find((part) => part.type === "year")?.value);
+  return `FY${String(year + offset).slice(-2)}`;
+};
 
-  return `FY${String(year).slice(-2)}`;
+export const fiscalYearLabel = (period: TotalPeriod): string =>
+  fiscalYearFromDate(period.from, 1);
+
+export const priorFiscalYearLabel = (period: TotalPeriod): string =>
+  fiscalYearFromDate(period.from, 0);
+
+export const periodSubtitle = (
+  { from, to }: TotalPeriod,
+  period: TotalPeriodName,
+): string => {
+  switch (period) {
+    case "day":
+      return formatCourtDate(from);
+    case "week":
+      return `${formatCourtDate(from)} – ${formatCourtDate(to)}`;
+    case "month":
+      return monthName.format(new Date(from));
+    case "quarter": {
+      const parts = courtParts.formatToParts(new Date(from));
+      const month = Number(parts.find((part) => part.type === "month")?.value);
+      return `Q${fiscalQuarter(month)}`;
+    }
+    default:
+      return fiscalYearFromDate(from, 1);
+  }
 };
 
 export const PERIOD_LABEL: Record<TotalPeriodName, string> = {
@@ -88,28 +111,3 @@ export const SUBTITLE_IS_DATED = new Set<TotalPeriodName>(["day", "week"]);
  */
 export const periodRange = ({ from, to }: TotalPeriod): string =>
   `${formatCourtDate(from)} to ${formatCourtDate(to)}`;
-
-/** Labels the instants the server reported; no boundary is recomputed here. */
-export const periodSubtitle = (
-  { from, to }: TotalPeriod,
-  period: TotalPeriodName,
-): string => {
-  const opened = new Date(from);
-  const parts = courtParts.formatToParts(opened);
-  const month = Number(parts.find((part) => part.type === "month")?.value);
-  const year = Number(parts.find((part) => part.type === "year")?.value);
-
-  switch (period) {
-    case "day":
-      return formatCourtDate(from);
-    case "week":
-      return `${formatCourtDate(from)} – ${formatCourtDate(to)}`;
-    case "month":
-      return monthName.format(opened);
-    case "quarter":
-      return `Q${fiscalQuarter(month)}`;
-    default:
-      // The year opens in October, so it belongs to the next fiscal year.
-      return `FY${String(year + 1).slice(-2)}`;
-  }
-};
