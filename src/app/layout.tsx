@@ -34,6 +34,7 @@ export default function RootLayout({
       <body className="flex h-dvh min-w-[800px] flex-col">
         <a
           href="#main-content"
+          tabIndex={-1}
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground"
         >
           Skip to main content
