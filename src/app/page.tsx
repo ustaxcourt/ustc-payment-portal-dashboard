@@ -67,6 +67,7 @@ export default async function Home({
 
       <main
         id="main-content"
+        tabIndex={-1}
         className="grid min-h-0 flex-1 grid-cols-3 gap-6 p-6 sm:p-8"
       >
         <Suspense fallback={<div aria-hidden="true" />}>
