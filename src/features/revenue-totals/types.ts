@@ -27,7 +27,6 @@ export type YoYTrend = {
   previous: number | null;
   difference: number | null;
   percentChange: number | null;
-  available: boolean;
 };
 
 export type YoYTrendSnapshot = Record<TotalPeriodName, YoYTrend>;
