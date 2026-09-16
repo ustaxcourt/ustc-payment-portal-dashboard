@@ -10,8 +10,7 @@ export const TRANSACTION_STATUSES = [
   "processed",
   "failed",
   "pending",
-  // Abandoned Pay.gov session, swept after the 3h token TTL. Carries
-  // paymentStatus "failed", so it lands under the Failed tab.
+  // Abandoned Pay.gov session; carries paymentStatus "failed" so it lands under Failed.
   "cancelled",
 ] as const;
 

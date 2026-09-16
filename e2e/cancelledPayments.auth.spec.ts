@@ -1,15 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-/**
- * AC 3 of the cancelled-payments work: an abandoned Pay.gov session renders as "Cancelled"
- * and appears under the Failed tab.
- *
- * The response is stubbed rather than seeded. Producing a real cancelled row means
- * backdating `created_at` and running the sweeper, both of which need database access the
- * dashboard has no business holding — it reaches the portal only over signed HTTP. AC 1 and
- * AC 2 are covered against real Postgres by the portal's `cancelExpiredSweep` integration
- * test; this spec covers the half the dashboard owns.
- */
+// Stubbed rather than seeded: a real cancelled row needs database access the dashboard has
+// no business holding — it reaches the portal only over signed HTTP.
 
 const CANCELLED_ROW = {
   agencyTrackingId: "SWPcancelled000000001",
@@ -19,11 +11,9 @@ const CANCELLED_ROW = {
   transactionAmount: 60,
   clientName: "Dawson",
   transactionReferenceId: "e2e-cancelled-ref",
-  // The pair that matters: cancelled workflow state, failed business outcome.
   transactionStatus: "cancelled",
   paymentStatus: "failed",
   paymentMethod: null,
-  // Pay.gov returned nothing, so the row carries no code or detail.
   returnCode: null,
   returnDetail: null,
   createdAt: "2026-08-03T12:00:00.000Z",
@@ -62,8 +52,7 @@ test("a cancelled transaction reads Cancelled under the Failed tab", async ({
     page.getByRole("cell", { name: "Cancelled", exact: true }),
   ).toBeVisible();
 
-  // Same row, so the reference id must be on screen alongside the label — otherwise the
-  // assertion above could pass against some other row entirely.
+  // Same row, or the assertion above could pass against an unrelated one.
   await expect(
     page.getByRole("cell", { name: CANCELLED_ROW.transactionReferenceId }),
   ).toBeVisible();
