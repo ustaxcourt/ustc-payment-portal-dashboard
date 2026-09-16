@@ -10,7 +10,6 @@ export const TRANSACTION_STATUSES = [
   "processed",
   "failed",
   "pending",
-  // Abandoned Pay.gov session; carries paymentStatus "failed" so it lands under Failed.
   "cancelled",
 ] as const;
 
