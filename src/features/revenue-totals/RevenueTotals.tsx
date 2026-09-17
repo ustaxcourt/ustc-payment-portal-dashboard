@@ -1,8 +1,9 @@
 "use client";
 
 import ErrorPanel from "@/components/ui/ErrorPanel";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatWholeCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { projectedFees } from "./projection";
 import {
   fiscalYearLabel,
   PERIOD_LABEL,
@@ -15,7 +16,7 @@ import {
 } from "./types";
 import { useTotals } from "./useTotals";
 
-const CELL = "border px-4 py-1.5";
+const CELL = "border px-3 py-0.5";
 const HEADER_ROW = "bg-totals-header";
 const HEADING_ID = "revenue-totals-heading";
 
@@ -43,7 +44,7 @@ function TrendCell({
   const showGlyph = (difference ?? 0) !== 0;
 
   return (
-    <td className={cn(CELL, "text-lg tabular-nums")}>
+    <td className={cn(CELL, "text-sm tabular-nums")}>
       {showGlyph && (
         <>
           <span className={cn("font-semibold", className)}>
@@ -174,7 +175,7 @@ export default function RevenueTotals() {
               Current Total
             </th>
             {TOTAL_PERIODS.map((period) => (
-              <td key={period} className={cn(CELL, "text-lg tabular-nums")}>
+              <td key={period} className={cn(CELL, "text-base tabular-nums")}>
                 {formatCurrency(data.current[period].total)}
               </td>
             ))}
@@ -191,6 +192,30 @@ export default function RevenueTotals() {
                 key={period}
                 trend={data.yoyTrends[period]}
               />
+            ))}
+          </tr>
+          <tr>
+            <th
+              scope="row"
+              className={cn(
+                CELL,
+                "border-0 text-right text-sm font-normal whitespace-nowrap italic text-muted-foreground",
+              )}
+            >
+              Projected Total
+              <span className="sr-only">
+                , estimated from the rate collected so far
+              </span>
+            </th>
+            {TOTAL_PERIODS.map((period) => (
+              <td
+                key={period}
+                className={cn(CELL, "bg-muted text-sm tabular-nums italic text-muted-foreground")}
+              >
+                {formatWholeCurrency(
+                  projectedFees(period, data.current[period]),
+                )}
+              </td>
             ))}
           </tr>
         </tbody>
