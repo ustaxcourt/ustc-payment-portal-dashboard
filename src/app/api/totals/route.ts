@@ -24,6 +24,8 @@ const isFeeRow = (value: unknown): value is FeeBreakdownRow => {
     typeof fee === "string" &&
     typeof feeName === "string" &&
     isFiniteNumber(qty) &&
+    Number.isSafeInteger(qty) &&
+    qty >= 0 &&
     isFiniteNumber(subtotal)
   );
 };

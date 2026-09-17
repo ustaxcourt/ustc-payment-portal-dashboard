@@ -127,6 +127,14 @@ describe("GET /api/totals", () => {
       "a fee row missing its subtotal",
       { ...period(1), fees: [{ ...feeRow, subtotal: "120" }] },
     ],
+    [
+      "a negative fee quantity",
+      { ...period(1), fees: [{ ...feeRow, qty: -1 }] },
+    ],
+    [
+      "a fractional fee quantity",
+      { ...period(1), fees: [{ ...feeRow, qty: 1.5 }] },
+    ],
   ])("returns 502 when a period has %s", async (_label, malformed) => {
     const body = validBody();
     body.totals.month = malformed as never;
