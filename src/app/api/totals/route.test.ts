@@ -35,7 +35,6 @@ const trend = (current: number): YoYTrend => ({
   previous: current - 10,
   difference: 10,
   percentChange: 5,
-  available: true,
 });
 
 const snapshot = <T>(make: (index: number) => T) =>
@@ -93,7 +92,6 @@ describe("GET /api/totals", () => {
     expect(body.current.day.total).toBe(100);
     expect(body.current.fiscalYear.fees).toEqual([feeRow]);
     expect(body.yoyTrends.day).toMatchObject({
-      available: true,
       percentChange: 5,
     });
   });
@@ -159,7 +157,6 @@ describe("GET /api/totals", () => {
       expect(payload.current.day.total).toBe(100);
       for (const name of TOTAL_PERIODS) {
         expect(payload.yoyTrends[name]).toMatchObject({
-          available: false,
           previous: null,
           difference: null,
           percentChange: null,
@@ -176,14 +173,13 @@ describe("GET /api/totals", () => {
       previous: null,
       difference: null,
       percentChange: null,
-      available: false,
     };
     getSigned.mockResolvedValue(upstreamOk(body));
 
     const { response, body: payload } = await invokeGet();
 
     expect(response.status).toBe(200);
-    expect(payload.yoyTrends.week).toMatchObject({ available: true });
+    expect(payload.yoyTrends.week).toMatchObject({ percentChange: 5 });
   });
 
   it("returns 502 when the API call throws", async () => {

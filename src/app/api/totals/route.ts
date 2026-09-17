@@ -124,7 +124,6 @@ export async function GET() {
           previous: null,
           difference: null,
           percentChange: null,
-          available: false,
         },
       ]),
     ) as YoYTrendSnapshot;
