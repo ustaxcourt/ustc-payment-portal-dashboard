@@ -50,12 +50,10 @@ enough context that the next person doesn't have to re-derive the decision.
   since each reads that data source through `modules/iam`.
 - **Status as of 2026-09-17:** The original revisit condition — "revisit when 6.58.0
   ships" — is now met on the calendar: 6.58.0 through 6.65.0 have all shipped.
-  It is **not** met on the evidence. No release note between 6.58.0 and 6.65.0
-  mentions the `ListOpenIDConnectProviders` regression, and the provider's current
-  changelog flags the OIDC surface as shaky in the other direction: the new
-  `aws_iam_openid_connect_provider` list resource ships as *"best effort ... we ask
-  for community help in testing"* ([#50024](https://github.com/hashicorp/terraform-provider-aws/issues/50024)).
-  So there is no reason to believe the bug is fixed.
+  It is **not** met on the evidence. Every shipped release from 6.57.0 through
+  6.65.0 was checked, and none mentions the `ListOpenIDConnectProviders`
+  regression or any other OIDC fix. So there is no published reason to believe the
+  bug is fixed — only that nobody has said otherwise.
 - **Plan:** Kept pinned. Clearing this entry requires a real `terraform plan` in
   `environments/dev` against AWS — `terraform validate` cannot exercise the data
   source, because the failure only appears when the provider actually calls IAM.
