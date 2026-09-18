@@ -11,11 +11,105 @@ import type {
 const NOW = "2026-08-18T16:30:00.000Z";
 
 const totals = (): TotalsResponse => ({
-  day: { from: "2026-08-18T04:00:00.000Z", to: NOW, total: 4500 },
-  week: { from: "2026-08-11T04:00:00.000Z", to: NOW, total: 22000 },
-  month: { from: "2026-08-01T04:00:00.000Z", to: NOW, total: 98125 },
-  quarter: { from: "2026-07-01T04:00:00.000Z", to: NOW, total: 158500 },
-  fiscalYear: { from: "2025-10-01T04:00:00.000Z", to: NOW, total: 458500 },
+  current: {
+    day: {
+      from: "2026-08-18T04:00:00.000Z",
+      to: NOW,
+      total: 4500,
+      fees: [
+        {
+          fee: "PETITION_FILING_FEE",
+          feeName: "Petition Filing Fee",
+          qty: 1,
+          subtotal: 300,
+        },
+      ],
+    },
+    week: {
+      from: "2026-08-11T04:00:00.000Z",
+      to: NOW,
+      total: 22000,
+      fees: [
+        {
+          fee: "PETITION_FILING_FEE",
+          feeName: "Petition Filing Fee",
+          qty: 5,
+          subtotal: 1500,
+        },
+      ],
+    },
+    month: {
+      from: "2026-08-01T04:00:00.000Z",
+      to: NOW,
+      total: 98125,
+      fees: [
+        {
+          fee: "PETITION_FILING_FEE",
+          feeName: "Petition Filing Fee",
+          qty: 7,
+          subtotal: 7000,
+        },
+      ],
+    },
+    quarter: {
+      from: "2026-07-01T04:00:00.000Z",
+      to: NOW,
+      total: 158500,
+      fees: [
+        {
+          fee: "PETITION_FILING_FEE",
+          feeName: "Petition Filing Fee",
+          qty: 12,
+          subtotal: 12000,
+        },
+      ],
+    },
+    fiscalYear: {
+      from: "2025-10-01T04:00:00.000Z",
+      to: NOW,
+      total: 458500,
+      fees: [
+        {
+          fee: "PETITION_FILING_FEE",
+          feeName: "Petition Filing Fee",
+          qty: 35,
+          subtotal: 35000,
+        },
+      ],
+    },
+  },
+  yoyTrends: {
+    day: {
+      current: 4500,
+      previous: 4100,
+      difference: 400,
+      percentChange: 9.76,
+    },
+    week: {
+      current: 22000,
+      previous: 20500,
+      difference: 1500,
+      percentChange: 7.32,
+    },
+    month: {
+      current: 98125,
+      previous: 93000,
+      difference: 5125,
+      percentChange: 5.51,
+    },
+    quarter: {
+      current: 158500,
+      previous: 150000,
+      difference: 8500,
+      percentChange: 5.67,
+    },
+    fiscalYear: {
+      current: 458500,
+      previous: 430000,
+      difference: 28500,
+      percentChange: 6.63,
+    },
+  },
 });
 
 const transaction = (
