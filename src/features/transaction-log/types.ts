@@ -10,6 +10,7 @@ export const TRANSACTION_STATUSES = [
   "processed",
   "failed",
   "pending",
+  "cancelled",
 ] as const;
 
 export type TransactionStatus = (typeof TRANSACTION_STATUSES)[number];
