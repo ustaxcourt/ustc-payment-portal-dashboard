@@ -24,7 +24,7 @@ test.describe("dashboard accessibility", () => {
         ).toBeVisible();
 
         await expect(
-          page.getByRole("table", { name: /Transaction log, Failed/i }),
+          page.getByRole("table", { name: /Transaction log, All/i }),
         ).toBeVisible();
 
         await expect(
@@ -59,7 +59,7 @@ test.describe("dashboard accessibility", () => {
         ).toBeVisible();
 
         await expect(
-          page.getByRole("table", { name: /Transaction log, Failed/i }),
+          page.getByRole("table", { name: /Transaction log, All/i }),
         ).toBeVisible();
 
         await expect(
