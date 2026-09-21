@@ -113,6 +113,21 @@ describe("TransactionSearch", () => {
     );
   });
 
+  it("offers Cancelled as a Transaction Status option", async () => {
+    const onFilterChange = vi.fn();
+    renderSearch({ onFilterChange });
+
+    await userEvent.click(screen.getByLabelText("Transaction Status"));
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Cancelled" }),
+    );
+
+    expect(onFilterChange).toHaveBeenCalledWith(
+      "transactionStatus",
+      "cancelled",
+    );
+  });
+
   it("shows the resolved label, not the raw value, on a closed trigger", () => {
     renderSearch({
       filters: {
