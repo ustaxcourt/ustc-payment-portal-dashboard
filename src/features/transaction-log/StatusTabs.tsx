@@ -38,7 +38,7 @@ export default function StatusTabs({
               "flex h-12 w-44 cursor-pointer items-center justify-between rounded-t-md px-5 text-sm transition-colors",
               // Sits on the table's border so the two read as one panel.
               isSelected
-                ? "-mb-0.5 h-[50px] border-2 border-b-0 border-muted-foreground bg-background font-semibold"
+                ? "-mb-0.5 h-[50px] border-2 border-b-0 table-border bg-background font-semibold"
                 : "border-2 border-b-0 border-border bg-muted text-muted-foreground hover:bg-muted/70",
             )}
           >

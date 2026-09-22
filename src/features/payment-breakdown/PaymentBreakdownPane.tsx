@@ -82,7 +82,7 @@ export default function PaymentBreakdownPane() {
 
   return (
     <Pane total={formatCurrency(data.grandTotal)}>
-      <div className="overflow-hidden rounded-md border-2 border-muted-foreground">
+      <div className="overflow-hidden rounded-md border-2 table-border">
         <Table>
           <TableCaption className="sr-only">
             {`Successful payments by fee, ${appliedRange.label}`}
