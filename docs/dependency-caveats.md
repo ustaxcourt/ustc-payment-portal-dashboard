@@ -24,18 +24,22 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.0.0 — deferred (2026-08-04)
+### @tanstack/react-table 8.21.3 → 9.0.0 — deferred (2026-09-22)
 
 - **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.0.0`.
-- **Reason:** 9.0.0 was published the same day this was written, and is an API
-  rewrite — `useTable` replaces `useReactTable`, `createCoreRowModel` replaces
-  `getCoreRowModel`, and row models are opt-in features. A plain `npm install`
-  picks it up silently. Every shadcn data-table example targets v8, which has been
-  stable since April 2025, so v8 is the version a future maintainer will find
-  documentation for.
-- **Plan:** Revisit once the v9 ecosystem catches up and shadcn's table docs
-  target it. There is no feature we need from v9 — the transaction log uses the
-  core row model only, since the server owns sorting, filtering and pagination.
+- **Reason:** v9 is not backward compatible with the v8 API used throughout the
+  transaction log. The application currently imports and relies on v8-specific
+  APIs including `useReactTable` and `getCoreRowModel`. Attempting to resolve the
+  dependency to v9 causes build failures such as:
+  `Export getCoreRowModel doesn't exist in target module` and
+  `Export useReactTable doesn't exist in target module`.
+  The migration requires source changes rather than a lockfile refresh. The
+  shadcn table examples and existing transaction-log implementation are still
+  based on the v8 API surface.
+- **Plan:** Remain on v8 until there is a planned effort to migrate the
+  transaction-log components to the v9 API. The upgrade should include a review
+  of all table-related components, sorting behavior, and tests. Pin the package
+  exactly to prevent automated dependency-update workflows from introducing v9.
 
 ### hashicorp/aws provider 6.56.0 → 6.57.0 — deferred (2026-07-29)
 
@@ -58,9 +62,9 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Current:** `15.5.22` (pinned exactly, not a range). **Available latest:** `16.2.12`.
 - **Reason:** AWS Amplify Hosting — the hosting target chosen for this app — documents
   Next.js support through version 15. Next 16 is not officially supported, and the
-  Amplify Hosting issue tracker carries a concrete failure for it: *"Next.js 16.1 build
+  Amplify Hosting issue tracker carries a concrete failure for it: _"Next.js 16.1 build
   fails with EEXIST error: Turbopack creates symlinks in `.next/node_modules` that
-  Amplify bundler cannot handle,"* plus open reports of WEB_COMPUTE builds stuck in
+  Amplify bundler cannot handle,"_ plus open reports of WEB_COMPUTE builds stuck in
   provisioning and SSR compute hangs. We were exposed to that failure by default: Next 16
   makes Turbopack the default build engine, so a plain `next build` produced
   `▲ Next.js 16.2.12 (Turbopack)` with no opt-in. On 15.5.22 the build runs on webpack.
