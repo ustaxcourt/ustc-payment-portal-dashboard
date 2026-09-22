@@ -25,10 +25,6 @@ const ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
   "mousemove",
 ];
 
-function logSignOut(reason: string) {
-  console.info("[session] signing out", { reason });
-}
-
 export function useIdleLogout() {
   const { status, update } = useSession();
   const pathname = usePathname();
@@ -76,6 +72,7 @@ export function useIdleLogout() {
     if (!clockSeededRef.current) {
       clockSeededRef.current = true;
       signOutStartedRef.current = false;
+      clearSessionMarkers();
       writeLastActivity(Date.now());
     }
 
@@ -91,13 +88,12 @@ export function useIdleLogout() {
 
     let lastWriteAt = 0;
 
-    const startSignOut = (reason: string, run: () => void) => {
+    const startSignOut = (run: () => void) => {
       if (signOutStartedRef.current) {
         return;
       }
 
       signOutStartedRef.current = true;
-      logSignOut(reason);
       run();
     };
 
@@ -120,7 +116,7 @@ export function useIdleLogout() {
       }
 
       if (Date.now() - lastActivity >= IDLE_LOGOUT_TIMEOUT_MS) {
-        startSignOut("idle-timeout", () => {
+        startSignOut(() => {
           broadcastLogout();
           void signOut({ callbackUrl: "/api/auth/federated-logout" });
         });
@@ -139,7 +135,7 @@ export function useIdleLogout() {
       }
 
       if (event.key === LOGOUT_SIGNAL_STORAGE_KEY) {
-        startSignOut("logout-in-another-tab", () => {
+        startSignOut(() => {
           void signOut({ redirect: false });
         });
 

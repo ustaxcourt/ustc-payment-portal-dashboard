@@ -57,7 +57,6 @@ describe("useIdleLogout", () => {
     vi.mocked(signOut).mockClear();
     vi.mocked(useRouter).mockReturnValue({ replace } as never);
     vi.mocked(usePathname).mockReturnValue("/");
-    vi.spyOn(console, "info").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -91,6 +90,35 @@ describe("useIdleLogout", () => {
         vi.advanceTimersByTime(2000);
       });
       expect(signOut).not.toHaveBeenCalled();
+    });
+
+    it("clears a lingering logout signal on sign-in", () => {
+      window.localStorage.setItem(LOGOUT_SIGNAL_STORAGE_KEY, "1");
+
+      signIn();
+
+      expect(
+        window.localStorage.getItem(LOGOUT_SIGNAL_STORAGE_KEY),
+      ).toBeNull();
+      expect(readLastActivity()).toBe(Date.now());
+    });
+
+    it("reseeds the clock when a sibling tab clears it mid-session", () => {
+      setStatus("authenticated");
+      const view = renderHook(() => useIdleLogout());
+
+      window.localStorage.removeItem(LAST_ACTIVITY_STORAGE_KEY);
+
+      setStatus("loading");
+      act(() => {
+        view.rerender();
+      });
+      setStatus("authenticated");
+      act(() => {
+        view.rerender();
+      });
+
+      expect(readLastActivity()).not.toBeNull();
     });
 
     it("clears stale markers on a signed-out page load", () => {
