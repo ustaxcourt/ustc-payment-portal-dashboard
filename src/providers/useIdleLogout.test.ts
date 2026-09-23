@@ -149,7 +149,7 @@ describe("useIdleLogout", () => {
       });
 
       expect(signOut).toHaveBeenCalledWith({
-        callbackUrl: "/api/auth/federated-logout",
+        callbackUrl: "/login",
       });
     });
 

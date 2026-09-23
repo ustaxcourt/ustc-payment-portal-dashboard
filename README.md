@@ -7,7 +7,7 @@ Stack decisions are recorded in
 
 ## Requirements
 
-- Node `24.18.0` (see `.nvmrc`)
+- Node `24.20.0` (see `.nvmrc`)
 
 ## Getting started
 

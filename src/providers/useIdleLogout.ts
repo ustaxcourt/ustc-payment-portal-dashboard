@@ -118,7 +118,7 @@ export function useIdleLogout() {
       if (Date.now() - lastActivity >= IDLE_LOGOUT_TIMEOUT_MS) {
         startSignOut(() => {
           broadcastLogout();
-          void signOut({ callbackUrl: "/api/auth/federated-logout" });
+          void signOut({ callbackUrl: "/login" });
         });
       }
     };
