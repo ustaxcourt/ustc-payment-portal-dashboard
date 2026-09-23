@@ -1,64 +1,69 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
 import ErrorPanel from "@/components/ui/ErrorPanel";
-import { COLUMN_LABEL, getColumns } from "./columns";
-import StatusTabs from "./StatusTabs";
-import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
-import TransactionSearch from "./TransactionSearch";
+import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
+import { PAYMENT_STATUS_LABEL } from "./statusStyles";
+import TransactionFilters from "./TransactionFilters";
 import TransactionTable from "./TransactionTable";
-import type { FeeType, TransactionSearchFilters } from "./types";
+import type { FeeType, PaymentStatus, TransactionSearchFilters } from "./types";
 import { useRetainedCounts } from "./useRetainedCounts";
 import { useTransactionLog } from "./useTransactionLog";
 import { useTransactionLogParams } from "./useTransactionLogParams";
 
 export default function TransactionLog() {
   const {
-    params,
     setParams,
-    tab,
     appliedRange,
     activeSorting,
-    selectTab,
     searchFilters,
     hasSearchCriteria,
     clearSearch,
-    queryEnabled,
   } = useTransactionLogParams();
 
   const { data, isPending, isPlaceholderData, isError, error, refetch } =
-    useTransactionLog(
-      tab,
-      appliedRange,
-      activeSorting,
-      searchFilters,
-      queryEnabled,
-    );
+    useTransactionLog(appliedRange, activeSorting, searchFilters);
 
-  // Badge counts span the whole timeframe, but an empty search disables its own
-  // query, so retain the last counts we saw — scoped to their range, so a
-  // timeframe change blanks the badges instead of stranding the old window's.
-  // Placeholder data is the prior range's response held during the refetch;
-  // feeding it in would cache stale counts under the new range and defeat that.
+  // Counts span the whole timeframe; retained across refetches (scoped to
+  // their range) so the sidebar's badges don't blank out while filtering.
   const counts = useRetainedCounts(
     isPlaceholderData ? undefined : data?.counts,
     `${appliedRange.from}..${appliedRange.to}`,
   );
 
-  // On the search tab, placeholder data is the previous search's response —
-  // hide it from both the table and the footer so a new search in flight
-  // doesn't pair an empty/"Searching…" table with a stale transaction count.
-  const visibleData =
-    tab === "search"
-      ? hasSearchCriteria && !isPlaceholderData
-        ? data
-        : undefined
-      : data;
+  // Metadata columns follow the selected fee; memoized so react-table keeps
+  // seeing a stable columns reference between renders.
+  const columns = useMemo(
+    () => [...getColumns(), ...metadataColumns(searchFilters.feeType)],
+    [searchFilters.feeType],
+  );
+
+  const onFilterChange = (
+    key: keyof TransactionSearchFilters,
+    value: string | null,
+  ) => {
+    if (key === "feeType") {
+      setParams({
+        feeType: value as FeeType | null,
+        metadataKey: null,
+        metadataValue: null,
+      });
+      return;
+    }
+    if (key === "paymentStatus") {
+      // Write forward to the canonical `status` key and clear the legacy one.
+      setParams({ status: value as PaymentStatus | null, paymentStatus: null });
+      return;
+    }
+    setParams({ [key]: value } as Pick<TransactionSearchFilters, typeof key>);
+  };
+
+  const statusLabel = searchFilters.paymentStatus
+    ? PAYMENT_STATUS_LABEL[searchFilters.paymentStatus]
+    : "All";
 
   return (
-    <section className="flex min-h-0 w-full flex-1 flex-col gap-3">
-      <h2 className="text-xl font-bold tracking-tight">Transaction Log</h2>
-
+    <section className="flex min-h-0 w-full flex-1 flex-col">
       <p aria-live="polite" className="sr-only">
         {data?.sort && COLUMN_LABEL[data.sort]
           ? `Sorted by ${COLUMN_LABEL[data.sort]}, ${
@@ -74,80 +79,53 @@ export default function TransactionLog() {
           onRetry={refetch}
         />
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-end justify-between gap-3 border-b-2 table-border">
-            <StatusTabs selected={tab} counts={counts} onSelect={selectTab} />
-            {tab === "search" ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="mb-1.5"
-                onClick={clearSearch}
-              >
-                Clear All
-              </Button>
-            ) : null}
+        <div className="flex min-h-0 flex-1 flex-col rounded-md border-2 table-border">
+          <div className="flex items-center justify-between rounded-t-[calc(var(--radius-md)-2px)] border-b-2 table-border bg-status-neutral-subtle px-4 py-2">
+            <h2 className="text-base font-bold tracking-tight">
+              Transaction Log
+              {typeof data?.total === "number" ? ` (${data.total})` : ""}
+            </h2>
           </div>
-          {tab === "search" ? (
-            <TransactionSearch
-              filters={{
-                feeType: params.feeType,
-                payType: params.payType,
-                paymentStatus: params.paymentStatus,
-                transactionStatus: params.transactionStatus,
-                metadataKey: params.metadataKey,
-                metadataValue: params.metadataValue,
-              }}
-              onFilterChange={(key, value) =>
-                setParams(
-                  key === "feeType"
-                    ? {
-                        feeType: value as FeeType | null,
-                        metadataKey: null,
-                        metadataValue: null,
-                      }
-                    : ({ [key]: value } as Pick<
-                        TransactionSearchFilters,
-                        typeof key
-                      >),
-                )
-              }
+
+          <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 lg:flex-row">
+            <TransactionFilters
+              filters={searchFilters}
+              counts={counts}
+              onFilterChange={onFilterChange}
               onMetadataSearch={(metadataKey, metadataValue) =>
                 setParams({ metadataKey, metadataValue })
               }
-              rows={visibleData?.data ?? []}
-              sorting={activeSorting}
-              onSortingChange={setParams}
-              emptyMessage={
-                !hasSearchCriteria
-                  ? "Choose a filter to search transactions."
-                  : isPending || isPlaceholderData
-                    ? "Searching…"
-                    : "No transactions match your search."
-              }
+              onClear={clearSearch}
+              hasActiveFilters={hasSearchCriteria}
             />
-          ) : (
-            <TransactionTable
-              rows={data?.data ?? []}
-              columns={getColumns(tab)}
-              caption={`Transaction log, ${TAB_LABEL[tab]}`}
-              headerTone={TAB_HEADER_TONE[tab]}
-              sorting={activeSorting}
-              onSortingChange={setParams}
-              emptyMessage={
-                isPending ? "Loading transactions…" : "No transactions to show."
-              }
-            />
-          )}
-          {visibleData ? (
-            <p className="mt-2 text-right text-sm text-muted-foreground">
-              {typeof visibleData.total === "number" &&
-              visibleData.data.length < visibleData.total
-                ? `Showing ${visibleData.data.length} of ${visibleData.total} transactions — export to get the full set`
-                : `${visibleData.data.length} ${visibleData.data.length === 1 ? "transaction" : "transactions"}`}
-            </p>
-          ) : null}
+
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <TransactionTable
+                rows={data?.data ?? []}
+                columns={columns}
+                caption={`Transaction log, ${statusLabel}`}
+                headerTone="bg-status-neutral-subtle"
+                sorting={activeSorting}
+                onSortingChange={setParams}
+                wrapperClassName="min-h-0 flex-1 overflow-auto rounded-md border table-border"
+                emptyMessage={
+                  isPending
+                    ? "Loading transactions…"
+                    : hasSearchCriteria
+                      ? "No transactions match your filters."
+                      : "No transactions to show."
+                }
+              />
+              {data ? (
+                <p className="mt-2 text-right text-sm text-muted-foreground">
+                  {typeof data.total === "number" &&
+                  data.data.length < data.total
+                    ? `Showing ${data.data.length} of ${data.total} transactions — export to get the full set`
+                    : `${data.data.length} ${data.data.length === 1 ? "transaction" : "transactions"}`}
+                </p>
+              ) : null}
+            </div>
+          </div>
         </div>
       )}
     </section>

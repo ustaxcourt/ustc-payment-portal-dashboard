@@ -41,6 +41,12 @@ describe("exportColumns", () => {
   });
 
   it("tracks the table's column order, with timestamps split in place", () => {
+    // The table always shows Failure reason now; the export still omits it
+    // outside the All/Failed tabs, so drop it from the expected order there.
+    const tableOrder = getColumns().map((c) =>
+      "accessorKey" in c ? c.accessorKey : c.id,
+    );
+
     for (const tab of ["all", "success", "failed", "pending"] as const) {
       // Collapse the split date/time pairs back to the display column name.
       const collapsed = headers(tab)
@@ -52,9 +58,6 @@ describe("exportColumns", () => {
         )
         .filter((h, i, all) => all.indexOf(h) === i);
 
-      const tableOrder = getColumns(tab).map((c) =>
-        "accessorKey" in c ? c.accessorKey : c.id,
-      );
       const exportOrder = collapsed.map(
         (h) =>
           ({
@@ -69,7 +72,12 @@ describe("exportColumns", () => {
           })[h] ?? h,
       );
 
-      expect(exportOrder).toEqual(tableOrder);
+      const expectedOrder =
+        tab === "all" || tab === "failed"
+          ? tableOrder
+          : tableOrder.filter((key) => key !== "returnDetail");
+
+      expect(exportOrder).toEqual(expectedOrder);
     }
   });
 

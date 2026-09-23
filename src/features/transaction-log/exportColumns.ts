@@ -1,5 +1,5 @@
 import { formatCourtStamp, formatLabel } from "@/lib/format";
-import { TAB_LABEL } from "./statusStyles";
+import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import type { TransactionLogEntry, TransactionTab } from "./types";
 
 export type ExportCell = string | number | Date;
@@ -72,7 +72,7 @@ const BASE_COLUMNS: ExportColumn[] = [
   {
     header: "Payment status",
     width: 14,
-    value: (row) => TAB_LABEL[row.paymentStatus],
+    value: (row) => PAYMENT_STATUS_LABEL[row.paymentStatus],
   },
   {
     header: "Transaction status",

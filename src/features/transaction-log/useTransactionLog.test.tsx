@@ -66,10 +66,9 @@ describe("useTransactionLog", () => {
       vi.fn().mockResolvedValue({ ok: false, status: 500 }),
     );
 
-    const { result } = renderHook(
-      () => useTransactionLog("all", range, sorting),
-      { wrapper },
-    );
+    const { result } = renderHook(() => useTransactionLog(range, sorting), {
+      wrapper,
+    });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toEqual(
@@ -92,10 +91,9 @@ describe("useTransactionLog", () => {
     }));
     vi.stubGlobal("fetch", fetchMock);
 
-    const { result } = renderHook(
-      () => useTransactionLog("all", range, sorting),
-      { wrapper },
-    );
+    const { result } = renderHook(() => useTransactionLog(range, sorting), {
+      wrapper,
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -125,7 +123,7 @@ describe("useTransactionLog", () => {
     };
 
     const { result } = renderHook(
-      () => useTransactionLog("search", range, sorting, filters, true),
+      () => useTransactionLog(range, sorting, filters, true),
       { wrapper },
     );
 
@@ -136,6 +134,34 @@ describe("useTransactionLog", () => {
     expect(url.searchParams.get("from")).toBe("2026-08-12T04:00:00.000Z");
     expect(url.searchParams.get("to")).toBe("2026-08-19T04:00:00.000Z");
     expect(url.searchParams.get("fee")).toBe("PETITION_FILING_FEE");
+  });
+
+  it("forwards the payment status filter as the wire `status` param", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => response(),
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const filters = {
+      feeType: null,
+      payType: null,
+      paymentStatus: "failed" as const,
+      transactionStatus: null,
+      metadataKey: null,
+      metadataValue: null,
+    };
+
+    const { result } = renderHook(
+      () => useTransactionLog(range, sorting, filters),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const url = new URL(fetchMock.mock.calls[0][0], "http://localhost");
+    expect(url.searchParams.get("status")).toBe("failed");
   });
 
   it("forwards a metadata lookup only when both key and value are set", async () => {
@@ -156,7 +182,6 @@ describe("useTransactionLog", () => {
     const { result, rerender } = renderHook(
       ({ metadataKey, metadataValue }) =>
         useTransactionLog(
-          "search",
           range,
           sorting,
           { ...base, metadataKey, metadataValue },

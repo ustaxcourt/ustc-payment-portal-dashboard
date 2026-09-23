@@ -33,7 +33,7 @@ export default function TransactionTable({
   sorting,
   onSortingChange,
   emptyMessage,
-  wrapperClassName = "min-h-0 flex-1 overflow-auto rounded-b-md border-2 border-t-0 table-border",
+  wrapperClassName = "min-h-0 flex-1 overflow-auto rounded-md border-2 table-border",
 }: {
   rows: TransactionLogEntry[];
   columns: ColumnDef<TransactionLogEntry>[];
@@ -71,7 +71,7 @@ export default function TransactionTable({
 
   return (
     <div data-testid="transaction-table-scroll" className={wrapperClassName}>
-      <Table>
+      <Table className="text-xs">
         <TableCaption className="sr-only">{caption}</TableCaption>
         <TableHeader className={cn("sticky top-0 z-10", headerTone)}>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -85,7 +85,7 @@ export default function TransactionTable({
                       : undefined
                   }
                   className={cn(
-                    "h-8",
+                    "h-7 px-1.5",
                     cellBorder(index, headerGroup.headers.length),
                   )}
                 >
@@ -115,7 +115,7 @@ export default function TransactionTable({
                   <TableCell
                     key={cell.id}
                     className={cn(
-                      "py-1",
+                      "px-1.5 py-1",
                       cellBorder(index, row.getVisibleCells().length),
                     )}
                   >

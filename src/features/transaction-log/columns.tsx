@@ -4,14 +4,13 @@ import type { ColumnDef, HeaderContext } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
 import SortableHeader from "./SortableHeader";
-import { TAB_LABEL, TAB_TONE } from "./statusStyles";
+import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
 import {
   FEE_METADATA_KEYS,
   type FeeType,
   METADATA_KEY_LABEL,
   type TransactionLogEntry,
   type TransactionSortField,
-  type ViewTab,
 } from "./types";
 
 export const COLUMN_LABEL: Record<TransactionSortField, string> = {
@@ -26,6 +25,18 @@ export const COLUMN_LABEL: Record<TransactionSortField, string> = {
   clientName: "Client",
   transactionReferenceId: "Reference ID",
 };
+
+// Free-text fields (failure reason, client name, reference id) have no
+// bounded length — without a cap, one long value stretches the whole
+// column (and the table) far past the viewport instead of just that cell.
+const truncated = (text: string, maxWidthClass: string, className?: string) => (
+  <span
+    className={`block ${maxWidthClass} truncate ${className ?? ""}`}
+    title={text}
+  >
+    {text}
+  </span>
+);
 
 const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
   <SortableHeader
@@ -88,8 +99,8 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     cell: ({ row }) => {
       const status = row.original.paymentStatus;
       return (
-        <Badge variant="secondary" className={TAB_TONE[status]}>
-          {TAB_LABEL[status]}
+        <Badge variant="secondary" className={PAYMENT_STATUS_TONE[status]}>
+          {PAYMENT_STATUS_LABEL[status]}
         </Badge>
       );
     },
@@ -102,31 +113,28 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   {
     accessorKey: "clientName",
     header: sortable,
+    cell: ({ row }) => truncated(row.original.clientName, "max-w-40"),
   },
   {
     accessorKey: "transactionReferenceId",
     header: sortable,
-    cell: ({ row }) => (
-      <span className="font-mono text-xs">
-        {row.original.transactionReferenceId}
-      </span>
-    ),
+    cell: ({ row }) =>
+      truncated(
+        row.original.transactionReferenceId,
+        "max-w-40",
+        "font-mono",
+      ),
   },
 ];
 
 const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
   accessorKey: "returnDetail",
   header: sortable,
-  cell: ({ row }) => row.original.returnDetail ?? "—",
+  cell: ({ row }) =>
+    row.original.returnDetail
+      ? truncated(row.original.returnDetail, "max-w-56")
+      : "—",
 };
-
-export const isSortableOnTab = (
-  field: TransactionSortField,
-  tab: ViewTab,
-): boolean =>
-  getColumns(tab).some(
-    (column) => (column as { accessorKey?: string }).accessorKey === field,
-  );
 
 const COLUMNS_WITH_FAILURE_REASON: ColumnDef<TransactionLogEntry>[] = [
   ...BASE_COLUMNS.slice(0, 6),
@@ -134,15 +142,11 @@ const COLUMNS_WITH_FAILURE_REASON: ColumnDef<TransactionLogEntry>[] = [
   ...BASE_COLUMNS.slice(6),
 ];
 
-// Returns a stable reference per tab — react-table's memoization (and any
-// caller passing this straight into useReactTable's columns option) relies
-// on that, not just a same-shape array, to avoid recomputing every render.
-export const getColumns = (
-  tab: ViewTab,
-): ColumnDef<TransactionLogEntry>[] =>
-  tab === "failed" || tab === "all" || tab === "search"
-    ? COLUMNS_WITH_FAILURE_REASON
-    : BASE_COLUMNS;
+// Returns a stable reference — react-table's memoization (and any caller
+// passing this straight into useReactTable's columns option) relies on
+// that, not just a same-shape array, to avoid recomputing every render.
+export const getColumns = (): ColumnDef<TransactionLogEntry>[] =>
+  COLUMNS_WITH_FAILURE_REASON;
 
 // One column per metadata key of the selected fee. Kept out of the sortable
 // set on purpose: the API cannot ORDER BY a JSON key. Callers memoize on

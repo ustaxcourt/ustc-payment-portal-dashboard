@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { describe, expect, it, vi } from "vitest";
 import { getColumns } from "./columns";
-import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
 import TransactionTable from "./TransactionTable";
 import type { TransactionLogEntry } from "./types";
 
@@ -30,9 +29,9 @@ const renderTable = (
   render(
     <TransactionTable
       rows={[row]}
-      columns={getColumns("all")}
-      caption={`Transaction log, ${TAB_LABEL.all}`}
-      headerTone={TAB_HEADER_TONE.all}
+      columns={getColumns()}
+      caption="Transaction log, All"
+      headerTone="bg-status-neutral-subtle"
       sorting={{ sort: "createdAt", order: "desc" }}
       onSortingChange={vi.fn()}
       emptyMessage="No transactions to show."
