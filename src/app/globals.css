@@ -78,7 +78,7 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
+  --border: oklch(0.967 0.0029 264.54);
   --input: oklch(0.922 0 0);
   --ring: var(--primary);
   /* Categorical chart order, CVD-validated against white; assign in fixed
