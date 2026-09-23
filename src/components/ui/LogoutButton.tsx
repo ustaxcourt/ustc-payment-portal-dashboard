@@ -24,7 +24,7 @@ export default function LogoutButton() {
     <Button
       onClick={() => {
         broadcastLogout();
-        void signOut({ callbackUrl: "/login" });
+        void signOut({ callbackUrl: "/api/auth/federated-logout" });
       }}
     >
       Logout

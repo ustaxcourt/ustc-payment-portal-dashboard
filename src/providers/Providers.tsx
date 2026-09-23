@@ -165,7 +165,7 @@ function IdleLogout() {
       signOutStartedRef.current = true;
       broadcastLogout();
       clearLastActivity();
-      void signOut({ callbackUrl: "/login" });
+      void signOut({ callbackUrl: "/api/auth/federated-logout" });
     };
 
     const markActivity = () => {
