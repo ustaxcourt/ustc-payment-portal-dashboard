@@ -75,7 +75,7 @@ export default function TransactionLog() {
         />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-end justify-between gap-3 border-b-2 border-muted-foreground">
+          <div className="flex items-end justify-between gap-3 border-b-2 table-border">
             <StatusTabs selected={tab} counts={counts} onSelect={selectTab} />
             {tab === "search" ? (
               <Button
