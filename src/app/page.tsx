@@ -67,7 +67,7 @@ export default async function Home({
       <main
         id="main-content"
         tabIndex={-1}
-        className="flex min-h-0 flex-1 flex-col p-6 sm:p-8"
+        className="flex flex-1 flex-col p-6 sm:p-8 lg:min-h-0"
       >
         <Suspense
           fallback={

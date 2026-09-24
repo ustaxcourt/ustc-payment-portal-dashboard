@@ -90,7 +90,7 @@ export default function TransactionFilters({
   hasActiveFilters,
 }: Props) {
   return (
-    <aside className="flex min-h-0 w-56 shrink-0 flex-col overflow-y-auto">
+    <aside className="flex w-56 shrink-0 flex-col overflow-y-auto lg:min-h-0">
       <div
         aria-hidden
         className="sticky top-0 z-10 h-7 w-full shrink-0 border-b bg-status-neutral-subtle"

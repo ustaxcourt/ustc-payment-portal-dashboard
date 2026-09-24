@@ -1,4 +1,4 @@
-import { Columns3, Download, Link2, type LucideIcon } from "lucide-react"
+import { Columns3, Download, Filter, Link2, type LucideIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
@@ -6,6 +6,7 @@ const ICONS = {
   link: Link2,
   download: Download,
   columns: Columns3,
+  filter: Filter,
 } satisfies Record<string, LucideIcon>
 
 export type IconButtonIcon = keyof typeof ICONS

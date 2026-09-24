@@ -33,7 +33,7 @@ export default function TransactionTable({
   sorting,
   onSortingChange,
   emptyMessage,
-  wrapperClassName = "min-h-0 flex-1 overflow-auto rounded-md border-2 table-border",
+  wrapperClassName = "flex-1 overflow-auto rounded-md border-2 table-border lg:min-h-0",
 }: {
   rows: TransactionLogEntry[];
   columns: ColumnDef<TransactionLogEntry>[];
