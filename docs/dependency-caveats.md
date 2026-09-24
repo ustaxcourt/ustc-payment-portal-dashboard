@@ -131,10 +131,21 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Accepted vulnerabilities
 
-None currently.
+### GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-fxqj-rqcc-2cmp, GHSA-r28c-9q8g-f849 — postcss@8.4.31 (high)
 
-All previously accepted vulnerabilities were cleared by dependency updates and
-have been removed from this document.
+- **Reason it can't be fixed now:** These four advisories together cover
+  `postcss <= 8.5.22`. Our direct dependency tree is already clear —
+  `@tailwindcss/postcss` resolves a patched PostCSS version. The flagged copy
+  remains vendored inside `next@15.5.26` at
+  `node_modules/next/node_modules/postcss`. We do not control that pin. The
+  only remediation offered by `npm audit` is upgrading to `next@16.3.6`, which
+  is currently deferred (see Deferred upgrades).
+- **Mitigation:** All four advisories require attacker-controlled CSS reaching
+  the compiler. This application compiles only first-party CSS during CI/build
+  and does not process user-supplied stylesheets.
+- **Revisit:** Re-test whenever a new 15.5.x patch is released or when the
+  deferred Next 16 upgrade is revisited. Remove this entry once Next ships a
+  patched bundled PostCSS version.
 
 <!-- Format:
 ### <advisory-id> — <package>@<version> (<severity>)
