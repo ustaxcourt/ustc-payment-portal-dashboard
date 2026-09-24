@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import FilterSelect from "@/components/ui/FilterSelect";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatLabel } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import MetadataSearch from "./MetadataSearch";
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TEXT_TONE } from "./statusStyles";
 import {
@@ -111,7 +112,7 @@ export default function TransactionFilters({
         <div>
           <h4 className="text-sm font-semibold">Payment Status</h4>
           <RadioGroup
-            className="mt-3"
+            className="mt-3 gap-4"
             value={filters.paymentStatus ?? "all"}
             onValueChange={(value) =>
               onFilterChange(
@@ -144,7 +145,12 @@ export default function TransactionFilters({
 
         <div className="border-t" />
 
-        <div className="flex flex-col gap-3 rounded-md bg-status-neutral-subtle p-3">
+        <div
+          className={cn(
+            "flex flex-col gap-3 rounded-md p-3",
+            filters.feeType && "bg-status-neutral-subtle",
+          )}
+        >
           <FilterSelect
             id={FEE_TYPE_FILTER.id}
             label={FEE_TYPE_FILTER.label}
@@ -168,7 +174,7 @@ export default function TransactionFilters({
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-5">
           {FILTER_CONFIG.map((filter) => (
             <FilterSelect
               key={filter.key}
