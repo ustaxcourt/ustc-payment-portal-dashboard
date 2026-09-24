@@ -27,21 +27,27 @@ const withAnyOption = (
   options: readonly { value: string; label: string }[],
 ) => [{ value: ANY_VALUE, label: anyLabel }, ...options];
 
+const FEE_TYPE_FILTER: {
+  key: FilterKey;
+  id: string;
+  label: string;
+  options: readonly { value: string; label: string }[];
+} = {
+  key: "feeType",
+  id: "filter-fee-type",
+  label: "Fee Type",
+  options: withAnyOption(
+    "Any",
+    FEE_TYPES.map((value) => ({ value, label: FEE_TYPE_LABEL[value] })),
+  ),
+};
+
 const FILTER_CONFIG: {
   key: FilterKey;
   id: string;
   label: string;
   options: readonly { value: string; label: string }[];
 }[] = [
-  {
-    key: "feeType",
-    id: "filter-fee-type",
-    label: "Fee Type",
-    options: withAnyOption(
-      "Any",
-      FEE_TYPES.map((value) => ({ value, label: FEE_TYPE_LABEL[value] })),
-    ),
-  },
   {
     key: "payType",
     id: "filter-pay-method",
@@ -83,80 +89,95 @@ export default function TransactionFilters({
   hasActiveFilters,
 }: Props) {
   return (
-    <aside className="flex w-56 shrink-0 flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Filters</h3>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={!hasActiveFilters}
-          onClick={onClear}
-        >
-          Clear All
-        </Button>
-      </div>
+    <aside className="flex w-56 shrink-0 flex-col">
+      <div aria-hidden className="h-7 w-full shrink-0 border-b bg-status-neutral-subtle" />
+      <div className="flex flex-1 flex-col gap-6 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Filters</h3>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={!hasActiveFilters}
+            onClick={onClear}
+          >
+            Clear All
+          </Button>
+        </div>
 
-      <div>
-        <h4 className="text-sm font-semibold">Payment Status</h4>
-        <RadioGroup
-          className="mt-3"
-          value={filters.paymentStatus ?? "all"}
-          onValueChange={(value) =>
-            onFilterChange(
-              "paymentStatus",
-              value === "all" ? null : (value as PaymentStatus),
-            )
-          }
-        >
-          {/* biome-ignore lint/a11y/noLabelWithoutControl: RadioGroupItem renders Base UI's hidden <input>, associated via its Labelable context — the linter can't see through the custom component. */}
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <RadioGroupItem value="all" />
-            <span className="font-semibold">
-              All Payment Status ({counts?.all ?? "—"})
-            </span>
-          </label>
-          {PAYMENT_STATUSES.map((status) => (
-            // biome-ignore lint/a11y/noLabelWithoutControl: see above.
-            <label
-              key={status}
-              className="flex cursor-pointer items-center gap-2 text-sm"
-            >
-              <RadioGroupItem value={status} />
-              <span className={PAYMENT_STATUS_TEXT_TONE[status]}>
-                {PAYMENT_STATUS_LABEL[status]} ({counts?.[status] ?? "—"})
+        <div>
+          <h4 className="text-sm font-semibold">Payment Status</h4>
+          <RadioGroup
+            className="mt-3"
+            value={filters.paymentStatus ?? "all"}
+            onValueChange={(value) =>
+              onFilterChange(
+                "paymentStatus",
+                value === "all" ? null : (value as PaymentStatus),
+              )
+            }
+          >
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: RadioGroupItem renders Base UI's hidden <input>, associated via its Labelable context — the linter can't see through the custom component. */}
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <RadioGroupItem value="all" />
+              <span className="font-semibold">
+                All Payment Status ({counts?.all ?? "—"})
               </span>
             </label>
-          ))}
-        </RadioGroup>
-      </div>
+            {PAYMENT_STATUSES.map((status) => (
+              // biome-ignore lint/a11y/noLabelWithoutControl: see above.
+              <label
+                key={status}
+                className="flex cursor-pointer items-center gap-2 text-sm"
+              >
+                <RadioGroupItem value={status} />
+                <span className={PAYMENT_STATUS_TEXT_TONE[status]}>
+                  {PAYMENT_STATUS_LABEL[status]} ({counts?.[status] ?? "—"})
+                </span>
+              </label>
+            ))}
+          </RadioGroup>
+        </div>
 
-      <div className="border-t" />
+        <div className="border-t" />
 
-      <div className="flex flex-col gap-3">
-        {FILTER_CONFIG.map((filter) => (
+        <div className="flex flex-col gap-3">
           <FilterSelect
-            key={filter.key}
-            id={filter.id}
-            label={filter.label}
-            value={filters[filter.key] ?? ANY_VALUE}
-            options={filter.options}
+            id={FEE_TYPE_FILTER.id}
+            label={FEE_TYPE_FILTER.label}
+            value={filters.feeType ?? ANY_VALUE}
+            options={FEE_TYPE_FILTER.options}
             onChange={(value) =>
-              onFilterChange(filter.key, value === ANY_VALUE ? null : value)
+              onFilterChange("feeType", value === ANY_VALUE ? null : value)
             }
           />
-        ))}
-      </div>
+          {filters.feeType ? (
+            <MetadataSearch
+              key={filters.feeType}
+              feeType={filters.feeType}
+              metadataKey={filters.metadataKey}
+              metadataValue={filters.metadataValue}
+              onSearch={onMetadataSearch}
+            />
+          ) : null}
+        </div>
 
-      <div className="flex flex-col gap-3">
-        <h4 className="text-sm font-semibold">Direct Lookup</h4>
-        <MetadataSearch
-          key={filters.feeType ?? "none"}
-          feeType={filters.feeType}
-          metadataKey={filters.metadataKey}
-          metadataValue={filters.metadataValue}
-          onSearch={onMetadataSearch}
-        />
+        <div className="border-t" />
+
+        <div className="flex flex-col gap-3">
+          {FILTER_CONFIG.map((filter) => (
+            <FilterSelect
+              key={filter.key}
+              id={filter.id}
+              label={filter.label}
+              value={filters[filter.key] ?? ANY_VALUE}
+              options={filter.options}
+              onChange={(value) =>
+                onFilterChange(filter.key, value === ANY_VALUE ? null : value)
+              }
+            />
+          ))}
+        </div>
       </div>
     </aside>
   );

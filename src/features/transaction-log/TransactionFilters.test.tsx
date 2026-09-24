@@ -155,9 +155,21 @@ describe("TransactionFilters", () => {
     });
   });
 
-  it("renders Direct Lookup", () => {
-    renderFilters();
+  describe("metadata search", () => {
+    it("is hidden until a Fee Type is selected", () => {
+      renderFilters();
 
-    expect(screen.getByText("Direct Lookup")).toBeInTheDocument();
+      expect(
+        screen.queryByText("Select a Fee Type to enable Search."),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Search" })).not.toBeInTheDocument();
+    });
+
+    it("appears below Fee Type once one is selected", () => {
+      renderFilters({ filters: { feeType: "PETITION_FILING_FEE" } });
+
+      expect(screen.getByText("Docket Number")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();
+    });
   });
 });

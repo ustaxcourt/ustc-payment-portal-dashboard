@@ -87,7 +87,7 @@ export default function TransactionLog() {
             </h2>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 lg:flex-row">
+          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
             <TransactionFilters
               filters={searchFilters}
               counts={counts}
@@ -107,7 +107,7 @@ export default function TransactionLog() {
                 headerTone="bg-status-neutral-subtle"
                 sorting={activeSorting}
                 onSortingChange={setParams}
-                wrapperClassName="min-h-0 flex-1 overflow-auto rounded-md border table-border"
+                wrapperClassName="min-h-0 flex-1 overflow-auto rounded-br-[calc(var(--radius-md)-2px)] border table-border"
                 emptyMessage={
                   isPending
                     ? "Loading transactions…"
@@ -116,14 +116,6 @@ export default function TransactionLog() {
                       : "No transactions to show."
                 }
               />
-              {data ? (
-                <p className="mt-2 text-right text-sm text-muted-foreground">
-                  {typeof data.total === "number" &&
-                  data.data.length < data.total
-                    ? `Showing ${data.data.length} of ${data.total} transactions — export to get the full set`
-                    : `${data.data.length} ${data.data.length === 1 ? "transaction" : "transactions"}`}
-                </p>
-              ) : null}
             </div>
           </div>
         </div>
