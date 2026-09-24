@@ -24,9 +24,9 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.2.4 — deferred (2026-08-04, re-confirmed 2026-09-17, reconfirmed)
+### @tanstack/react-table 8.21.3 → 9.2.4 — deferred (2026-08-04, re-confirmed 2026-09-23)
 
-- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.0.0`.
+- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.2.4`.
 - **Reason:** v9 is not backward compatible with the v8 API used throughout the
   transaction log. The application currently imports and relies on v8-specific
   APIs including `useReactTable` and `getCoreRowModel`. Attempting to resolve the
@@ -41,7 +41,7 @@ enough context that the next person doesn't have to re-derive the decision.
   of all table-related components, sorting behavior, and tests. Pin the package
   exactly to prevent automated dependency-update workflows from introducing v9.
 
-### hashicorp/aws provider 6.56.0 → 6.65.0 — deferred (2026-07-29, re-confirmed 2026-09-17)
+### hashicorp/aws provider 6.56.0 → 6.66.0 — deferred (2026-07-29, re-confirmed 2026-09-17)
 
 - **Current:** `6.56.0` (pinned exactly, not `~> 6.0`). **Available latest:** `6.65.0`.
 - **Reason:** 6.57.0 fails reading the GitHub OIDC provider. Every `terraform plan`
@@ -131,28 +131,10 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Accepted vulnerabilities
 
-### GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-fxqj-rqcc-2cmp, GHSA-r28c-9q8g-f849 — postcss@8.4.31 (high)
+None currently.
 
-- **Reason it can't be fixed now:** These four advisories together cover
-  `postcss <= 8.5.22`. Our direct dependency tree is already clear —
-  `@tailwindcss/postcss@4.3.3` resolves `postcss@8.5.28`, which is patched. The
-  flagged copy is `postcss@8.4.31`, vendored inside `next@15.5.25` at
-  `node_modules/next/node_modules/postcss`. We do not control that pin, and it is
-  still present on 15.5.25, the latest 15.x release. The only fix `npm audit`
-  offers is `next@16.3.5` — the deferred major (see
-  [Deferred upgrades](#deferred-upgrades)).
-- **Mitigation:** All four advisories require attacker-controlled CSS reaching
-  the compiler: XSS via an unescaped `</style>` in stringify output, and three
-  arbitrary-file-read paths via a malicious `sourceMappingURL` comment. This app
-  compiles only first-party CSS at build time, in CI — no user-supplied
-  stylesheet is ever parsed, at build time or at runtime. Exploitation would
-  require an attacker to already have commit access to this repo, at which point
-  the advisory is not the problem.
-- **Revisit:** Clears with the Next 16 upgrade, or sooner if Next.js ships a 15.5.x
-  patch bumping its bundled `postcss` past 8.5.22. Re-run `npm audit` on each
-  dependency-update cycle and drop this entry once the nested copy is patched.
-  This is the **only** remaining advisory in the tree; both counts `npm audit`
-  reports (1 high, 1 moderate) trace to this one nested package.
+All previously accepted vulnerabilities were cleared by dependency updates and
+have been removed from this document.
 
 <!-- Format:
 ### <advisory-id> — <package>@<version> (<severity>)
