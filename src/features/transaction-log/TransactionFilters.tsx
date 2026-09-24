@@ -95,7 +95,7 @@ export default function TransactionFilters({
         aria-hidden
         className="sticky top-0 z-10 h-7 w-full shrink-0 border-b bg-status-neutral-subtle"
       />
-      <div className="flex flex-1 flex-col gap-6 p-4">
+      <div className="flex flex-col gap-6 p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Filters</h3>
           <Button
@@ -141,13 +141,14 @@ export default function TransactionFilters({
               </label>
             ))}
           </RadioGroup>
-        </div>
+      </div>
 
         <div className="border-t" />
+        </div>
 
         <div
           className={cn(
-            "flex flex-col gap-3 rounded-md p-3",
+            "flex flex-col gap-3 p-3",
             filters.feeType && "bg-status-neutral-subtle",
           )}
         >
@@ -174,6 +175,7 @@ export default function TransactionFilters({
           ) : null}
         </div>
 
+        <div className="flex flex-1 flex-col gap-6 p-4">
         <div className="flex flex-col gap-5">
           {FILTER_CONFIG.map((filter) => (
             <FilterSelect
