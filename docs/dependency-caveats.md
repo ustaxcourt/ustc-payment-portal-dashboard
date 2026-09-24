@@ -65,9 +65,9 @@ enough context that the next person doesn't have to re-derive the decision.
   Pinned exactly in the meantime so `terraform init -upgrade` cannot silently
   reintroduce it.
 
-### next 15.5.25 → 16.3.5 — deferred (2026-07-27, re-confirmed 2026-09-17)
+### next 15.5.26 → 16.3.6 — deferred (2026-07-27, re-confirmed 2026-09-23)
 
-- **Current:** `15.5.25` (pinned exactly, not a range). **Available latest:** `16.3.5`.
+- **Current:** `15.5.26` (pinned exactly, not a range). **Available latest:** `16.3.6`.
 - **Reason:** AWS Amplify Hosting — the hosting target chosen for this app — documents
   Next.js support through version 15. Next 16 is not officially supported, and the
   Amplify Hosting issue tracker carries a concrete failure for it: _"Next.js 16.1 build
@@ -75,17 +75,16 @@ enough context that the next person doesn't have to re-derive the decision.
   Amplify bundler cannot handle,"_ plus open reports of WEB_COMPUTE builds stuck in
   provisioning and SSR compute hangs. We were exposed to that failure by default: Next 16
   makes Turbopack the default build engine, so a plain `next build` produced
-  `▲ Next.js 16.2.12 (Turbopack)` with no opt-in. On the 15.5.x line the build runs on
+  `▲ Next.js 16.x (Turbopack)` with no opt-in. On the 15.5.x line the build runs on
   webpack.
 - **Plan:** Upgrade when Amplify documents Next 16 support and the Turbopack bundler
-  issue is closed. Pinned exactly rather than `^15` so the major cannot drift back in
+  issue is closed. Pinned exactly rather than `^15` so the major cannot drift in
   through a lockfile refresh. **This pin is contingent on the Amplify hosting decision
   (ADR 0001 open question 3); if the team selects OpenNext instead, re-evaluate rather
   than assuming the pin is still required.**
 - **Note:** Staying on 15.x is not the same as staying still. This cycle moved
-  15.5.22 → 15.5.25 within the pin, which is what cleared the critical Next.js RCE
-  advisories (see below). Patch releases on the 15.5 line should be taken promptly
-  rather than waiting on the major.
+  15.5.25 → 15.5.26 within the pin. Patch releases on the 15.5 line should continue
+  to be taken promptly while Next 16 remains deferred.
 
 ### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17)
 
