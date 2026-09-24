@@ -141,7 +141,7 @@ export default function TransactionFilters({
 
         <div className="border-t" />
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 rounded-md bg-status-neutral-subtle p-3">
           <FilterSelect
             id={FEE_TYPE_FILTER.id}
             label={FEE_TYPE_FILTER.label}
