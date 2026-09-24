@@ -7,7 +7,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Table,
   TableBody,
@@ -69,10 +69,21 @@ export default function TransactionTable({
     },
   });
 
+  const leafColumns = table.getVisibleLeafColumns();
+  const totalSize = leafColumns.reduce((sum, col) => sum + col.getSize(), 0);
+
   return (
     <div data-testid="transaction-table-scroll" className={wrapperClassName}>
-      <Table className="text-xs">
+      <Table className="table-fixed text-xs">
         <TableCaption className="sr-only">{caption}</TableCaption>
+        <colgroup>
+          {leafColumns.map((col) => (
+            <col
+              key={col.id}
+              style={{ width: `${(col.getSize() / totalSize) * 100}%` }}
+            />
+          ))}
+        </colgroup>
         <TableHeader className={cn("sticky top-0 z-10", headerTone)}>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="hover:bg-transparent">
@@ -112,15 +123,16 @@ export default function TransactionTable({
             table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell, index) => (
-                  <TableCell
+                  <CopyableCell
                     key={cell.id}
+                    text={cell.column.columnDef.meta?.copyText?.(row.original)}
                     className={cn(
                       "px-1.5 py-1",
                       cellBorder(index, row.getVisibleCells().length),
                     )}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+                  </CopyableCell>
                 ))}
               </TableRow>
             ))
@@ -131,8 +143,54 @@ export default function TransactionTable({
   );
 }
 
+// Cells truncate to fit their column (see the colgroup above), so a click
+// copies — and a hover title shows — the untruncated value from the
+// column's `meta.copyText` rather than whatever's visibly clipped.
+function CopyableCell({
+  text,
+  className,
+  children,
+}: {
+  text?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  const handleClick = async () => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 1200);
+    } catch {
+      // Clipboard API unavailable (e.g. insecure context) — no-op.
+    }
+  };
+
+  return (
+    <TableCell
+      title={text}
+      onClick={handleClick}
+      className={cn(
+        text && "cursor-pointer",
+        copied && "bg-primary/10",
+        className,
+      )}
+    >
+      {children}
+    </TableCell>
+  );
+}
+
 const cellBorder = (index: number, total: number) =>
-  index === total - 1 ? "whitespace-nowrap" : "whitespace-nowrap border-r";
+  index === total - 1 ? undefined : "border-r";
 
 const ariaSort = (
   sorted: false | "asc" | "desc",

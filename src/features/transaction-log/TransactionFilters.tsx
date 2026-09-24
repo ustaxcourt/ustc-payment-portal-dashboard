@@ -155,17 +155,18 @@ export default function TransactionFilters({
             }
           />
           {filters.feeType ? (
-            <MetadataSearch
-              key={filters.feeType}
-              feeType={filters.feeType}
-              metadataKey={filters.metadataKey}
-              metadataValue={filters.metadataValue}
-              onSearch={onMetadataSearch}
-            />
+            <>
+              <div className="border-t border-status-neutral" />
+              <MetadataSearch
+                key={filters.feeType}
+                feeType={filters.feeType}
+                metadataKey={filters.metadataKey}
+                metadataValue={filters.metadataValue}
+                onSearch={onMetadataSearch}
+              />
+            </>
           ) : null}
         </div>
-
-        <div className="border-t" />
 
         <div className="flex flex-col gap-3">
           {FILTER_CONFIG.map((filter) => (

@@ -26,17 +26,15 @@ export const COLUMN_LABEL: Record<TransactionSortField, string> = {
   transactionReferenceId: "Reference ID",
 };
 
-// Free-text fields (failure reason, client name, reference id) have no
-// bounded length — without a cap, one long value stretches the whole
-// column (and the table) far past the viewport instead of just that cell.
-const truncated = (text: string, maxWidthClass: string, className?: string) => (
-  <span
-    className={`block ${maxWidthClass} truncate ${className ?? ""}`}
-    title={text}
-  >
-    {text}
-  </span>
-);
+// The table's columns share the available width (see TransactionTable's
+// colgroup) instead of growing to fit content, so every cell truncates with
+// a hover tooltip + click-to-copy instead — see `meta.copyText` below,
+// which supplies the untruncated value for both.
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData, TValue> {
+    copyText?: (row: TData) => string;
+  }
+}
 
 const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
   <SortableHeader
@@ -51,6 +49,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     accessorKey: "createdAt",
     header: sortable,
     sortDescFirst: true,
+    size: 115,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.createdAt);
       return (
@@ -60,11 +59,18 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
         </div>
       );
     },
+    meta: {
+      copyText: (row) => {
+        const stamp = formatCourtStamp(row.createdAt);
+        return `${stamp.date} ${stamp.time}`;
+      },
+    },
   },
   {
     accessorKey: "lastUpdatedAt",
     header: sortable,
     sortDescFirst: true,
+    size: 115,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.lastUpdatedAt);
       return (
@@ -74,28 +80,41 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
         </div>
       );
     },
+    meta: {
+      copyText: (row) => {
+        const stamp = formatCourtStamp(row.lastUpdatedAt);
+        return `${stamp.date} ${stamp.time}`;
+      },
+    },
   },
   {
     accessorKey: "feeName",
     header: sortable,
+    size: 130,
+    meta: { copyText: (row) => row.feeName },
   },
   {
     accessorKey: "transactionAmount",
     header: sortable,
+    size: 80,
     cell: ({ row }) => (
       <span className="tabular-nums">
         {formatCurrency(row.original.transactionAmount)}
       </span>
     ),
+    meta: { copyText: (row) => formatCurrency(row.transactionAmount) },
   },
   {
     accessorKey: "paymentMethod",
     header: sortable,
+    size: 100,
     cell: ({ row }) => formatLabel(row.original.paymentMethod),
+    meta: { copyText: (row) => formatLabel(row.paymentMethod) },
   },
   {
     accessorKey: "paymentStatus",
     header: sortable,
+    size: 85,
     cell: ({ row }) => {
       const status = row.original.paymentStatus;
       return (
@@ -104,36 +123,38 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
         </Badge>
       );
     },
+    meta: { copyText: (row) => PAYMENT_STATUS_LABEL[row.paymentStatus] },
   },
   {
     accessorKey: "transactionStatus",
     header: sortable,
+    size: 100,
     cell: ({ row }) => formatLabel(row.original.transactionStatus),
+    meta: { copyText: (row) => formatLabel(row.transactionStatus) },
   },
   {
     accessorKey: "clientName",
     header: sortable,
-    cell: ({ row }) => truncated(row.original.clientName, "max-w-40"),
+    size: 120,
+    meta: { copyText: (row) => row.clientName },
   },
   {
     accessorKey: "transactionReferenceId",
     header: sortable,
-    cell: ({ row }) =>
-      truncated(
-        row.original.transactionReferenceId,
-        "max-w-40",
-        "font-mono",
-      ),
+    size: 130,
+    cell: ({ row }) => (
+      <span className="font-mono">{row.original.transactionReferenceId}</span>
+    ),
+    meta: { copyText: (row) => row.transactionReferenceId },
   },
 ];
 
 const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
   accessorKey: "returnDetail",
   header: sortable,
-  cell: ({ row }) =>
-    row.original.returnDetail
-      ? truncated(row.original.returnDetail, "max-w-56")
-      : "—",
+  size: 150,
+  cell: ({ row }) => row.original.returnDetail ?? "—",
+  meta: { copyText: (row) => row.returnDetail ?? "—" },
 };
 
 const COLUMNS_WITH_FAILURE_REASON: ColumnDef<TransactionLogEntry>[] = [
@@ -158,5 +179,7 @@ export const metadataColumns = (
     id: `metadata.${key}`,
     header: METADATA_KEY_LABEL[key],
     enableSorting: false,
+    size: 110,
+    meta: { copyText: (row) => row.metadata?.[key] ?? "—" },
     cell: ({ row }) => row.original.metadata?.[key] ?? "—",
   }));
