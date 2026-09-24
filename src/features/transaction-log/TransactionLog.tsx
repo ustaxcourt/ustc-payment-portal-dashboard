@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import ErrorPanel from "@/components/ui/ErrorPanel";
+import { IconButton } from "@/components/ui/icon-button";
 import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
@@ -62,6 +63,18 @@ export default function TransactionLog() {
     ? PAYMENT_STATUS_LABEL[searchFilters.paymentStatus]
     : "All";
 
+  const copyShareLink = () => {
+    // TODO: copy a shareable link for the current filters/timeframe.
+  };
+
+  const downloadReport = () => {
+    // TODO: download the transaction log as a report.
+  };
+
+  const selectColumns = () => {
+    // TODO: let the user choose which columns are visible.
+  };
+
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col">
       <p aria-live="polite" className="sr-only">
@@ -85,6 +98,23 @@ export default function TransactionLog() {
               Transaction Log
               {typeof data?.total === "number" ? ` (${data.total})` : ""}
             </h2>
+            <div className="flex items-center gap-2">
+              <IconButton
+                icon="link"
+                label="Copy share link"
+                onClick={copyShareLink}
+              />
+              <IconButton
+                icon="download"
+                label="Download report"
+                onClick={downloadReport}
+              />
+              <IconButton
+                icon="columns"
+                label="Select columns"
+                onClick={selectColumns}
+              />
+            </div>
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
