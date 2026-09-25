@@ -67,7 +67,7 @@ describe("buildWorkbookInWorker", () => {
     controller.abort();
 
     await expect(
-      buildWorkbookInWorker([], "all", controller.signal),
+      buildWorkbookInWorker([], controller.signal),
     ).rejects.toMatchObject({ name: "AbortError" });
   });
 });

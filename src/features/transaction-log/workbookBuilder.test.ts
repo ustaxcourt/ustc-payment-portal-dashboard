@@ -19,7 +19,7 @@ const row = (id: number): TransactionLogEntry => ({
 
 describe("buildWorkbook", () => {
   it("produces a readable workbook with typed cells and table furniture", async () => {
-    const buffer = await buildWorkbook([row(1), row(2)], "success");
+    const buffer = await buildWorkbook([row(1), row(2)]);
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
@@ -28,9 +28,10 @@ describe("buildWorkbook", () => {
 
     expect(sheet.rowCount).toBe(3);
     expect(sheet.getCell("A1").value).toBe("Created date (ET)");
-    // Success tab: no Failure reason, 11 columns ending in Reference ID.
-    expect(sheet.getCell("K1").value).toBe("Reference ID");
-    expect(sheet.getCell("L1").value).toBeNull();
+    // Failure reason always appears, right after Payment status.
+    expect(sheet.getCell("I1").value).toBe("Failure reason");
+    expect(sheet.getCell("L1").value).toBe("Reference ID");
+    expect(sheet.getCell("M1").value).toBeNull();
 
     const amount = sheet.getRow(2).getCell(6);
     expect(amount.value).toBe(60.5);
@@ -42,7 +43,7 @@ describe("buildWorkbook", () => {
   });
 
   it("returns a transferable ArrayBuffer", async () => {
-    const buffer = await buildWorkbook([row(1)], "all");
+    const buffer = await buildWorkbook([row(1)]);
     expect(buffer).toBeInstanceOf(ArrayBuffer);
     expect(buffer.byteLength).toBeGreaterThan(0);
   });

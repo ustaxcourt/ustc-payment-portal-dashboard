@@ -21,96 +21,80 @@ const row: TransactionLogEntry = {
   lastUpdatedAt: "2026-08-18T03:59:59.000Z",
 };
 
-const headers = (tab: Parameters<typeof exportColumns>[0]) =>
-  exportColumns(tab).map((column) => column.header);
+const headers = () => exportColumns().map((column) => column.header);
 
-const cell = (tab: "all" | "failed", header: string) => {
-  const column = exportColumns(tab).find((c) => c.header === header);
+const cell = (header: string) => {
+  const column = exportColumns().find((c) => c.header === header);
   if (!column) throw new Error(`No column ${header}`);
   return column.value(row);
 };
 
 describe("exportColumns", () => {
-  it("includes Failure reason only on the All and Failed tabs", () => {
-    expect(headers("all")).toContain("Failure reason");
-    expect(headers("failed")).toContain("Failure reason");
-    expect(headers("success")).not.toContain("Failure reason");
-    expect(headers("pending")).not.toContain("Failure reason");
-    expect(headers("all")).toHaveLength(12);
-    expect(headers("success")).toHaveLength(11);
+  it("always includes Failure reason", () => {
+    expect(headers()).toContain("Failure reason");
+    expect(headers()).toHaveLength(12);
   });
 
   it("tracks the table's column order, with timestamps split in place", () => {
-    // The table always shows Failure reason now; the export still omits it
-    // outside the All/Failed tabs, so drop it from the expected order there.
     const tableOrder = getColumns().map((c) =>
       "accessorKey" in c ? c.accessorKey : c.id,
     );
 
-    for (const tab of ["all", "success", "failed", "pending"] as const) {
-      // Collapse the split date/time pairs back to the display column name.
-      const collapsed = headers(tab)
-        .map((h) =>
-          h
-            .replace(/ (date|time) \(ET\)$/, "")
-            .replace(/^Created$/, "createdAt")
-            .replace(/^Last updated$/, "lastUpdatedAt"),
-        )
-        .filter((h, i, all) => all.indexOf(h) === i);
+    // Collapse the split date/time pairs back to the display column name.
+    const collapsed = headers()
+      .map((h) =>
+        h
+          .replace(/ (date|time) \(ET\)$/, "")
+          .replace(/^Created$/, "createdAt")
+          .replace(/^Last updated$/, "lastUpdatedAt"),
+      )
+      .filter((h, i, all) => all.indexOf(h) === i);
 
-      const exportOrder = collapsed.map(
-        (h) =>
-          ({
-            "Fee type": "feeName",
-            Amount: "transactionAmount",
-            "Payment method": "paymentMethod",
-            "Payment status": "paymentStatus",
-            "Failure reason": "returnDetail",
-            "Transaction status": "transactionStatus",
-            Client: "clientName",
-            "Reference ID": "transactionReferenceId",
-          })[h] ?? h,
-      );
+    const exportOrder = collapsed.map(
+      (h) =>
+        ({
+          "Fee type": "feeName",
+          Amount: "transactionAmount",
+          "Payment method": "paymentMethod",
+          "Payment status": "paymentStatus",
+          "Failure reason": "returnDetail",
+          "Transaction status": "transactionStatus",
+          Client: "clientName",
+          "Reference ID": "transactionReferenceId",
+        })[h] ?? h,
+    );
 
-      const expectedOrder =
-        tab === "all" || tab === "failed"
-          ? tableOrder
-          : tableOrder.filter((key) => key !== "returnDetail");
-
-      expect(exportOrder).toEqual(expectedOrder);
-    }
+    expect(exportOrder).toEqual(tableOrder);
   });
 
   it("converts timestamps to Court-time date and time cells", () => {
-    const date = cell("all", "Created date (ET)");
+    const date = cell("Created date (ET)");
     expect(date).toBeInstanceOf(Date);
     expect((date as Date).toISOString()).toBe("2026-08-17T00:00:00.000Z");
 
     // 19:30:45 ET as a fraction of a day.
-    const time = cell("all", "Created time (ET)") as number;
+    const time = cell("Created time (ET)") as number;
     expect(time).toBeCloseTo((19 * 3600 + 30 * 60 + 45) / 86400, 10);
 
     // 03:59 UTC on Aug 18 is still Aug 17 in Court time.
-    const updated = cell("all", "Last updated date (ET)");
+    const updated = cell("Last updated date (ET)");
     expect((updated as Date).toISOString()).toBe("2026-08-17T00:00:00.000Z");
   });
 
   it("keeps Amount a raw number and labels human-readable", () => {
-    expect(cell("all", "Amount")).toBe(1234.56);
-    expect(cell("all", "Payment method")).toBe("Credit/Debit Card");
-    expect(cell("all", "Payment status")).toBe("Failed");
-    expect(cell("all", "Transaction status")).toBe("Pending settlement");
+    expect(cell("Amount")).toBe(1234.56);
+    expect(cell("Payment method")).toBe("Credit/Debit Card");
+    expect(cell("Payment status")).toBe("Failed");
+    expect(cell("Transaction status")).toBe("Pending settlement");
   });
 
   it("writes empty cells, never placeholder dashes", () => {
     const bare = { ...row, paymentMethod: null, returnDetail: null };
-    for (const column of exportColumns("all")) {
+    for (const column of exportColumns()) {
       const value = column.value(bare);
       expect(value).not.toBe("—");
     }
-    const failure = exportColumns("all").find(
-      (c) => c.header === "Failure reason",
-    );
+    const failure = exportColumns().find((c) => c.header === "Failure reason");
     expect(failure?.value(bare)).toBe("");
   });
 });

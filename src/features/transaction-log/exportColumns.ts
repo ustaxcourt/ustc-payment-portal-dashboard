@@ -1,6 +1,6 @@
 import { formatCourtStamp, formatLabel } from "@/lib/format";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
-import type { TransactionLogEntry, TransactionTab } from "./types";
+import type { TransactionLogEntry } from "./types";
 
 export type ExportCell = string | number | Date;
 
@@ -98,9 +98,9 @@ const FAILURE_REASON: ExportColumn = {
   value: (row) => row.returnDetail ?? "",
 };
 
-/** Matches the table: Failure reason appears after Payment status on the
- *  All and Failed tabs only. */
-export const exportColumns = (tab: TransactionTab): ExportColumn[] =>
-  tab === "failed" || tab === "all"
-    ? [...BASE_COLUMNS.slice(0, 8), FAILURE_REASON, ...BASE_COLUMNS.slice(8)]
-    : BASE_COLUMNS;
+/** Matches the table: Failure reason always appears right after Payment status. */
+export const exportColumns = (): ExportColumn[] => [
+  ...BASE_COLUMNS.slice(0, 8),
+  FAILURE_REASON,
+  ...BASE_COLUMNS.slice(8),
+];
