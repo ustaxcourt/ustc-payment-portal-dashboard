@@ -8,6 +8,7 @@ import TimeframeBar from "@/features/transaction-log/TimeframeBar";
 import TransactionLog from "@/features/transaction-log/TransactionLog";
 import { getSessionAuthOptions, hasValidDashboardSession } from "@/lib/auth";
 import { loginUrlReturningTo } from "@/lib/callbackUrl";
+import Image from "next/image";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -39,26 +40,42 @@ export default async function Home({
 
   return (
     <>
-      <div className="border-b-2 border-foreground">
-        <header className="flex flex-wrap items-start justify-between gap-4 px-6 py-4 sm:px-8">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Payment Portal
-            </h1>
-            <p className="text-base font-semibold text-primary">
-              Case Services &amp; Finance Dashboard
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-3">
-              <p className="text-sm text-muted-foreground">
-                {session.user?.email}
-              </p>
-              <LogoutButton />
+      <div className="border-b bg-slate-100">
+        <header className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4A556F]">
+            <Image
+              src="/ustc-seal.png"
+              alt="United States Tax Court seal"
+              width={28}
+              height={28}
+              unoptimized
+            />
             </div>
-            <RevenueTotals />
+            <div className="flex flex-col gap-0.5">
+              <h1 className="text-lg font-bold leading-none text-foreground">
+                Case Services &amp; Finance Dashboard
+              </h1>
+              <p className="text-sm leading-none text-muted-foreground">
+                Financial operations overview
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              {session.user?.email}
+            </span>
+
+            <div className="h-6 w-px bg-border" />
+
+            <LogoutButton />
           </div>
         </header>
+      </div>
+
+      <div className="mt-6 mb-6">
+        <RevenueTotals />
       </div>
 
       <Suspense fallback={<div className="bg-muted px-6 py-4 sm:px-8" />}>
