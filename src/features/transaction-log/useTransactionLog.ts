@@ -60,7 +60,6 @@ export const useTransactionLog = (
   range: AppliedDateRange,
   sorting: TransactionSorting,
   filters?: TransactionSearchFilters,
-  enabled = true,
 ) => {
   const metadata = pairedMetadata(filters);
 
@@ -80,7 +79,6 @@ export const useTransactionLog = (
     ],
     queryFn: ({ signal }) =>
       fetchTransactionLogPage(range, sorting, filters, 1, PAGE_SIZE, signal),
-    placeholderData: (previous) => (enabled ? previous : undefined),
-    enabled,
+    placeholderData: (previous) => previous,
   });
 };

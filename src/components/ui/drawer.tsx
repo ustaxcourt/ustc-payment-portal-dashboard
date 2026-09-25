@@ -15,7 +15,8 @@ function DrawerPortal(props: DrawerPrimitive.Portal.Props) {
 // Positioned `fixed` with no top/left/width/height baked in — callers that
 // need the drawer scoped to a specific on-screen region (rather than the
 // full viewport) pass those via `style`, computed from that region's actual
-// intersection with the viewport. See TransactionLog.tsx's `useDrawerRect`.
+// intersection with the viewport. See the `drawerRect` state in
+// TransactionLog.tsx.
 function DrawerBackdrop({
   className,
   ...props

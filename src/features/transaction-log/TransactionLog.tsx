@@ -126,6 +126,19 @@ export default function TransactionLog() {
     ? PAYMENT_STATUS_LABEL[searchFilters.paymentStatus]
     : "All";
 
+  const backdropStyle = drawerRect
+    ? {
+        top: drawerRect.top,
+        left: drawerRect.left,
+        width: drawerRect.width,
+        height: drawerRect.height,
+      }
+    : undefined;
+
+  const viewportStyle = drawerRect
+    ? { top: drawerRect.top, left: drawerRect.left, height: drawerRect.height }
+    : undefined;
+
   const filtersPanel = (
     <TransactionFilters
       filters={searchFilters}
@@ -213,29 +226,8 @@ export default function TransactionLog() {
             {isNarrow ? (
               <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
                 <DrawerPortal>
-                  <DrawerBackdrop
-                    style={
-                      drawerRect
-                        ? {
-                            top: drawerRect.top,
-                            left: drawerRect.left,
-                            width: drawerRect.width,
-                            height: drawerRect.height,
-                          }
-                        : undefined
-                    }
-                  />
-                  <DrawerViewport
-                    style={
-                      drawerRect
-                        ? {
-                            top: drawerRect.top,
-                            left: drawerRect.left,
-                            height: drawerRect.height,
-                          }
-                        : undefined
-                    }
-                  >
+                  <DrawerBackdrop style={backdropStyle} />
+                  <DrawerViewport style={viewportStyle}>
                     <DrawerPopup aria-label="Filters">{filtersPanel}</DrawerPopup>
                   </DrawerViewport>
                 </DrawerPortal>

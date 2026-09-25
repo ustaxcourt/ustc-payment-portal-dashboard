@@ -12,8 +12,8 @@ import {
   FEE_TYPES,
   type MetadataKey,
   PAY_TYPES,
-  type PaymentStatus,
   PAYMENT_STATUSES,
+  type PaymentStatus,
   TRANSACTION_STATUSES,
   type TransactionCounts,
   type TransactionSearchFilters,
@@ -135,41 +135,41 @@ export default function TransactionFilters({
               </label>
             ))}
           </RadioGroup>
-      </div>
+        </div>
 
         <div className="border-t" />
-        </div>
+      </div>
 
-        <div
-          className={cn(
-            "flex flex-col gap-3 p-3",
-            filters.feeType && "bg-status-neutral-subtle",
-          )}
-        >
-          <FilterSelect
-            id={FEE_TYPE_FILTER.id}
-            label={FEE_TYPE_FILTER.label}
-            value={filters.feeType ?? ANY_VALUE}
-            options={FEE_TYPE_FILTER.options}
-            onChange={(value) =>
-              onFilterChange("feeType", value === ANY_VALUE ? null : value)
-            }
-          />
-          {filters.feeType ? (
-            <>
-              <div className="border-t border-status-neutral" />
-              <MetadataSearch
-                key={filters.feeType}
-                feeType={filters.feeType}
-                metadataKey={filters.metadataKey}
-                metadataValue={filters.metadataValue}
-                onSearch={onMetadataSearch}
-              />
-            </>
-          ) : null}
-        </div>
+      <div
+        className={cn(
+          "flex flex-col gap-3 px-4 py-3",
+          filters.feeType && "bg-status-neutral-subtle",
+        )}
+      >
+        <FilterSelect
+          id={FEE_TYPE_FILTER.id}
+          label={FEE_TYPE_FILTER.label}
+          value={filters.feeType ?? ANY_VALUE}
+          options={FEE_TYPE_FILTER.options}
+          onChange={(value) =>
+            onFilterChange("feeType", value === ANY_VALUE ? null : value)
+          }
+        />
+        {filters.feeType ? (
+          <>
+            <div className="border-t border-status-neutral" />
+            <MetadataSearch
+              key={filters.feeType}
+              feeType={filters.feeType}
+              metadataKey={filters.metadataKey}
+              metadataValue={filters.metadataValue}
+              onSearch={onMetadataSearch}
+            />
+          </>
+        ) : null}
+      </div>
 
-        <div className="flex flex-1 flex-col gap-6 p-4">
+      <div className="flex flex-1 flex-col gap-6 p-4">
         <div className="flex flex-col gap-5">
           {FILTER_CONFIG.map((filter) => (
             <FilterSelect

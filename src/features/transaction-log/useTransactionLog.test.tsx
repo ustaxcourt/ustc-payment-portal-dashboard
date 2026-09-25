@@ -123,7 +123,7 @@ describe("useTransactionLog", () => {
     };
 
     const { result } = renderHook(
-      () => useTransactionLog(range, sorting, filters, true),
+      () => useTransactionLog(range, sorting, filters),
       { wrapper },
     );
 
@@ -181,12 +181,7 @@ describe("useTransactionLog", () => {
 
     const { result, rerender } = renderHook(
       ({ metadataKey, metadataValue }) =>
-        useTransactionLog(
-          range,
-          sorting,
-          { ...base, metadataKey, metadataValue },
-          true,
-        ),
+        useTransactionLog(range, sorting, { ...base, metadataKey, metadataValue }),
       {
         wrapper,
         initialProps: {
