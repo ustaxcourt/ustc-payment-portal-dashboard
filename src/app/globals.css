@@ -101,13 +101,13 @@
   --status-neutral-foreground: oklch(20.8% 0.042 265.755);
   --status-neutral-subtle: oklch(96.8% 0.007 247.896);
   --status-success: oklch(92.5% 0.084 155.995);
-  --status-success-foreground: oklch(0.532 0.149 132.4);
+  --status-success-foreground: oklch(0.507 0.149 132.4);
   --status-success-subtle: oklch(98.2% 0.018 155.826);
   --status-failed: oklch(88.5% 0.062 18.334);
-  --status-failed-foreground:oklch(0.583 0.239 28.5);
+  --status-failed-foreground: oklch(0.468 0.239 28.5);
   --status-failed-subtle: oklch(97.1% 0.013 17.38);
   --status-pending: oklch(92.4% 0.12 95.746);
-  --status-pending-foreground: oklch(0.555 0.127 62.5);
+  --status-pending-foreground: oklch(0.519 0.127 62.5);
   --status-pending-subtle: oklch(98.7% 0.022 95.277);
   --totals-header: oklch(93.2% 0.032 255.585);
   --table-border: oklch(0.46 0 0);
