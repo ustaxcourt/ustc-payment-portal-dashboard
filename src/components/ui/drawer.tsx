@@ -12,6 +12,10 @@ function DrawerPortal(props: DrawerPrimitive.Portal.Props) {
   return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />
 }
 
+// Positioned `fixed` with no top/left/width/height baked in — callers that
+// need the drawer scoped to a specific on-screen region (rather than the
+// full viewport) pass those via `style`, computed from that region's actual
+// intersection with the viewport. See TransactionLog.tsx's `useDrawerRect`.
 function DrawerBackdrop({
   className,
   ...props
@@ -20,7 +24,7 @@ function DrawerBackdrop({
     <DrawerPrimitive.Backdrop
       data-slot="drawer-backdrop"
       className={cn(
-        "absolute top-0 left-0 z-40 h-dvh w-full bg-black/40 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0",
+        "fixed z-40 bg-black/40 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0",
         className
       )}
       {...props}
@@ -52,7 +56,7 @@ function DrawerViewport({
     <DrawerPrimitive.Viewport
       data-slot="drawer-viewport"
       className={cn(
-        "absolute top-0 left-0 z-50 flex h-dvh w-56 flex-col transition-transform duration-200 data-starting-style:-translate-x-full data-ending-style:-translate-x-full",
+        "fixed z-50 flex w-56 flex-col transition-transform duration-200 data-starting-style:-translate-x-full data-ending-style:-translate-x-full",
         className
       )}
       {...props}

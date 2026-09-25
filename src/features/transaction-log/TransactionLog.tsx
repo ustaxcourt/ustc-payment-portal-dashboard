@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Drawer,
   DrawerBackdrop,
@@ -10,7 +16,6 @@ import {
 } from "@/components/ui/drawer";
 import ErrorPanel from "@/components/ui/ErrorPanel";
 import { IconButton } from "@/components/ui/icon-button";
-import { cn } from "@/lib/utils";
 import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
@@ -34,12 +39,22 @@ export default function TransactionLog() {
     useTransactionLog(appliedRange, activeSorting, searchFilters);
 
   // Below `lg` the filters live in a Drawer overlay instead of the static
-  // sidebar, so they never compete with the table for vertical space. The
-  // drawer is portaled into filtersScopeRef so it covers just the filters
-  // + table region, not the whole page.
+  // sidebar, so they never compete with the table for vertical space.
   const [isNarrow, setIsNarrow] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
+
+  // The drawer is positioned `fixed` (see drawer.tsx) so it always lands
+  // fully on-screen and can scroll, regardless of where filtersScopeRef sits
+  // in the (possibly very tall) page. This computes the on-screen rect to
+  // pin it to — the container's intersection with the viewport — so it
+  // visually reads as scoped to the table card rather than the full window.
+  const [drawerRect, setDrawerRect] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   useEffect(() => {
     const query = window.matchMedia("(max-width: 1023px)");
@@ -52,6 +67,26 @@ export default function TransactionLog() {
   useEffect(() => {
     if (!isNarrow) setFiltersOpen(false);
   }, [isNarrow]);
+
+  useLayoutEffect(() => {
+    if (!isNarrow || !filtersOpen) return;
+    const updateRect = () => {
+      const el = filtersScopeRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const top = Math.max(rect.top, 0);
+      const bottom = Math.min(rect.bottom, window.innerHeight);
+      setDrawerRect({
+        top,
+        left: rect.left,
+        width: rect.width,
+        height: Math.max(bottom - top, 0),
+      });
+    };
+    updateRect();
+    window.addEventListener("resize", updateRect);
+    return () => window.removeEventListener("resize", updateRect);
+  }, [isNarrow, filtersOpen]);
 
   // Counts span the whole timeframe; retained across refetches (scoped to
   // their range) so the sidebar's badges don't blank out while filtering.
@@ -173,16 +208,34 @@ export default function TransactionLog() {
 
           <div
             ref={filtersScopeRef}
-            className={cn(
-              "flex flex-1 flex-col lg:min-h-0 lg:flex-row",
-              isNarrow && "relative overflow-hidden",
-            )}
+            className="flex flex-1 flex-col lg:min-h-0 lg:flex-row"
           >
             {isNarrow ? (
               <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
-                <DrawerPortal container={filtersScopeRef}>
-                  <DrawerBackdrop />
-                  <DrawerViewport>
+                <DrawerPortal>
+                  <DrawerBackdrop
+                    style={
+                      drawerRect
+                        ? {
+                            top: drawerRect.top,
+                            left: drawerRect.left,
+                            width: drawerRect.width,
+                            height: drawerRect.height,
+                          }
+                        : undefined
+                    }
+                  />
+                  <DrawerViewport
+                    style={
+                      drawerRect
+                        ? {
+                            top: drawerRect.top,
+                            left: drawerRect.left,
+                            height: drawerRect.height,
+                          }
+                        : undefined
+                    }
+                  >
                     <DrawerPopup aria-label="Filters">{filtersPanel}</DrawerPopup>
                   </DrawerViewport>
                 </DrawerPortal>
