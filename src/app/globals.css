@@ -53,6 +53,7 @@
   --color-status-pending-subtle: var(--status-pending-subtle);
   --color-totals-header: var(--totals-header);
   --color-table-border: var(--table-border);
+  --color-table-header: var(--table-header);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -111,6 +112,7 @@
   --status-pending-subtle: oklch(98.7% 0.022 95.277);
   --totals-header: oklch(93.2% 0.032 255.585);
   --table-border: oklch(0.46 0 0);
+  --table-header: oklch(98.4% 0.003 247.858);
 }
 
 @layer base {

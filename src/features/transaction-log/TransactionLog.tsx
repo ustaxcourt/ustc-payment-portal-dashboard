@@ -249,7 +249,7 @@ export default function TransactionLog() {
                 rows={data?.data ?? []}
                 columns={columns}
                 caption={`Transaction log, ${statusLabel}`}
-                headerTone="bg-status-neutral-subtle"
+                headerTone="bg-table-header"
                 sorting={activeSorting}
                 onSortingChange={setParams}
                 wrapperClassName="flex-1 overflow-auto rounded-br-[calc(var(--radius-md)-2px)] border table-border lg:min-h-0"

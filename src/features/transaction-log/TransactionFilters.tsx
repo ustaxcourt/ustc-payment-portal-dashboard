@@ -91,10 +91,6 @@ export default function TransactionFilters({
 }: Props) {
   return (
     <aside className="flex w-56 shrink-0 flex-col overflow-y-auto lg:min-h-0">
-      <div
-        aria-hidden
-        className="sticky top-0 z-10 h-7 w-full shrink-0 border-b bg-status-neutral-subtle"
-      />
       <div className="flex flex-col gap-6 p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Filters</h3>
