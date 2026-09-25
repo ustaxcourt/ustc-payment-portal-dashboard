@@ -20,7 +20,9 @@ test.describe("dashboard accessibility", () => {
       route,
       ready: async () => {
         await expect(
-          page.getByRole("heading", { name: "Payment Portal" }),
+          page.getByRole("heading", {
+            name: "Case Services & Finance Dashboard",
+          }),
         ).toBeVisible();
 
         await expect(
@@ -55,7 +57,9 @@ test.describe("dashboard accessibility", () => {
       route,
       ready: async () => {
         await expect(
-          page.getByRole("heading", { name: "Payment Portal" }),
+          page.getByRole("heading", {
+            name: "Case Services & Finance Dashboard",
+          }),
         ).toBeVisible();
 
         await expect(
