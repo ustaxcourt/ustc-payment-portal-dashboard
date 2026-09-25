@@ -21,9 +21,8 @@ Until now, developers added these by hand through a manual workflow in
 `isd-cloud-payment-portal`, and nothing removed them. By September 2026 the app
 held 16 URIs for previews that no longer existed, plus several placeholders.
 
-That workflow signs in as a service principal with `Application.ReadWrite.All`,
-which can edit every app registration in the tenant, so it was not a suitable
-identity to trigger from this repo on every pull request.
+That workflow signs in with a broadly privileged identity, so it was not
+suitable to trigger from this repo on every pull request.
 
 ## Decision
 
@@ -74,8 +73,8 @@ they let any matching host receive authorization codes.
 need an identity that can write the app from Terraform runs and would put the
 whole registration, not just preview URIs, under per-PR churn.
 
-**Reuse the isd repo's service principal.** Works, but grants tenant-wide app
-registration write to a job that runs on every pull request.
+**Reuse the isd repo's service principal.** Works, but grants far more access
+than editing one app's redirect URIs to a job that runs on every pull request.
 
 **A single redirect URI plus a proxy** (Auth.js v5 `redirectProxyUrl`).
 Removes per-preview URIs entirely, but requires migrating off next-auth v4.
