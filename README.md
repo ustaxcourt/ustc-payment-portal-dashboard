@@ -121,6 +121,53 @@ How it works, and where the pieces live (all under
   table, so the file always matches the on-screen column set (including the
   tab-dependent Failure reason column).
 
+## Entra redirect URIs
+
+The **Entra Redirect URIs** workflow owns the Payment Portal Dashboard Dev app
+registration's redirect URI list. It keeps exactly:
+
+- the permanent URIs in `STATIC_REDIRECT_URIS`
+  (`scripts/entra-redirect-uris/plan.ts`): local development and the dev
+  domain, and
+- one sign-in callback per `PAY-*` or `feature/*` branch, matching its Amplify
+  preview.
+
+Push a branch and sign-in works on its preview within about 15 minutes
+(immediately if you open a PR); delete or merge the branch and the callback is
+removed. To add a permanent URI, add it to `STATIC_REDIRECT_URIS` in a PR.
+Anything else, including URIs added in the Azure portal, is removed on the next
+run. See ADR 0002 for why it works this way.
+
+The workflow runs `scripts/entra-redirect-uris/sync.sh`, which compares that
+list with the app's redirect URIs, reports the difference on the run's summary
+page, and applies it.
+
+Configuration lives in the `entra-dev` GitHub environment (deployable from
+`main` only): secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
+`ENTRA_APP_OBJECT_ID`, and variables `AMPLIFY_APP_ID` and `DRY_RUN`.
+
+- **Pause it:** set `DRY_RUN` to `true`. Runs keep reporting but change nothing.
+  `false` turns writes back on.
+- **Run it now:** Actions → Entra Redirect URIs → Run workflow.
+- **"Refusing to remove N URIs":** a run will not remove more than 10 at once,
+  in case the branch list came back wrong. Check the summary; if the removals
+  are expected, run it manually with a higher `max_removals`.
+- **"Entra does not match the plan":** the write did not stick. Compare the
+  app's redirect URIs in the Azure portal with the run summary, then re-run.
+- **Preview sign-in fails with `AADSTS50011`:** the callback is not registered
+  yet. Check the latest run, or run it manually.
+- **Scheduled runs stopped:** GitHub pauses schedules after 60 days without a
+  commit. Re-enable the workflow from the Actions tab.
+
+To see what a run would do without GitHub Actions (read-only with
+`DRY_RUN=true`, using your own `az login`):
+
+```sh
+GITHUB_REPOSITORY=ustaxcourt/ustc-payment-portal-dashboard \
+ENTRA_APP_OBJECT_ID=<object id> AMPLIFY_APP_ID=<app id> \
+scripts/entra-redirect-uris/sync.sh
+```
+
 ## Not yet set up
 
 These are deliberate gaps, not oversights — see ADR 0001's open questions:
