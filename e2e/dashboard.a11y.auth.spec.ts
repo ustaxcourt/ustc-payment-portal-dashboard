@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { expectAccessiblePage } from "./accessibility/axe";
 import { stubDashboardResponses } from "./accessibility/dashboardData";
 
+// TODO: For PAY-467: Update for refactored Payment Breakdown Pane
 test.describe("dashboard accessibility", () => {
   test.beforeEach(async ({ page }) => {
     await stubDashboardResponses(page);
@@ -29,10 +30,6 @@ test.describe("dashboard accessibility", () => {
 
         await expect(
           page.getByRole("table", { name: /Revenue totals/i }),
-        ).toBeVisible();
-
-        await expect(
-          page.getByRole("table", { name: /Successful payments by fee/i }),
         ).toBeVisible();
 
         await expect(
@@ -64,10 +61,6 @@ test.describe("dashboard accessibility", () => {
 
         await expect(
           page.getByRole("table", { name: /Revenue totals/i }),
-        ).toBeVisible();
-
-        await expect(
-          page.getByRole("table", { name: /Successful payments by fee/i }),
         ).toBeVisible();
 
         await expect(
