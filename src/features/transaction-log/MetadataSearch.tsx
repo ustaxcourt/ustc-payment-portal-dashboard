@@ -92,16 +92,17 @@ export default function MetadataSearch({
           value={selectedKey ?? ""}
           options={options}
           onChange={(value) => setSelectedKey(value as MetadataKey)}
+          triggerClassName="bg-background"
         />
       )}
 
-      <div className="flex items-end gap-2">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-2">
+        <div className="relative">
           <input
             id="metadata-search-input"
             type="text"
             maxLength={200}
-            className="h-8 w-full rounded-lg border border-input bg-transparent py-2 pr-8 pl-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-8 w-full rounded-lg border border-input bg-background py-2 pr-8 pl-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             disabled={!selectedKey}
@@ -120,7 +121,7 @@ export default function MetadataSearch({
             </button>
           ) : null}
         </div>
-        <Button type="submit" disabled={!selectedKey}>
+        <Button type="submit" variant="outline" disabled={!selectedKey} className="w-1/3">
           Search
         </Button>
       </div>

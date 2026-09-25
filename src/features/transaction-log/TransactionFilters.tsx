@@ -137,7 +137,7 @@ export default function TransactionFilters({
           </RadioGroup>
         </div>
 
-        <div className="border-t" />
+        <div className="border-t border-status-neutral" />
       </div>
 
       <div
@@ -154,6 +154,7 @@ export default function TransactionFilters({
           onChange={(value) =>
             onFilterChange("feeType", value === ANY_VALUE ? null : value)
           }
+          triggerClassName="bg-background"
         />
         {filters.feeType ? (
           <>
