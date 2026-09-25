@@ -1,7 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NuqsTestingAdapter } from "nuqs/adapters/testing";
+import {
+  NuqsTestingAdapter,
+  type OnUrlUpdateFunction,
+} from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import TimeframeBar from "./TimeframeBar";
 import TransactionLog from "./TransactionLog";
@@ -22,13 +25,18 @@ const response = (
   ...overrides,
 });
 
-const renderLog = (searchParams = "") => {
+const renderLog = (
+  searchParams = "",
+  options: { onUrlUpdate?: OnUrlUpdateFunction } = {},
+) => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
 
   return render(
-    <NuqsTestingAdapter searchParams={searchParams}>
+    // hasMemory: interactions re-render with the params they just set,
+    // matching a real browser's address bar instead of a frozen snapshot.
+    <NuqsTestingAdapter searchParams={searchParams} hasMemory {...options}>
       <QueryClientProvider client={client}>
         <TransactionLog />
       </QueryClientProvider>
@@ -102,7 +110,8 @@ describe("TransactionLog", () => {
     expect(requested).toContain("status=failed");
   });
 
-  it("falls back when the sorted column is absent from the tab", async () => {
+  it("keeps whatever sort field is in the url regardless of the payment status filter", async () => {
+    // Every column is always rendered now, so there's no tab to fall off of.
     const fetchMock = mockFetch(response());
 
     renderLog("?status=pending&sort=returnDetail&order=asc");
@@ -110,42 +119,37 @@ describe("TransactionLog", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
     const requested = String(fetchMock.mock.calls[0][0]);
-    expect(requested).toContain("sort=createdAt");
-    expect(requested).toContain("order=desc");
-    expect(requested).not.toContain("returnDetail");
+    expect(requested).toContain("sort=returnDetail");
+    expect(requested).toContain("order=asc");
   });
 
-  it("renders the Search tab", async () => {
-    mockFetch(response());
+  it("fetches immediately with no filters applied", async () => {
+    const fetchMock = mockFetch(response());
 
     renderLog("");
 
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Search" })).toBeInTheDocument();
+      expect(screen.getByText("No transactions to show.")).toBeInTheDocument();
     });
   });
 
-  it("forwards fee and pay type filters when searching", async () => {
+  it("forwards fee and pay type filters", async () => {
     const fetchMock = mockFetch(response());
 
-    renderLog(
-      "?status=search&feeType=PETITION_FILING_FEE&payType=ACH",
-    );
+    renderLog("?feeType=PETITION_FILING_FEE&payType=ACH");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
     const requested = String(fetchMock.mock.calls[0][0]);
     expect(requested).toContain("fee=PETITION_FILING_FEE");
     expect(requested).toContain("paymentMethod=ACH");
-    expect(requested).not.toContain("status=search");
   });
 
-  it("forwards payment status and transaction status filters when searching", async () => {
+  it("forwards payment status and transaction status filters", async () => {
     const fetchMock = mockFetch(response());
 
-    renderLog(
-      "?status=search&paymentStatus=failed&transactionStatus=processed",
-    );
+    renderLog("?status=failed&transactionStatus=processed");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
@@ -154,60 +158,11 @@ describe("TransactionLog", () => {
     expect(requested).toContain("transactionStatus=processed");
   });
 
-  it("keeps the sort when switching to search, since its columns match the other tabs", async () => {
-    const fetchMock = mockFetch(response());
-
-    renderLog(
-      "?status=search&sort=clientName&order=asc&feeType=PETITION_FILING_FEE",
-    );
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-
-    const requested = String(fetchMock.mock.calls[0][0]);
-    expect(requested).toContain("sort=clientName");
-    expect(requested).toContain("order=asc");
-  });
-
-  it("does not query when the search tab has no filter yet", async () => {
-    const fetchMock = mockFetch(response());
-
-    renderLog("?status=search");
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          "Choose a filter to search transactions.",
-        ),
-      ).toBeInTheDocument();
-    });
-
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    ["feeType=PETITION_FILING_FEE", "fee=PETITION_FILING_FEE"],
-    ["payType=ACH", "paymentMethod=ACH"],
-    ["paymentStatus=failed", "status=failed"],
-    ["transactionStatus=processed", "transactionStatus=processed"],
-  ])(
-    "starts querying as soon as %s is set, with no other filter present",
-    async (param, expectedQuery) => {
-      const fetchMock = mockFetch(response());
-
-      renderLog(`?status=search&${param}`);
-
-      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-
-      const requested = String(fetchMock.mock.calls[0][0]);
-      expect(requested).toContain(expectedQuery);
-    },
-  );
-
   it("runs a metadata lookup carried in the durable URL", async () => {
     const fetchMock = mockFetch(response());
 
     renderLog(
-      "?status=search&feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=foo@example.com",
+      "?feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=foo@example.com",
     );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
@@ -226,9 +181,7 @@ describe("TransactionLog", () => {
   it("does not query for a metadata key with no value in the URL", async () => {
     const fetchMock = mockFetch(response());
 
-    renderLog(
-      "?status=search&feeType=PETITION_FILING_FEE&metadataKey=docketNumber",
-    );
+    renderLog("?feeType=PETITION_FILING_FEE&metadataKey=docketNumber");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
@@ -242,7 +195,7 @@ describe("TransactionLog", () => {
     const fetchMock = mockFetch(response());
 
     renderLog(
-      "?status=search&feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=foo",
+      "?feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=foo",
     );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
@@ -270,7 +223,7 @@ describe("TransactionLog", () => {
   it("changing the timeframe while a filter is active keeps the filter and updates the range", async () => {
     const fetchMock = mockFetch(response());
 
-    renderDashboard("?status=search&feeType=PETITION_FILING_FEE&range=today");
+    renderDashboard("?feeType=PETITION_FILING_FEE&range=today");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     const firstRequest = new URL(
@@ -296,11 +249,11 @@ describe("TransactionLog", () => {
     );
   });
 
-  it("forwards a custom timeframe together with search filters", async () => {
+  it("forwards a custom timeframe together with active filters", async () => {
     const fetchMock = mockFetch(response());
 
     renderLog(
-      "?status=search&range=custom&from=07/01/2026&to=07/10/2026&transactionStatus=processed",
+      "?range=custom&from=07/01/2026&to=07/10/2026&transactionStatus=processed",
     );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
@@ -316,149 +269,87 @@ describe("TransactionLog", () => {
     expect(requested.searchParams.get("transactionStatus")).toBe("processed");
   });
 
-  it("does not carry over the previous tab's totals onto an empty search", async () => {
-    const fetchMock = mockFetch(
-      response({
-        data: [],
-        total: 4213,
-        from: "2026-08-20T04:00:00.000Z",
-        to: "2026-08-21T04:00:00.000Z",
-      }),
-    );
+  describe("Payment Status filter", () => {
+    it("selecting a status option re-fetches with the new status", async () => {
+      const fetchMock = mockFetch(response());
 
-    renderLog("?status=all");
+      renderLog("");
+      await screen.findByText("Failed (0)");
 
-    await waitFor(() => {
-      expect(screen.getByText(/of 4213 transactions/)).toBeInTheDocument();
+      await userEvent.click(screen.getByText("Failed (0)"));
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+      const requested = String(fetchMock.mock.calls[1][0]);
+      expect(requested).toContain("status=failed");
     });
 
-    fetchMock.mockClear();
+    it("shows each option's count from the timeframe-wide totals", async () => {
+      mockFetch(
+        response({ counts: { all: 12, success: 5, failed: 4, pending: 3 } }),
+      );
 
-    await userEvent.click(screen.getByRole("tab", { name: "Search" }));
+      renderLog("");
 
-    await waitFor(() => {
-      expect(
-        screen.getByText("Choose a filter to search transactions."),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText("All Payment Status (12)")).toBeInTheDocument();
+        expect(screen.getByText("Successful (5)")).toBeInTheDocument();
+        expect(screen.getByText("Failed (4)")).toBeInTheDocument();
+        expect(screen.getByText("Pending (3)")).toBeInTheDocument();
+      });
     });
 
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.queryByText(/of 4213 transactions/)).not.toBeInTheDocument();
-  });
+    it("disables Clear All until a filter is active, then resets on click", async () => {
+      const fetchMock = mockFetch(response());
 
-  it("hides the previous search's transaction count while a new search is in flight", async () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
+      renderLog("?feeType=PETITION_FILING_FEE");
 
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => response({ total: 4213 }),
-    });
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "Clear All" }),
+        ).toBeEnabled(),
+      );
 
-    let resolveSecond!: (value: {
-      ok: boolean;
-      status: number;
-      json: () => Promise<TransactionLogResponse>;
-    }) => void;
-    fetchMock.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          resolveSecond = resolve;
-        }),
-    );
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => response({ total: 10 }),
-    });
+      fetchMock.mockClear();
+      await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
 
-    renderLog("?status=search&feeType=PETITION_FILING_FEE");
-
-    await waitFor(() => {
-      expect(screen.getByText(/of 4213 transactions/)).toBeInTheDocument();
-    });
-
-    await userEvent.click(screen.getByLabelText("Fee Type"));
-    await userEvent.click(
-      await screen.findByRole("option", {
-        name: "Non-Attorney Exam Registration Fee",
-      }),
-    );
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-
-    expect(screen.getByText("Searching…")).toBeInTheDocument();
-    expect(screen.queryByText(/of 4213 transactions/)).not.toBeInTheDocument();
-
-    resolveSecond({
-      ok: true,
-      status: 200,
-      json: async () => response({ total: 10 }),
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/10 transactions/)).toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "Clear All" }),
+        ).toBeDisabled(),
+      );
     });
   });
 
-  it("only shows Clear All on the search tab", async () => {
-    const fetchMock = mockFetch(response());
+  describe("legacy paymentStatus URL fallback", () => {
+    it("filters using the old paymentStatus param when status is absent", async () => {
+      const fetchMock = mockFetch(response());
 
-    renderLog("?status=all");
+      renderLog("?paymentStatus=failed");
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
-    expect(
-      screen.queryByRole("button", { name: "Clear All" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("clears search filters when Clear All is clicked", async () => {
-    const fetchMock = mockFetch(response());
-
-    renderLog(
-      "?status=search&feeType=PETITION_FILING_FEE&payType=ACH&paymentStatus=failed&transactionStatus=processed",
-    );
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    fetchMock.mockClear();
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "Clear All" }),
-    );
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          "Choose a filter to search transactions.",
-        ),
-      ).toBeInTheDocument();
+      const requested = String(fetchMock.mock.calls[0][0]);
+      expect(requested).toContain("status=failed");
     });
 
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
+    it("normalizes the URL to `status` and clears the legacy key on interaction", async () => {
+      mockFetch(response());
+      const onUrlUpdate = vi.fn();
 
-  it("keeps the other tabs' badge counts after Clear All empties the search", async () => {
-    mockFetch(
-      response({ counts: { all: 12, success: 5, failed: 4, pending: 3 } }),
-    );
+      renderLog("?paymentStatus=failed", { onUrlUpdate });
 
-    renderLog("?status=search&feeType=PETITION_FILING_FEE");
+      await waitFor(() => {
+        expect(screen.getByText("Failed (0)")).toBeInTheDocument();
+      });
 
-    await waitFor(() => {
-      expect(screen.getByRole("tab", { name: /All/ })).toHaveTextContent("12");
+      await userEvent.click(screen.getByText("Pending (0)"));
+
+      await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+      const last = onUrlUpdate.mock.calls.at(-1)?.[0] as {
+        searchParams: URLSearchParams;
+      };
+      expect(last.searchParams.get("status")).toBe("pending");
+      expect(last.searchParams.get("paymentStatus")).toBeNull();
     });
-
-    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
-
-    await waitFor(() => {
-      expect(
-        screen.getByText("Choose a filter to search transactions."),
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.getByRole("tab", { name: /All/ })).toHaveTextContent("12");
-    expect(screen.getByRole("tab", { name: /Pending/ })).toHaveTextContent("3");
   });
 });

@@ -7,7 +7,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Table,
   TableBody,
@@ -33,7 +33,7 @@ export default function TransactionTable({
   sorting,
   onSortingChange,
   emptyMessage,
-  wrapperClassName = "min-h-0 flex-1 overflow-auto rounded-b-md border-2 border-t-0 border-muted-foreground",
+  wrapperClassName = "flex-1 overflow-auto rounded-md border-2 table-border lg:min-h-0",
 }: {
   rows: TransactionLogEntry[];
   columns: ColumnDef<TransactionLogEntry>[];
@@ -69,10 +69,25 @@ export default function TransactionTable({
     },
   });
 
+  const leafColumns = table.getVisibleLeafColumns();
+  const totalSize = leafColumns.reduce((sum, col) => sum + col.getSize(), 0);
+  const tableRows = table.getRowModel().rows;
+
   return (
-    <div data-testid="transaction-table-scroll" className={wrapperClassName}>
-      <Table>
+    <div
+      data-testid="transaction-table-scroll"
+      className={cn("relative", wrapperClassName)}
+    >
+      <Table className="table-fixed text-xs">
         <TableCaption className="sr-only">{caption}</TableCaption>
+        <colgroup>
+          {leafColumns.map((col) => (
+            <col
+              key={col.id}
+              style={{ width: `${(col.getSize() / totalSize) * 100}%` }}
+            />
+          ))}
+        </colgroup>
         <TableHeader className={cn("sticky top-0 z-10", headerTone)}>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="hover:bg-transparent">
@@ -85,7 +100,7 @@ export default function TransactionTable({
                       : undefined
                   }
                   className={cn(
-                    "h-8",
+                    "h-7 px-1.5",
                     cellBorder(index, headerGroup.headers.length),
                   )}
                 >
@@ -99,40 +114,81 @@ export default function TransactionTable({
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-24 text-center text-muted-foreground"
-              >
-                {emptyMessage}
-              </TableCell>
+          {tableRows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell, index) => (
+                <CopyableCell
+                  key={cell.id}
+                  text={cell.column.columnDef.meta?.copyText?.(row.original)}
+                  className={cn(
+                    "px-1.5 py-1",
+                    cellBorder(index, row.getVisibleCells().length),
+                  )}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </CopyableCell>
+              ))}
             </TableRow>
-          ) : (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell, index) => (
-                  <TableCell
-                    key={cell.id}
-                    className={cn(
-                      "py-1",
-                      cellBorder(index, row.getVisibleCells().length),
-                    )}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          )}
+          ))}
         </TableBody>
       </Table>
+      {tableRows.length === 0 ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-background text-center text-xs text-muted-foreground">
+          {emptyMessage}
+        </div>
+      ) : null}
     </div>
   );
 }
 
+// Cells truncate to fit their column (see the colgroup above), so a click
+// copies — and a hover title shows — the untruncated value from the
+// column's `meta.copyText` rather than whatever's visibly clipped.
+function CopyableCell({
+  text,
+  className,
+  children,
+}: {
+  text?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  const handleClick = async () => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 1200);
+    } catch {
+      // Clipboard API unavailable (e.g. insecure context) — no-op.
+    }
+  };
+
+  return (
+    <TableCell
+      title={text}
+      onClick={handleClick}
+      className={cn(
+        text && "cursor-pointer",
+        copied && "bg-primary/10",
+        className,
+      )}
+    >
+      {children}
+    </TableCell>
+  );
+}
+
 const cellBorder = (index: number, total: number) =>
-  index === total - 1 ? "whitespace-nowrap" : "whitespace-nowrap border-r";
+  index === total - 1 ? undefined : "border-r";
 
 const ariaSort = (
   sorted: false | "asc" | "desc",

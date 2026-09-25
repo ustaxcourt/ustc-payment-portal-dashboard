@@ -1,7 +1,6 @@
 "use client";
 
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
-import { isSortableOnTab } from "./columns";
 import { DATE_RANGE_PRESETS, resolveAppliedDateRange } from "./dateRange";
 import {
   DEFAULT_ORDER,
@@ -14,8 +13,6 @@ import {
   TRANSACTION_SORT_FIELDS,
   TRANSACTION_STATUSES,
   type TransactionSearchFilters,
-  VIEW_TABS,
-  type ViewTab,
 } from "./types";
 
 export const useTransactionLogParams = () => {
@@ -27,10 +24,14 @@ export const useTransactionLogParams = () => {
       sort: parseAsStringLiteral(TRANSACTION_SORT_FIELDS).withDefault(
         DEFAULT_SORT,
       ),
-      status: parseAsStringLiteral(VIEW_TABS).withDefault("all"),
+      status: parseAsStringLiteral(PAYMENT_STATUSES),
       to: parseAsString,
       feeType: parseAsStringLiteral(FEE_TYPES),
       payType: parseAsStringLiteral(PAY_TYPES),
+      // Legacy key: the old Search tab wrote the Payment Status dropdown here,
+      // separately from `status` (the old tab param). Kept as a read-only
+      // fallback so links minted before the tabs-to-sidebar refactor still
+      // filter correctly; `status` is the sole key written going forward.
       paymentStatus: parseAsStringLiteral(PAYMENT_STATUSES),
       transactionStatus: parseAsStringLiteral(TRANSACTION_STATUSES),
       metadataKey: parseAsStringLiteral(METADATA_KEYS),
@@ -41,48 +42,36 @@ export const useTransactionLogParams = () => {
     },
   );
 
-  const tab = params.status;
   const appliedRange = resolveAppliedDateRange(
     params.range,
     params.from,
     params.to,
   );
 
-  const sorting = { sort: params.sort, order: params.order };
-  const activeSorting = isSortableOnTab(sorting.sort, tab)
-    ? sorting
-    : { sort: DEFAULT_SORT, order: DEFAULT_ORDER };
+  const activeSorting = { sort: params.sort, order: params.order };
 
-  const selectTab = (next: ViewTab) => {
-    setParams(
-      isSortableOnTab(params.sort, next)
-        ? { status: next }
-        : { status: next, sort: DEFAULT_SORT, order: DEFAULT_ORDER },
-    );
+  const paymentStatus = params.status ?? params.paymentStatus;
+
+  const searchFilters: TransactionSearchFilters = {
+    feeType: params.feeType,
+    payType: params.payType,
+    paymentStatus,
+    transactionStatus: params.transactionStatus,
+    metadataKey: params.metadataKey,
+    metadataValue: params.metadataValue,
   };
 
-  const searchFilters: TransactionSearchFilters | undefined =
-    tab === "search"
-      ? {
-          feeType: params.feeType,
-          payType: params.payType,
-          paymentStatus: params.paymentStatus,
-          transactionStatus: params.transactionStatus,
-          metadataKey: params.metadataKey,
-          metadataValue: params.metadataValue,
-        }
-      : undefined;
-
   const hasSearchCriteria = Boolean(
-    searchFilters?.feeType ||
-      searchFilters?.payType ||
-      searchFilters?.paymentStatus ||
-      searchFilters?.transactionStatus ||
-      (searchFilters?.metadataKey && searchFilters.metadataValue)
+    searchFilters.feeType ||
+      searchFilters.payType ||
+      searchFilters.paymentStatus ||
+      searchFilters.transactionStatus ||
+      (searchFilters.metadataKey && searchFilters.metadataValue)
   );
 
   const clearSearch = () =>
     setParams({
+      status: null,
       feeType: null,
       payType: null,
       paymentStatus: null,
@@ -91,19 +80,13 @@ export const useTransactionLogParams = () => {
       metadataValue: null,
     });
 
-  // The search tab fetches nothing until a filter is chosen.
-  const queryEnabled = tab !== "search" || hasSearchCriteria;
-
   return {
     params,
     setParams,
-    tab,
     appliedRange,
     activeSorting,
-    selectTab,
     searchFilters,
     hasSearchCriteria,
     clearSearch,
-    queryEnabled,
   };
 };

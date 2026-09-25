@@ -1,12 +1,11 @@
 import ExcelJS from "exceljs";
 import { exportColumns } from "./exportColumns";
-import type { TransactionLogEntry, TransactionTab } from "./types";
+import type { TransactionLogEntry } from "./types";
 
 export const buildWorkbook = async (
   rows: TransactionLogEntry[],
-  tab: TransactionTab,
 ): Promise<ArrayBuffer> => {
-  const columns = exportColumns(tab);
+  const columns = exportColumns();
 
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Transactions", {

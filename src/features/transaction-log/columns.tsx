@@ -4,14 +4,13 @@ import type { ColumnDef, HeaderContext } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
 import SortableHeader from "./SortableHeader";
-import { TAB_LABEL, TAB_TONE } from "./statusStyles";
+import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
 import {
   FEE_METADATA_KEYS,
   type FeeType,
   METADATA_KEY_LABEL,
   type TransactionLogEntry,
   type TransactionSortField,
-  type ViewTab,
 } from "./types";
 
 export const COLUMN_LABEL: Record<TransactionSortField, string> = {
@@ -27,6 +26,16 @@ export const COLUMN_LABEL: Record<TransactionSortField, string> = {
   transactionReferenceId: "Reference ID",
 };
 
+// The table's columns share the available width (see TransactionTable's
+// colgroup) instead of growing to fit content, so every cell truncates with
+// a hover tooltip + click-to-copy instead — see `meta.copyText` below,
+// which supplies the untruncated value for both.
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData, TValue> {
+    copyText?: (row: TData) => string;
+  }
+}
+
 const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
   <SortableHeader
     label={COLUMN_LABEL[column.id as TransactionSortField]}
@@ -40,6 +49,7 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     accessorKey: "createdAt",
     header: sortable,
     sortDescFirst: true,
+    size: 115,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.createdAt);
       return (
@@ -49,11 +59,18 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
         </div>
       );
     },
+    meta: {
+      copyText: (row) => {
+        const stamp = formatCourtStamp(row.createdAt);
+        return `${stamp.date} ${stamp.time}`;
+      },
+    },
   },
   {
     accessorKey: "lastUpdatedAt",
     header: sortable,
     sortDescFirst: true,
+    size: 115,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.lastUpdatedAt);
       return (
@@ -63,70 +80,82 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
         </div>
       );
     },
+    meta: {
+      copyText: (row) => {
+        const stamp = formatCourtStamp(row.lastUpdatedAt);
+        return `${stamp.date} ${stamp.time}`;
+      },
+    },
   },
   {
     accessorKey: "feeName",
     header: sortable,
+    size: 130,
+    meta: { copyText: (row) => row.feeName },
   },
   {
     accessorKey: "transactionAmount",
     header: sortable,
+    size: 80,
     cell: ({ row }) => (
       <span className="tabular-nums">
         {formatCurrency(row.original.transactionAmount)}
       </span>
     ),
+    meta: { copyText: (row) => formatCurrency(row.transactionAmount) },
   },
   {
     accessorKey: "paymentMethod",
     header: sortable,
+    size: 100,
     cell: ({ row }) => formatLabel(row.original.paymentMethod),
+    meta: { copyText: (row) => formatLabel(row.paymentMethod) },
   },
   {
     accessorKey: "paymentStatus",
     header: sortable,
+    size: 85,
     cell: ({ row }) => {
       const status = row.original.paymentStatus;
       return (
-        <Badge variant="secondary" className={TAB_TONE[status]}>
-          {TAB_LABEL[status]}
+        <Badge variant="secondary" className={PAYMENT_STATUS_TONE[status]}>
+          {PAYMENT_STATUS_LABEL[status]}
         </Badge>
       );
     },
+    meta: { copyText: (row) => PAYMENT_STATUS_LABEL[row.paymentStatus] },
   },
   {
     accessorKey: "transactionStatus",
     header: sortable,
+    size: 100,
     cell: ({ row }) => formatLabel(row.original.transactionStatus),
+    meta: { copyText: (row) => formatLabel(row.transactionStatus) },
   },
   {
     accessorKey: "clientName",
     header: sortable,
+    size: 120,
+    meta: { copyText: (row) => row.clientName },
   },
   {
     accessorKey: "transactionReferenceId",
     header: sortable,
+    size: 130,
     cell: ({ row }) => (
-      <span className="font-mono text-xs">
-        {row.original.transactionReferenceId}
-      </span>
+      <span className="font-mono">{row.original.transactionReferenceId}</span>
     ),
+    meta: { copyText: (row) => row.transactionReferenceId },
   },
 ];
 
 const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
   accessorKey: "returnDetail",
   header: sortable,
+  size: 150,
   cell: ({ row }) => row.original.returnDetail ?? "—",
+  meta: { copyText: (row) => row.returnDetail ?? "—" },
 };
-
-export const isSortableOnTab = (
-  field: TransactionSortField,
-  tab: ViewTab,
-): boolean =>
-  getColumns(tab).some(
-    (column) => (column as { accessorKey?: string }).accessorKey === field,
-  );
 
 const COLUMNS_WITH_FAILURE_REASON: ColumnDef<TransactionLogEntry>[] = [
   ...BASE_COLUMNS.slice(0, 6),
@@ -134,15 +163,11 @@ const COLUMNS_WITH_FAILURE_REASON: ColumnDef<TransactionLogEntry>[] = [
   ...BASE_COLUMNS.slice(6),
 ];
 
-// Returns a stable reference per tab — react-table's memoization (and any
-// caller passing this straight into useReactTable's columns option) relies
-// on that, not just a same-shape array, to avoid recomputing every render.
-export const getColumns = (
-  tab: ViewTab,
-): ColumnDef<TransactionLogEntry>[] =>
-  tab === "failed" || tab === "all" || tab === "search"
-    ? COLUMNS_WITH_FAILURE_REASON
-    : BASE_COLUMNS;
+// Returns a stable reference — react-table's memoization (and any caller
+// passing this straight into useReactTable's columns option) relies on
+// that, not just a same-shape array, to avoid recomputing every render.
+export const getColumns = (): ColumnDef<TransactionLogEntry>[] =>
+  COLUMNS_WITH_FAILURE_REASON;
 
 // One column per metadata key of the selected fee. Kept out of the sortable
 // set on purpose: the API cannot ORDER BY a JSON key. Callers memoize on
@@ -154,5 +179,7 @@ export const metadataColumns = (
     id: `metadata.${key}`,
     header: METADATA_KEY_LABEL[key],
     enableSorting: false,
+    size: 110,
+    meta: { copyText: (row) => row.metadata?.[key] ?? "—" },
     cell: ({ row }) => row.original.metadata?.[key] ?? "—",
   }));

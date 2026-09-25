@@ -7,22 +7,10 @@ import { useTransactionLog } from "./useTransactionLog";
 import { useTransactionLogParams } from "./useTransactionLogParams";
 
 export default function TimeframeBar() {
-  const {
-    setParams,
-    tab,
-    appliedRange,
-    activeSorting,
-    searchFilters,
-    queryEnabled,
-  } = useTransactionLogParams();
+  const { setParams, appliedRange, activeSorting, searchFilters } =
+    useTransactionLogParams();
   // Same arguments as TransactionLog, so both subscribe to one cached query.
-  const { data } = useTransactionLog(
-    tab,
-    appliedRange,
-    activeSorting,
-    searchFilters,
-    queryEnabled,
-  );
+  const { data } = useTransactionLog(appliedRange, activeSorting, searchFilters);
 
   return (
     // Band ≈ half the header's height (PO-approved); pairs with TimeframeControls' py-1.
@@ -36,10 +24,10 @@ export default function TimeframeBar() {
         onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
       />
       <ExportButton
-        tab={tab === "search" ? "all" : tab}
+        tab={searchFilters.paymentStatus ?? "all"}
         range={appliedRange}
         sorting={activeSorting}
-        disabled={tab === "search" || !data || data.data.length === 0}
+        disabled={!data || data.data.length === 0}
       />
     </div>
   );
