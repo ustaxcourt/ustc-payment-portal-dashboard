@@ -124,9 +124,7 @@ export default function TransactionFilters({
             {/* biome-ignore lint/a11y/noLabelWithoutControl: RadioGroupItem renders Base UI's hidden <input>, associated via its Labelable context — the linter can't see through the custom component. */}
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <RadioGroupItem value="all" />
-              <span className="font-semibold">
-                All Payment Status ({counts?.all ?? "—"})
-              </span>
+              <span>All Payment Status ({counts?.all ?? "—"})</span>
             </label>
             {PAYMENT_STATUSES.map((status) => (
               // biome-ignore lint/a11y/noLabelWithoutControl: see above.
