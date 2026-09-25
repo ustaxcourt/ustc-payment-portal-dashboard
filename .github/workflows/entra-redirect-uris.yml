@@ -1,4 +1,4 @@
-name: Entra Preview Redirects
+name: Entra Redirect URIs
 
 # Every trigger here runs this file from main, which the entra-dev environment
 # requires. `create` and `push` would run it from the pushed branch instead, so
@@ -22,7 +22,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: entra-preview-redirects
+  group: entra-redirect-uris
   cancel-in-progress: false
 
 jobs:
@@ -48,7 +48,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           allow-no-subscriptions: true
 
-      - run: scripts/entra-preview-redirects/sync.sh
+      - run: scripts/entra-redirect-uris/sync.sh
         env:
           GH_TOKEN: ${{ github.token }}
           ENTRA_APP_OBJECT_ID: ${{ secrets.ENTRA_APP_OBJECT_ID }}

@@ -1,4 +1,4 @@
-# 2. Automatic Entra redirect URIs for Amplify preview branches
+# 2. Entra redirect URIs managed from this repo
 
 Date: 2026-09-25
 
@@ -22,30 +22,38 @@ Until now, developers added these by hand through a manual workflow in
 held 16 URIs for previews that no longer existed, plus several placeholders.
 
 That workflow signs in with a broadly privileged identity, so it was not
-suitable to trigger from this repo on every pull request.
+suitable to trigger from this repo on every pull request. It also left the
+app's few permanent URIs (the dev domain, local development) as unreviewed
+manual edits.
 
 ## Decision
 
-A scheduled, event-assisted **sync job** in this repo makes the app's preview
-URIs match the repo's branches.
+A scheduled, event-assisted **sync job** in this repo owns the app's entire
+redirect URI list: the permanent URIs declared in code, plus one per preview
+branch.
 
 | Concern | Choice |
 | --- | --- |
 | What gets a URI | Every branch matching Amplify's `preview_branch_patterns`, PR or not |
 | When a URI goes away | When its branch is deleted; auto-delete on merge makes that automatic |
 | Model | **Reconcile**: compute the full desired set every run, not add/remove per event |
-| Scope | Only URIs matching `https://<sub>.<app-id>.amplifyapp.com/api/auth/callback/azure-ad`; all others are never touched |
+| Scope | The whole list: `STATIC_REDIRECT_URIS` in `plan.ts` plus preview URIs; anything else is removed |
 | Identity | Dedicated app **Payment Portal Dashboard Preview Sync**: federated credential for the `entra-dev` environment, no secrets, Graph `Application.ReadWrite.OwnedBy`, owner of the dev app only |
 | Triggers | `pull_request_target` (opened/reopened), `delete`, `schedule` every 15 min, `workflow_dispatch` |
 | Guard rails | `entra-dev` deployable from `main` only; `DRY_RUN` variable; removal cap (default 10); 256-URI limit; read-back verification after each write |
 
-Code: `scripts/entra-preview-redirects/` (`plan.ts` decides, `sync.sh` fetches
-and writes) and `.github/workflows/entra-preview-redirects.yml`.
+Code: `scripts/entra-redirect-uris/` (`plan.ts` decides, `sync.sh` fetches
+and writes) and `.github/workflows/entra-redirect-uris.yml`.
 
 **Reconcile instead of add/remove events.** GitHub keeps at most one pending
 run per concurrency group and drops the rest, and scheduled runs can be
 skipped. An event-driven job would lose URIs silently; a reconciler repairs
 any missed event on its next run and is safe to run any number of times.
+
+**Own the whole list, declared in code.** Adding a permanent URI is a PR to
+`STATIC_REDIRECT_URIS`, so every change is reviewed, and edits made in the
+Azure portal are reverted rather than drifting. This also retires the manual
+workflow in `isd-cloud-payment-portal`.
 
 **Only triggers that run from `main`.** The environment is restricted to
 `main`, so a branch cannot edit the script and then run it against Entra.
@@ -73,6 +81,10 @@ they let any matching host receive authorization codes.
 need an identity that can write the app from Terraform runs and would put the
 whole registration, not just preview URIs, under per-PR churn.
 
+**Manage only preview URIs; keep the isd workflow for the rest.** The first
+version of this design. Leaves two tools editing one list, one of them manual
+and unreviewed.
+
 **Reuse the isd repo's service principal.** Works, but grants far more access
 than editing one app's redirect URIs to a job that runs on every pull request.
 
@@ -87,8 +99,10 @@ Kept as a follow-up.
 - A branch that is closed without merging, or never gets a PR, keeps a working
   sign-in until the branch is deleted. Stale-branch cleanup is a separate
   concern; branches outside the preview patterns get no preview at all.
-- Any URI of the owned form that does not match a branch is removed, including
-  ones added by hand. The isd workflow is now for non-preview URIs only.
+- Any URI that is not in `STATIC_REDIRECT_URIS` and has no branch is removed,
+  including ones added by hand in the Azure portal. A wrong edit to
+  `STATIC_REDIRECT_URIS` (dropping the dev domain, say) would break dev
+  sign-in on the next run, so review it like any auth change.
 - Each run appears as a deployment on the `entra-dev` environment.
 - GitHub pauses scheduled workflows in public repos after 60 days without a
   commit; event triggers still run, and the schedule is re-enabled from the
@@ -96,7 +110,6 @@ Kept as a follow-up.
 
 ## References
 
-- `scripts/entra-preview-redirects/`, `.github/workflows/entra-preview-redirects.yml`
+- `scripts/entra-redirect-uris/`, `.github/workflows/entra-redirect-uris.yml`
 - `terraform/environments/dev/main.tf` (`preview_branch_patterns`), `amplify.yml`
-- `ustaxcourt/isd-cloud-payment-portal` (manual workflow for non-preview URIs)
 - [Graph `Application.ReadWrite.OwnedBy`](https://learn.microsoft.com/en-us/graph/permissions-reference#applicationreadwriteownedby)

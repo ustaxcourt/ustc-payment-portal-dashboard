@@ -1,30 +1,33 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import {
-  isOwnedUri,
   isPreviewBranch,
   MAX_REDIRECT_URIS,
   type PlanInput,
   planRedirectUris,
-  previewRedirectUri,
   previewSubdomain,
+  STATIC_REDIRECT_URIS,
 } from "./plan";
 
 const APP_ID = "d2xd0ob1rbbqjb";
 const uri = (subdomain: string) =>
   `https://${subdomain}.${APP_ID}.amplifyapp.com/api/auth/callback/azure-ad`;
 
-// URIs on the dev app that this job must never touch.
-const UNOWNED = [
-  "http://localhost:3000/api/auth/callback/azure-ad",
-  "https://dev-dashboard.payments.ustaxcourt.gov/api/auth/callback/azure-ad",
-  "https://pay-385-amplify-compute-role-spike.d2xd0ob1rbbqjb.amplifyapp.com",
-  "https://pay-1-old.dOTHERAPPID.amplifyapp.com/api/auth/callback/azure-ad",
-  "https://PAY-2-upper.d2xd0ob1rbbqjb.amplifyapp.com/api/auth/callback/azure-ad",
+// Real entries the dev app has held that match neither list, so must be removed.
+const JUNK = [
+  "https://payment.example.com/oauth/callback",
+  "https://pay-452-search-and-table-dashboard-refactor.d2xd0ob1rbbqjb.amplifyapp.com",
+  "https://pay-1-old.dotherappid.amplifyapp.com/api/auth/callback/azure-ad",
 ];
 
 const plan = (overrides: Partial<PlanInput>) =>
-  planRedirectUris({ current: [], branches: [], amplifyAppId: APP_ID, maxRemovals: 10, ...overrides });
+  planRedirectUris({
+    current: STATIC_REDIRECT_URIS,
+    branches: [],
+    amplifyAppId: APP_ID,
+    maxRemovals: 10,
+    ...overrides,
+  });
 
 describe("previewSubdomain", () => {
   it.each([
@@ -51,41 +54,39 @@ describe("isPreviewBranch", () => {
   });
 });
 
-describe("isOwnedUri", () => {
-  it("owns preview callback URIs for this Amplify app", () => {
-    expect(isOwnedUri(uri("pay-451-x"), APP_ID)).toBe(true);
-    expect(isOwnedUri(previewRedirectUri("feature/Foo", APP_ID), APP_ID)).toBe(true);
-  });
-
-  it.each(UNOWNED)("does not own %s", (value) => {
-    expect(isOwnedUri(value, APP_ID)).toBe(false);
-  });
-});
-
 describe("planRedirectUris", () => {
   it("adds URIs for existing preview branches and ignores other branches", () => {
-    const result = plan({ current: UNOWNED, branches: ["PAY-461-deps", "main", "Adds-Agents-File"] });
+    const result = plan({ branches: ["PAY-461-deps", "main", "Adds-Agents-File"] });
 
     expect(result.added).toEqual([uri("pay-461-deps")]);
     expect(result.removed).toEqual([]);
-    expect(result.next).toEqual([...UNOWNED, uri("pay-461-deps")]);
+    expect(result.next).toEqual([...STATIC_REDIRECT_URIS, uri("pay-461-deps")]);
   });
 
-  it("removes owned URIs whose branch no longer exists", () => {
-    const current = [uri("pay-331-sso"), ...UNOWNED, uri("pay-451-deps")];
+  it("removes preview URIs whose branch no longer exists", () => {
+    const current = [uri("pay-331-sso"), ...STATIC_REDIRECT_URIS, uri("pay-451-deps")];
     const result = plan({ current, branches: ["PAY-451-deps"] });
 
     expect(result.removed).toEqual([uri("pay-331-sso")]);
-    expect(result.added).toEqual([]);
-    expect(result.next).toEqual([...UNOWNED, uri("pay-451-deps")]);
+    expect(result.next).toEqual([...STATIC_REDIRECT_URIS, uri("pay-451-deps")]);
   });
 
-  it("keeps every URI it does not own, even with no preview branches", () => {
-    expect(plan({ current: UNOWNED, branches: [] }).next).toEqual(UNOWNED);
+  it("removes URIs that are neither static nor from a branch", () => {
+    const result = plan({ current: [...STATIC_REDIRECT_URIS, ...JUNK] });
+
+    expect(result.removed).toEqual(JUNK);
+    expect(result.next).toEqual(STATIC_REDIRECT_URIS);
+  });
+
+  it("restores missing static URIs", () => {
+    const result = plan({ current: [] });
+
+    expect(result.added).toEqual([...STATIC_REDIRECT_URIS].sort());
+    expect(result.removed).toEqual([]);
   });
 
   it("makes no changes when run on its own output", () => {
-    const first = plan({ current: [uri("pay-1-old"), ...UNOWNED], branches: ["PAY-2-new", "feature/x"] });
+    const first = plan({ current: [uri("pay-1-old"), ...JUNK], branches: ["PAY-2-new", "feature/x"] });
     const second = plan({ current: first.next, branches: ["PAY-2-new", "feature/x"] });
 
     expect(second.added).toEqual([]);

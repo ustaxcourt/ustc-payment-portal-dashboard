@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Syncs the dev Entra app's preview redirect URIs with the repo's branches.
+# Syncs the dev Entra app's redirect URIs with plan.ts's static list and the
+# repo's preview branches.
 # Only writes when DRY_RUN=false.
 
 set -euo pipefail
@@ -41,7 +42,7 @@ jq -n \
   }' > "$WORK_DIR/input.json"
 
 if ! node "$SCRIPT_DIR/plan.ts" < "$WORK_DIR/input.json" > "$WORK_DIR/plan.json" 2> "$WORK_DIR/plan.err"; then
-  report "## Entra preview redirect URIs"
+  report "## Entra redirect URIs"
   report ""
   report "❌ No changes made: $(cat "$WORK_DIR/plan.err")"
   exit 1
@@ -50,7 +51,7 @@ fi
 added=$(jq '.added | length' "$WORK_DIR/plan.json")
 removed=$(jq '.removed | length' "$WORK_DIR/plan.json")
 
-report "## Entra preview redirect URIs"
+report "## Entra redirect URIs"
 report ""
 report "Dry run: \`${DRY_RUN}\` · Adding ${added}, removing ${removed}, $(jq '.next | length' "$WORK_DIR/plan.json") after sync"
 report ""

@@ -3,6 +3,13 @@ import { readFileSync } from "node:fs";
 // Keep in sync with preview_branch_patterns in terraform/environments/dev/main.tf.
 export const PREVIEW_BRANCH_PATTERNS = ["PAY-*", "feature/*"];
 
+// Every non-preview redirect URI the dev app keeps. Anything else not generated
+// from a branch is removed, so add URIs here rather than in the Azure portal.
+export const STATIC_REDIRECT_URIS = [
+  "http://localhost:3000/api/auth/callback/azure-ad",
+  "https://dev-dashboard.payments.ustaxcourt.gov/api/auth/callback/azure-ad",
+];
+
 export const MAX_REDIRECT_URIS = 256;
 
 const CALLBACK_PATH = "/api/auth/callback/azure-ad";
@@ -41,13 +48,6 @@ export function previewRedirectUri(branch: string, amplifyAppId: string): string
   return `https://${previewSubdomain(branch)}.${amplifyAppId}.amplifyapp.com${CALLBACK_PATH}`;
 }
 
-// The only URIs this job may add or remove; everything else is left alone.
-export function isOwnedUri(uri: string, amplifyAppId: string): boolean {
-  return new RegExp(
-    `^https://[a-z0-9-]+\\.${amplifyAppId}\\.amplifyapp\\.com${CALLBACK_PATH}$`,
-  ).test(uri);
-}
-
 function assertStringArray(value: unknown, name: string): asserts value is string[] {
   if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
     throw new Error(`${name} must be an array of strings`);
@@ -66,7 +66,7 @@ export function planRedirectUris(input: PlanInput): Plan {
     throw new Error(`maxRemovals must be a non-negative integer, got ${maxRemovals}`);
   }
 
-  const desired = new Set<string>();
+  const desired = new Set<string>(STATIC_REDIRECT_URIS);
   const skipped: Plan["skipped"] = [];
 
   for (const branch of branches) {
@@ -83,7 +83,7 @@ export function planRedirectUris(input: PlanInput): Plan {
     desired.add(previewRedirectUri(branch, amplifyAppId));
   }
 
-  const removed = current.filter((uri) => isOwnedUri(uri, amplifyAppId) && !desired.has(uri));
+  const removed = current.filter((uri) => !desired.has(uri));
   const added = [...desired].filter((uri) => !current.includes(uri)).sort();
   const next = [...current.filter((uri) => !removed.includes(uri)), ...added];
 
@@ -94,11 +94,6 @@ export function planRedirectUris(input: PlanInput): Plan {
   }
   if (next.length > MAX_REDIRECT_URIS) {
     throw new Error(`Plan has ${next.length} redirect URIs; Entra allows ${MAX_REDIRECT_URIS}`);
-  }
-  for (const uri of current) {
-    if (!isOwnedUri(uri, amplifyAppId) && !next.includes(uri)) {
-      throw new Error(`Plan would drop a URI this job does not own: ${uri}`);
-    }
   }
 
   return { next, added, removed, skipped };
