@@ -121,6 +121,47 @@ How it works, and where the pieces live (all under
   table, so the file always matches the on-screen column set (including the
   tab-dependent Failure reason column).
 
+## Preview sign-in
+
+Every `PAY-*` and `feature/*` branch gets an Amplify preview, and the
+**Entra Preview Redirects** workflow registers its sign-in callback on the
+Payment Portal Dashboard Dev app registration. Push a branch and sign-in works
+within about 15 minutes (immediately if you open a PR); delete or merge the
+branch and the callback is removed. Nothing needs to be added by hand. See
+ADR 0002 for why it works this way.
+
+The workflow runs `scripts/entra-preview-redirects/sync.sh`, which compares the
+repo's branches with the app's redirect URIs, reports the difference on the
+run's summary page, and applies it. It only ever touches URIs of the form
+`https://<branch>.<amplify-app-id>.amplifyapp.com/api/auth/callback/azure-ad`,
+and removes any of those that no longer have a branch.
+
+Configuration lives in the `entra-dev` GitHub environment (deployable from
+`main` only): secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
+`ENTRA_APP_OBJECT_ID`, and variables `AMPLIFY_APP_ID` and `DRY_RUN`.
+
+- **Pause it:** set `DRY_RUN` to `true`. Runs keep reporting but change nothing.
+  `false` turns writes back on.
+- **Run it now:** Actions → Entra Preview Redirects → Run workflow.
+- **"Refusing to remove N URIs":** a run will not remove more than 10 at once,
+  in case the branch list came back wrong. Check the summary; if the removals
+  are expected, run it manually with a higher `max_removals`.
+- **"Entra does not match the plan":** the write did not stick. Compare the
+  app's redirect URIs in the Azure portal with the run summary, then re-run.
+- **Preview sign-in fails with `AADSTS50011`:** the callback is not registered
+  yet. Check the latest run, or run it manually.
+- **Scheduled runs stopped:** GitHub pauses schedules after 60 days without a
+  commit. Re-enable the workflow from the Actions tab.
+
+To see what a run would do without GitHub Actions (read-only with
+`DRY_RUN=true`, using your own `az login`):
+
+```sh
+GITHUB_REPOSITORY=ustaxcourt/ustc-payment-portal-dashboard \
+ENTRA_APP_OBJECT_ID=<object id> AMPLIFY_APP_ID=<app id> \
+scripts/entra-preview-redirects/sync.sh
+```
+
 ## Not yet set up
 
 These are deliberate gaps, not oversights — see ADR 0001's open questions:
