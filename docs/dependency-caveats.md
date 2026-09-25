@@ -24,21 +24,24 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.2.4 — deferred (2026-08-04, re-confirmed 2026-09-17)
+### @tanstack/react-table 8.21.3 → 9.2.4 — deferred (2026-08-04, re-confirmed 2026-09-23)
 
 - **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.2.4`.
-- **Reason:** v9 is an API rewrite — `useTable` replaces `useReactTable`,
-  `createCoreRowModel` replaces `getCoreRowModel`, and row models are opt-in
-  features. A plain `npm install` picks it up silently. Every shadcn data-table
-  example still targets v8, which has been stable since April 2025, so v8 is the
-  version a future maintainer will find documentation for.
-- **Plan:** Revisit once the v9 ecosystem catches up and shadcn's table docs target
-  it. There is no feature we need from v9 — the transaction log uses the core row
-  model only, since the server owns sorting, filtering and pagination. The v9 line
-  has moved 9.0.0 → 9.2.4 since this was first written, but the rewrite and the
-  shadcn documentation gap are unchanged, so the reasoning still holds.
+- **Reason:** v9 is not backward compatible with the v8 API used throughout the
+  transaction log. The application currently imports and relies on v8-specific
+  APIs including `useReactTable` and `getCoreRowModel`. Attempting to resolve the
+  dependency to v9 causes build failures such as:
+  `Export getCoreRowModel doesn't exist in target module` and
+  `Export useReactTable doesn't exist in target module`.
+  The migration requires source changes rather than a lockfile refresh. The
+  shadcn table examples and existing transaction-log implementation are still
+  based on the v8 API surface.
+- **Plan:** Remain on v8 until there is a planned effort to migrate the
+  transaction-log components to the v9 API. The upgrade should include a review
+  of all table-related components, sorting behavior, and tests. Pin the package
+  exactly to prevent automated dependency-update workflows from introducing v9.
 
-### hashicorp/aws provider 6.56.0 → 6.65.0 — deferred (2026-07-29, re-confirmed 2026-09-17)
+### hashicorp/aws provider 6.56.0 → 6.66.0 — deferred (2026-07-29, re-confirmed 2026-09-17)
 
 - **Current:** `6.56.0` (pinned exactly, not `~> 6.0`). **Available latest:** `6.65.0`.
 - **Reason:** 6.57.0 fails reading the GitHub OIDC provider. Every `terraform plan`
@@ -62,27 +65,26 @@ enough context that the next person doesn't have to re-derive the decision.
   Pinned exactly in the meantime so `terraform init -upgrade` cannot silently
   reintroduce it.
 
-### next 15.5.25 → 16.3.5 — deferred (2026-07-27, re-confirmed 2026-09-17)
+### next 15.5.26 → 16.3.6 — deferred (2026-07-27, re-confirmed 2026-09-23)
 
-- **Current:** `15.5.25` (pinned exactly, not a range). **Available latest:** `16.3.5`.
+- **Current:** `15.5.26` (pinned exactly, not a range). **Available latest:** `16.3.6`.
 - **Reason:** AWS Amplify Hosting — the hosting target chosen for this app — documents
   Next.js support through version 15. Next 16 is not officially supported, and the
-  Amplify Hosting issue tracker carries a concrete failure for it: *"Next.js 16.1 build
+  Amplify Hosting issue tracker carries a concrete failure for it: _"Next.js 16.1 build
   fails with EEXIST error: Turbopack creates symlinks in `.next/node_modules` that
-  Amplify bundler cannot handle,"* plus open reports of WEB_COMPUTE builds stuck in
+  Amplify bundler cannot handle,"_ plus open reports of WEB_COMPUTE builds stuck in
   provisioning and SSR compute hangs. We were exposed to that failure by default: Next 16
   makes Turbopack the default build engine, so a plain `next build` produced
-  `▲ Next.js 16.2.12 (Turbopack)` with no opt-in. On the 15.5.x line the build runs on
+  `▲ Next.js 16.x (Turbopack)` with no opt-in. On the 15.5.x line the build runs on
   webpack.
 - **Plan:** Upgrade when Amplify documents Next 16 support and the Turbopack bundler
-  issue is closed. Pinned exactly rather than `^15` so the major cannot drift back in
+  issue is closed. Pinned exactly rather than `^15` so the major cannot drift in
   through a lockfile refresh. **This pin is contingent on the Amplify hosting decision
   (ADR 0001 open question 3); if the team selects OpenNext instead, re-evaluate rather
   than assuming the pin is still required.**
 - **Note:** Staying on 15.x is not the same as staying still. This cycle moved
-  15.5.22 → 15.5.25 within the pin, which is what cleared the critical Next.js RCE
-  advisories (see below). Patch releases on the 15.5 line should be taken promptly
-  rather than waiting on the major.
+  15.5.25 → 15.5.26 within the pin. Patch releases on the 15.5 line should continue
+  to be taken promptly while Next 16 remains deferred.
 
 ### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17)
 
@@ -100,6 +102,7 @@ enough context that the next person doesn't have to re-derive the decision.
   The build fails before compiling anything. Verified by reverting to 5.9.3 on an
   otherwise identical tree, where the build succeeds — so this is the TypeScript
   major, not anything else in this cycle.
+
 - **Plan:** Revisit when Next.js supports the TypeScript 7 compiler API for
   `next.config.ts` loading. Tied to the Next 16 entry above: check both together,
   and re-test with `npm run build`, not just `npm run tsc` — a passing typecheck
@@ -132,24 +135,17 @@ enough context that the next person doesn't have to re-derive the decision.
 
 - **Reason it can't be fixed now:** These four advisories together cover
   `postcss <= 8.5.22`. Our direct dependency tree is already clear —
-  `@tailwindcss/postcss@4.3.3` resolves `postcss@8.5.28`, which is patched. The
-  flagged copy is `postcss@8.4.31`, vendored inside `next@15.5.25` at
-  `node_modules/next/node_modules/postcss`. We do not control that pin, and it is
-  still present on 15.5.25, the latest 15.x release. The only fix `npm audit`
-  offers is `next@16.3.5` — the deferred major (see
-  [Deferred upgrades](#deferred-upgrades)).
+  `@tailwindcss/postcss` resolves a patched PostCSS version. The flagged copy
+  remains vendored inside `next@15.5.26` at
+  `node_modules/next/node_modules/postcss`. We do not control that pin. The
+  only remediation offered by `npm audit` is upgrading to `next@16.3.6`, which
+  is currently deferred (see Deferred upgrades).
 - **Mitigation:** All four advisories require attacker-controlled CSS reaching
-  the compiler: XSS via an unescaped `</style>` in stringify output, and three
-  arbitrary-file-read paths via a malicious `sourceMappingURL` comment. This app
-  compiles only first-party CSS at build time, in CI — no user-supplied
-  stylesheet is ever parsed, at build time or at runtime. Exploitation would
-  require an attacker to already have commit access to this repo, at which point
-  the advisory is not the problem.
-- **Revisit:** Clears with the Next 16 upgrade, or sooner if Next.js ships a 15.5.x
-  patch bumping its bundled `postcss` past 8.5.22. Re-run `npm audit` on each
-  dependency-update cycle and drop this entry once the nested copy is patched.
-  This is the **only** remaining advisory in the tree; both counts `npm audit`
-  reports (1 high, 1 moderate) trace to this one nested package.
+  the compiler. This application compiles only first-party CSS during CI/build
+  and does not process user-supplied stylesheets.
+- **Revisit:** Re-test whenever a new 15.5.x patch is released or when the
+  deferred Next 16 upgrade is revisited. Remove this entry once Next ships a
+  patched bundled PostCSS version.
 
 <!-- Format:
 ### <advisory-id> — <package>@<version> (<severity>)
