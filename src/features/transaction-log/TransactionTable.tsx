@@ -71,9 +71,13 @@ export default function TransactionTable({
 
   const leafColumns = table.getVisibleLeafColumns();
   const totalSize = leafColumns.reduce((sum, col) => sum + col.getSize(), 0);
+  const tableRows = table.getRowModel().rows;
 
   return (
-    <div data-testid="transaction-table-scroll" className={wrapperClassName}>
+    <div
+      data-testid="transaction-table-scroll"
+      className={cn("relative", wrapperClassName)}
+    >
       <Table className="table-fixed text-xs">
         <TableCaption className="sr-only">{caption}</TableCaption>
         <colgroup>
@@ -110,35 +114,29 @@ export default function TransactionTable({
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-24 text-center text-muted-foreground"
-              >
-                {emptyMessage}
-              </TableCell>
+          {tableRows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell, index) => (
+                <CopyableCell
+                  key={cell.id}
+                  text={cell.column.columnDef.meta?.copyText?.(row.original)}
+                  className={cn(
+                    "px-1.5 py-1",
+                    cellBorder(index, row.getVisibleCells().length),
+                  )}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </CopyableCell>
+              ))}
             </TableRow>
-          ) : (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell, index) => (
-                  <CopyableCell
-                    key={cell.id}
-                    text={cell.column.columnDef.meta?.copyText?.(row.original)}
-                    className={cn(
-                      "px-1.5 py-1",
-                      cellBorder(index, row.getVisibleCells().length),
-                    )}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </CopyableCell>
-                ))}
-              </TableRow>
-            ))
-          )}
+          ))}
         </TableBody>
       </Table>
+      {tableRows.length === 0 ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-status-neutral-subtle text-center text-xs text-muted-foreground">
+          {emptyMessage}
+        </div>
+      ) : null}
     </div>
   );
 }
