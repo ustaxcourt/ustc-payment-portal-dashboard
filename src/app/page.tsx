@@ -60,7 +60,7 @@ export default async function Home({
         </header>
       </div>
 
-      <Suspense fallback={<div className="bg-muted px-6 py-4 sm:px-8" />}>
+      <Suspense fallback={<div className="bg-status-neutral px-6 py-4 sm:px-8" />}>
         <TimeframeBar />
       </Suspense>
 
