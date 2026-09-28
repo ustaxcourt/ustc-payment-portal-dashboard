@@ -34,7 +34,7 @@ branch.
 
 | Concern | Choice |
 | --- | --- |
-| What gets a URI | Every branch matching Amplify's `preview_branch_patterns`, PR or not |
+| What gets a URI | Every branch matching Amplify's `preview_branch_patterns`, PR or not, except names with non-ASCII characters or a subdomain over 63 characters (skipped and flagged) |
 | When a URI goes away | When its branch is deleted; auto-delete on merge makes that automatic |
 | Model | **Reconcile**: compute the full desired set every run, not add/remove per event |
 | Scope | The whole list: `STATIC_REDIRECT_URIS` in `plan.ts` plus preview URIs; anything else is removed |
@@ -64,7 +64,9 @@ used; the 15-minute schedule covers newly pushed branches instead.
 **The subdomain rule is duplicated on purpose.** `plan.ts` repeats
 `amplify.yml`'s `NEXTAUTH_URL` rule (lowercase, non-alphanumerics to `-`)
 because that is the `redirect_uri` the app actually sends. A test pins it,
-and both places point at each other.
+and both places point at each other. For non-ASCII names that rule depends on
+the build machine's locale (`café` becomes `caf-` or `caf--`), so those
+branches are skipped and flagged rather than registered under a guess.
 
 ### Alternatives considered
 

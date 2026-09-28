@@ -130,7 +130,10 @@ registration's redirect URI list. It keeps exactly:
   (`scripts/entra-redirect-uris/plan.ts`): local development and the dev
   domain, and
 - one sign-in callback per `PAY-*` or `feature/*` branch, matching its Amplify
-  preview.
+  preview. Branches whose names contain non-ASCII characters or spaces, or
+  whose preview subdomain would exceed 63 characters, are skipped and flagged
+  in the run summary, because their callback URL cannot be predicted reliably.
+  Stick to letters, numbers and hyphens.
 
 Push a branch and sign-in works on its preview within about 15 minutes
 (immediately if you open a PR); delete or merge the branch and the callback is
