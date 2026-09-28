@@ -70,16 +70,16 @@
   --popover: oklch(1 0 0);
   --popover-foreground: var(--foreground);
   --primary: #0f3aa8;
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(96.8% 0.007 247.896);
+  --primary-foreground: var(--color-neutral-50);
+  --secondary: var(--color-neutral-100);
+  --secondary-foreground: var(--color-neutral-900);
+  --muted: var(--color-slate-100);
   --muted-foreground: oklch(0.46 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --accent: var(--color-neutral-100);
+  --accent-foreground: var(--color-neutral-900);
+  --destructive: var(--color-red-600);
   --border: oklch(0.967 0.0029 264.54);
-  --input: oklch(0.922 0 0);
+  --input: var(--color-neutral-200);
   --ring: var(--primary);
   /* Categorical chart order, CVD-validated against white; assign in fixed
      order, never cycled. Placeholder until PAY-387 designs specify colors. */
@@ -89,27 +89,29 @@
   --chart-4: #8a3ffc;
   --chart-5: #c4457e;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --status-neutral: oklch(92.9% 0.013 255.508);
-  --status-neutral-foreground: oklch(20.8% 0.042 265.755);
-  --status-neutral-subtle: oklch(96.8% 0.007 247.896);
-  --status-success: oklch(92.5% 0.084 155.995);
+  --sidebar: var(--color-neutral-50);
+  --sidebar-foreground: var(--color-neutral-950);
+  --sidebar-primary: var(--color-neutral-900);
+  --sidebar-primary-foreground: var(--color-neutral-50);
+  --sidebar-accent: var(--color-neutral-100);
+  --sidebar-accent-foreground: var(--color-neutral-900);
+  --sidebar-border: var(--color-neutral-200);
+  --sidebar-ring: var(--color-neutral-400);
+  /* Unpicked stock Tailwind swatches, referenced by name so that's obvious;
+     the *-foreground trio and table-border are the only hand-tuned values here. */
+  --status-neutral: var(--color-slate-200);
+  --status-neutral-foreground: var(--color-slate-900);
+  --status-neutral-subtle: var(--color-slate-100);
+  --status-success: var(--color-green-200);
   --status-success-foreground: oklch(0.447 0.119 151.4);
-  --status-success-subtle: oklch(98.2% 0.018 155.826);
-  --status-failed: oklch(88.5% 0.062 18.334);
+  --status-success-subtle: var(--color-green-50);
+  --status-failed: var(--color-red-200);
   --status-failed-foreground: oklch(0.445 0.177 26.8);
-  --status-failed-subtle: oklch(97.1% 0.013 17.38);
-  --status-pending: oklch(92.4% 0.12 95.746);
+  --status-failed-subtle: var(--color-red-50);
+  --status-pending: var(--color-amber-200);
   --status-pending-foreground: oklch(0.422 0.095 57.9);
-  --status-pending-subtle: oklch(98.7% 0.022 95.277);
-  --totals-header: oklch(93.2% 0.032 255.585);
+  --status-pending-subtle: var(--color-amber-50);
+  --totals-header: var(--color-blue-100);
   --table-border: oklch(0.46 0 0);
 }
 
