@@ -26,6 +26,7 @@ export type Plan = {
   added: string[];
   removed: string[];
   skipped: { branch: string; reason: string }[];
+  warnings: string[];
 };
 
 function globToRegExp(pattern: string): RegExp {
@@ -68,6 +69,8 @@ export function planRedirectUris(input: PlanInput): Plan {
 
   const desired = new Set<string>(STATIC_REDIRECT_URIS);
   const skipped: Plan["skipped"] = [];
+  const warnings: string[] = [];
+  const branchBySubdomain = new Map<string, string>();
 
   for (const branch of branches) {
     if (!isPreviewBranch(branch)) continue;
@@ -76,16 +79,23 @@ export function planRedirectUris(input: PlanInput): Plan {
       skipped.push({ branch, reason: "contains non-ASCII or whitespace characters" });
       continue;
     }
-    if (previewSubdomain(branch).length > 63) {
+    const subdomain = previewSubdomain(branch);
+    if (subdomain.length > 63) {
       skipped.push({ branch, reason: "subdomain exceeds the 63-character DNS label limit" });
       continue;
     }
+    const other = branchBySubdomain.get(subdomain);
+    if (other) {
+      warnings.push(`"${other}" and "${branch}" share the preview subdomain "${subdomain}"`);
+    }
+    branchBySubdomain.set(subdomain, branch);
     desired.add(previewRedirectUri(branch, amplifyAppId));
   }
 
+  const currentSet = new Set(current);
   const removed = current.filter((uri) => !desired.has(uri));
-  const added = [...desired].filter((uri) => !current.includes(uri)).sort();
-  const next = [...current.filter((uri) => !removed.includes(uri)), ...added];
+  const added = [...desired].filter((uri) => !currentSet.has(uri)).sort();
+  const next = [...current.filter((uri) => desired.has(uri)), ...added];
 
   if (removed.length > maxRemovals) {
     throw new Error(
@@ -96,7 +106,7 @@ export function planRedirectUris(input: PlanInput): Plan {
     throw new Error(`Plan has ${next.length} redirect URIs; Entra allows ${MAX_REDIRECT_URIS}`);
   }
 
-  return { next, added, removed, skipped };
+  return { next, added, removed, skipped, warnings };
 }
 
 if (import.meta.main) {

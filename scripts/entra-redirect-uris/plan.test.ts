@@ -94,8 +94,18 @@ describe("planRedirectUris", () => {
     expect(second.next).toEqual(first.next);
   });
 
-  it("adds one URI when two branches map to the same subdomain", () => {
-    expect(plan({ branches: ["feature/a_b", "feature/a.b"] }).added).toEqual([uri("feature-a-b")]);
+  it("adds one URI and warns when two branches map to the same subdomain", () => {
+    const result = plan({ branches: ["feature/a_b", "feature/a-b", "PAY-1-Fix", "PAY-1-fix"] });
+
+    expect(result.added).toEqual([uri("feature-a-b"), uri("pay-1-fix")]);
+    expect(result.warnings).toEqual([
+      '"feature/a_b" and "feature/a-b" share the preview subdomain "feature-a-b"',
+      '"PAY-1-Fix" and "PAY-1-fix" share the preview subdomain "pay-1-fix"',
+    ]);
+  });
+
+  it("has no warnings when every subdomain is unique", () => {
+    expect(plan({ branches: ["feature/foo", "PAY-1"] }).warnings).toEqual([]);
   });
 
   it("returns additions in sorted order", () => {

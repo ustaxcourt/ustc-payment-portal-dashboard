@@ -58,7 +58,8 @@ report ""
 report "$(jq -r '
   (.added[] | "- ➕ `\(.)`"),
   (.removed[] | "- ➖ `\(.)`"),
-  (.skipped[] | "- ⚠️ skipped `\(.branch)`: \(.reason)")
+  (.skipped[] | "- ⚠️ skipped `\(.branch)`: \(.reason)"),
+  (.warnings[] | "- ⚠️ \(.)")
 ' "$WORK_DIR/plan.json")"
 
 if [ "$added" -eq 0 ] && [ "$removed" -eq 0 ]; then
