@@ -100,8 +100,6 @@
   --sidebar-accent-foreground: var(--color-neutral-900);
   --sidebar-border: var(--color-neutral-200);
   --sidebar-ring: var(--color-neutral-400);
-  /* Unpicked stock Tailwind swatches, referenced by name so that's obvious;
-     the *-foreground trio and table-border are the only hand-tuned values here. */
   --status-neutral: var(--color-slate-200);
   --status-neutral-foreground: var(--color-slate-900);
   --status-neutral-subtle: var(--color-slate-100);
