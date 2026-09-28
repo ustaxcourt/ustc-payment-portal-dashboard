@@ -63,11 +63,11 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: #000000;
-  --card: oklch(1 0 0);
+  --background: var(--color-white);
+  --foreground: var(--color-black);
+  --card: var(--color-white);
   --card-foreground: var(--foreground);
-  --popover: oklch(1 0 0);
+  --popover: var(--color-white);
   --popover-foreground: var(--foreground);
   --primary: #0f3aa8;
   --primary-foreground: var(--color-neutral-50);
