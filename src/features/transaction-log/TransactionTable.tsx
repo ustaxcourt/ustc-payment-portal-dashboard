@@ -94,6 +94,7 @@ export default function TransactionTable({
               {headerGroup.headers.map((header, index) => (
                 <TableHead
                   key={header.id}
+                  title={header.column.columnDef.meta?.headerLabel}
                   aria-sort={
                     header.column.getCanSort()
                       ? ariaSort(header.column.getIsSorted())
