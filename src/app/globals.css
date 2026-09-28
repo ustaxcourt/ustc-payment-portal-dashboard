@@ -106,13 +106,13 @@
   --status-neutral-foreground: var(--color-slate-900);
   --status-neutral-subtle: var(--color-slate-100);
   --status-success: var(--color-green-200);
-  --status-success-foreground: oklch(0.447 0.119 151.4);
+  --status-success-foreground: var(--color-green-800);
   --status-success-subtle: var(--color-green-50);
   --status-failed: var(--color-red-200);
-  --status-failed-foreground: oklch(0.445 0.177 26.8);
+  --status-failed-foreground: var(--color-red-900);
   --status-failed-subtle: var(--color-red-50);
   --status-pending: var(--color-amber-200);
-  --status-pending-foreground: oklch(0.422 0.095 57.9);
+  --status-pending-foreground: var(--color-yellow-900);
   --status-pending-subtle: var(--color-amber-50);
   --totals-header: var(--color-blue-100);
   --table-border: var(--muted-gray);
