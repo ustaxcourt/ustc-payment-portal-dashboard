@@ -163,6 +163,7 @@ To see what a run would do without GitHub Actions (read-only with
 `DRY_RUN=true`, using your own `az login`):
 
 ```sh
+DRY_RUN=true \
 GITHUB_REPOSITORY=ustaxcourt/ustc-payment-portal-dashboard \
 ENTRA_APP_OBJECT_ID=<object id> AMPLIFY_APP_ID=<app id> \
 scripts/entra-redirect-uris/sync.sh

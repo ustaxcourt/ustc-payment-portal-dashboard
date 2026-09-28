@@ -54,4 +54,4 @@ jobs:
           ENTRA_APP_OBJECT_ID: ${{ secrets.ENTRA_APP_OBJECT_ID }}
           AMPLIFY_APP_ID: ${{ vars.AMPLIFY_APP_ID }}
           DRY_RUN: ${{ vars.DRY_RUN }}
-          MAX_REMOVALS: ${{ inputs.max_removals || 10 }}
+          MAX_REMOVALS: ${{ inputs.max_removals }}
