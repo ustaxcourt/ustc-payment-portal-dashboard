@@ -74,7 +74,10 @@
   --secondary: var(--color-neutral-100);
   --secondary-foreground: var(--color-neutral-900);
   --muted: var(--color-slate-100);
-  --muted-foreground: oklch(0.46 0 0);
+  /* No Tailwind swatch matches this gray; shared so muted-foreground and
+     table-border (below) can't drift apart while they happen to agree. */
+  --muted-gray: oklch(0.46 0 0);
+  --muted-foreground: var(--muted-gray);
   --accent: var(--color-neutral-100);
   --accent-foreground: var(--color-neutral-900);
   --destructive: var(--color-red-600);
@@ -112,7 +115,7 @@
   --status-pending-foreground: oklch(0.422 0.095 57.9);
   --status-pending-subtle: var(--color-amber-50);
   --totals-header: var(--color-blue-100);
-  --table-border: oklch(0.46 0 0);
+  --table-border: var(--muted-gray);
 }
 
 @layer base {
