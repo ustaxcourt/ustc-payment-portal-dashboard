@@ -41,7 +41,7 @@ export default async function Home({
   return (
     <>
       <div className="border-b bg-slate-100">
-        <header className="flex items-center justify-between px-4 py-3">
+        <header className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4A556F]">
             <Image
