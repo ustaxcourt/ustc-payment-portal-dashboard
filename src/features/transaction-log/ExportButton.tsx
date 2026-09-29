@@ -16,6 +16,7 @@ import {
   saveWorkbook,
 } from "./exportWorkbook";
 import type { TransactionSorting, TransactionTab } from "./types";
+import { Download, Loader2 } from "lucide-react";
 
 type ExportPhase =
   | { step: "idle" }
@@ -104,13 +105,20 @@ export default function ExportButton({
             Cancel
           </Button>
         ) : null}
-        <Button
-          type="button"
-          onClick={startExport}
-          disabled={disabled || busy}
-        >
-          {busy ? "Exporting…" : "Export"}
-        </Button>
+          <Button
+            type="button"
+            variant="default"
+            size="icon"
+            onClick={startExport}
+            disabled={disabled || busy}
+            aria-label={busy ? "Exporting transactions" : "Export transaction log"}
+          >
+            {busy ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Download className="h-5 w-5" />
+            )}
+          </Button>
       </div>
       <p aria-live="polite" className="text-sm text-muted-foreground">
         {progressText}
