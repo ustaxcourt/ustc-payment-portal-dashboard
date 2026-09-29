@@ -12,7 +12,7 @@ export default function LogoutButton() {
         broadcastLogout();
         void signOut({ callbackUrl: "/login" });
       }}
-      className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary"
+      className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary cursor-pointer"
     >
       <LogOut className="h-5 w-5" />
       <span>Logout</span>

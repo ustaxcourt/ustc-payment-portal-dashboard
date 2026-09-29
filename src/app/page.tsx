@@ -43,14 +43,14 @@ export default async function Home({
       <div className="border-b bg-slate-100">
         <header className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4A556F]">
-            <Image
-              src="/ustc-seal.png"
-              alt="United States Tax Court seal"
-              width={28}
-              height={28}
-              unoptimized
-            />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white">
+              <Image
+                src="/ustc-seal-black.png"
+                alt="United States Tax Court seal"
+                width={60}
+                height={60}
+                unoptimized
+              />
             </div>
             <div className="flex flex-col gap-0.5">
               <h1 className="text-lg font-bold leading-none text-foreground">
