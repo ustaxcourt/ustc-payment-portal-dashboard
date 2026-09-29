@@ -319,37 +319,4 @@ describe("TransactionLog", () => {
       );
     });
   });
-
-  describe("legacy paymentStatus URL fallback", () => {
-    it("filters using the old paymentStatus param when status is absent", async () => {
-      const fetchMock = mockFetch(response());
-
-      renderLog("?paymentStatus=failed");
-
-      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-
-      const requested = String(fetchMock.mock.calls[0][0]);
-      expect(requested).toContain("status=failed");
-    });
-
-    it("normalizes the URL to `status` and clears the legacy key on interaction", async () => {
-      mockFetch(response());
-      const onUrlUpdate = vi.fn();
-
-      renderLog("?paymentStatus=failed", { onUrlUpdate });
-
-      await waitFor(() => {
-        expect(screen.getByText("Failed (0)")).toBeInTheDocument();
-      });
-
-      await userEvent.click(screen.getByText("Pending (0)"));
-
-      await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
-      const last = onUrlUpdate.mock.calls.at(-1)?.[0] as {
-        searchParams: URLSearchParams;
-      };
-      expect(last.searchParams.get("status")).toBe("pending");
-      expect(last.searchParams.get("paymentStatus")).toBeNull();
-    });
-  });
 });

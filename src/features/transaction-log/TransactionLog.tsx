@@ -115,8 +115,8 @@ export default function TransactionLog() {
       return;
     }
     if (key === "paymentStatus") {
-      // Write forward to the canonical `status` key and clear the legacy one.
-      setParams({ status: value as PaymentStatus | null, paymentStatus: null });
+      // searchFilters calls this field `paymentStatus`; the URL/wire key is `status`.
+      setParams({ status: value as PaymentStatus | null });
       return;
     }
     setParams({ [key]: value } as Pick<TransactionSearchFilters, typeof key>);

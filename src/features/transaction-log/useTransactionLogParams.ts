@@ -28,11 +28,6 @@ export const useTransactionLogParams = () => {
       to: parseAsString,
       feeType: parseAsStringLiteral(FEE_TYPES),
       payType: parseAsStringLiteral(PAY_TYPES),
-      // Legacy key: the old Search tab wrote the Payment Status dropdown here,
-      // separately from `status` (the old tab param). Kept as a read-only
-      // fallback so links minted before the tabs-to-sidebar refactor still
-      // filter correctly; `status` is the sole key written going forward.
-      paymentStatus: parseAsStringLiteral(PAYMENT_STATUSES),
       transactionStatus: parseAsStringLiteral(TRANSACTION_STATUSES),
       metadataKey: parseAsStringLiteral(METADATA_KEYS),
       metadataValue: parseAsString,
@@ -50,12 +45,10 @@ export const useTransactionLogParams = () => {
 
   const activeSorting = { sort: params.sort, order: params.order };
 
-  const paymentStatus = params.status ?? params.paymentStatus;
-
   const searchFilters: TransactionSearchFilters = {
     feeType: params.feeType,
     payType: params.payType,
-    paymentStatus,
+    paymentStatus: params.status,
     transactionStatus: params.transactionStatus,
     metadataKey: params.metadataKey,
     metadataValue: params.metadataValue,
@@ -74,7 +67,6 @@ export const useTransactionLogParams = () => {
       status: null,
       feeType: null,
       payType: null,
-      paymentStatus: null,
       transactionStatus: null,
       metadataKey: null,
       metadataValue: null,
