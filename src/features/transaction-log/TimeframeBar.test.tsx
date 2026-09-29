@@ -85,7 +85,7 @@ describe("TimeframeBar", () => {
       screen.getByRole("button", { name: "Custom range" }),
     ).toBeInTheDocument();
     expect(
-      await screen.findByRole("button", { name: "Export" }),
+      await screen.findByRole("button", { name: "Export transaction log" }),
     ).toBeInTheDocument();
   });
 
@@ -94,7 +94,7 @@ describe("TimeframeBar", () => {
     renderBar();
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Export" })).toBeDisabled(),
+      expect(screen.getByRole("button", { name: "Export transaction log" })).toBeDisabled(),
     );
   });
 
@@ -103,7 +103,7 @@ describe("TimeframeBar", () => {
     renderBar();
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Export" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "Export transaction log" })).toBeEnabled(),
     );
   });
 

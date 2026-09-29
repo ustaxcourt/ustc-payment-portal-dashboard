@@ -56,7 +56,7 @@ describe("ExportButton", () => {
     vi.mocked(buildWorkbookInWorker).mockResolvedValue(buffer);
 
     renderButton();
-    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export transaction log" }));
 
     await waitFor(() =>
       expect(saveWorkbook).toHaveBeenCalledWith(
@@ -81,10 +81,10 @@ describe("ExportButton", () => {
     );
 
     renderButton();
-    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export transaction log" }));
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Export" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "Export transaction log" })).toBeEnabled(),
     );
     expect(fetchAllTransactions).not.toHaveBeenCalled();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -96,7 +96,7 @@ describe("ExportButton", () => {
     );
 
     renderButton();
-    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export transaction log" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /60,000.*Narrow the timeframe/,
@@ -108,13 +108,13 @@ describe("ExportButton", () => {
     vi.mocked(fetchAllTransactions).mockRejectedValue(new Error("boom"));
 
     renderButton();
-    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export transaction log" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The export failed. Try again.",
     );
     expect(
-      screen.getByRole("button", { name: "Export" }),
+      screen.getByRole("button", { name: "Export transaction log" }),
     ).not.toBeDisabled();
   });
 
@@ -124,10 +124,10 @@ describe("ExportButton", () => {
     );
 
     renderButton();
-    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export transaction log" }));
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Export" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "Export transaction log" })).toBeEnabled(),
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -143,7 +143,7 @@ describe("ExportButton", () => {
     );
 
     renderButton();
-    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export transaction log" }));
 
     await waitFor(() =>
       expect(discardSaveDestination).toHaveBeenCalledWith(destination),
@@ -162,7 +162,7 @@ describe("ExportButton", () => {
     );
 
     renderButton();
-    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export transaction log" }));
 
     await waitFor(() =>
       expect(discardSaveDestination).toHaveBeenCalledWith(destination),
@@ -177,7 +177,7 @@ describe("ExportButton", () => {
     vi.mocked(buildWorkbookInWorker).mockResolvedValue(new ArrayBuffer(8));
 
     renderButton();
-    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export transaction log" }));
 
     await waitFor(() => expect(saveWorkbook).toHaveBeenCalled());
     expect(discardSaveDestination).not.toHaveBeenCalled();
@@ -196,19 +196,19 @@ describe("ExportButton", () => {
     );
 
     renderButton();
-    await userEvent.click(screen.getByRole("button", { name: "Export" }));
+    await userEvent.click(screen.getByRole("button", { name: "Export transaction log" }));
 
     const cancel = await screen.findByRole("button", { name: "Cancel" });
     await userEvent.click(cancel);
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Export" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "Export transaction log" })).toBeEnabled(),
     );
     release({ rows: [], total: 0 });
   });
 
   it("is disabled when the view has no rows", () => {
     renderButton(true);
-    expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Export transaction log" })).toBeDisabled();
   });
 });
