@@ -112,6 +112,7 @@ export default function ExportButton({
             onClick={startExport}
             disabled={disabled || busy}
             aria-label={busy ? "Exporting transactions" : "Export transaction log"}
+            title={busy ? "Exporting transactions" : "Export transaction log"}
           >
             {busy ? (
               <Loader2 className="h-5 w-5 animate-spin" />
