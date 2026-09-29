@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import RevenueTotals from "./RevenueTotals";
 import type { TotalsResponse } from "./types";
@@ -96,7 +96,7 @@ describe("RevenueTotals", () => {
     expect(screen.getByText("$458,500.00")).toBeInTheDocument();
     expect(
       screen.getByRole("rowheader", {
-        name: "YoY Trend (FY26 vs FY25)",
+        name: "YoY Trend (FY26 vs. FY25)",
       }),
     ).toBeInTheDocument();
   });
@@ -128,7 +128,7 @@ describe("RevenueTotals", () => {
     const rowHeaders = screen.getAllByRole("rowheader");
     expect(rowHeaders.map((header) => header.textContent)).toEqual([
       "Current Total",
-      "YoY Trend (FY26 vs FY25)",
+      "YoY Trend (FY26 vs. FY25)",
       "Projected Total, estimated from the rate collected so far",
     ]);
   });
@@ -202,13 +202,72 @@ describe("RevenueTotals", () => {
 
     // The day and week subtitles already carry their dates.
     expect(
-      await screen.findByRole("columnheader", { name: "Today - Feb 18, 2026" }),
+      await screen.findByRole("columnheader", { name: "Today, Feb 18, 2026" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Week, Feb 15–18, 2026" }),
+    ).toBeInTheDocument();
+  });
+
+  it("names the undated periods with their subtitle and window", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    expect(
+      await screen.findByRole("columnheader", {
+        name: "Month, February, Feb 1, 2026 to Feb 18, 2026",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("columnheader", {
-        name: "Week - Feb 15, 2026 – Feb 18, 2026",
+        name: "Quarter, Q2, Jan 1, 2026 to Feb 18, 2026",
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", {
+        name: "Fiscal Year, FY26, Oct 1, 2025 to Feb 18, 2026",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the trend glyphs from assistive tech", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    await screen.findByText("$4,500.00");
+    for (const glyph of [...screen.getAllByText("▲"), ...screen.getAllByText("▼")]) {
+      expect(glyph).toHaveAttribute("aria-hidden", "true");
+    }
+  });
+
+  it("announces loading without exposing the placeholder table", () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => {})));
+
+    renderTotals();
+
+    expect(screen.getByRole("status")).toHaveTextContent("Loading revenue totals…");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("offers no control to collapse the totals, per the AC", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    await screen.findByText("$4,500.00");
+    const region = screen.getByRole("region", { name: "Revenue Totals" });
+    expect(within(region).queryByRole("button")).not.toBeInTheDocument();
   });
 
   it("shows the retry affordance when the request fails", async () => {

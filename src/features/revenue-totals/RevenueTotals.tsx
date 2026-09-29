@@ -16,8 +16,8 @@ import {
 } from "./types";
 import { useTotals } from "./useTotals";
 
-const CELL = "border px-3 py-0.5";
-const HEADER_ROW = "bg-totals-header";
+const CELL = "px-3 py-1 text-left";
+const PERIOD_HEADER = cn(CELL, "border-b text-sm font-normal");
 const HEADING_ID = "revenue-totals-heading";
 
 const formatTrendPercent = (percentChange: number | null): string | null => {
@@ -44,12 +44,10 @@ function TrendCell({
   const showGlyph = (difference ?? 0) !== 0;
 
   return (
-    <td className={cn(CELL, "text-sm tabular-nums")}>
+    <td className={cn(CELL, "text-sm tabular-nums", className)}>
       {showGlyph && (
         <>
-          <span className={cn("font-semibold", className)}>
-            {glyph}
-          </span>{" "}
+          <span aria-hidden="true">{glyph}</span>{" "}
         </>
       )}
 
@@ -75,6 +73,60 @@ function Panel({ children }: { children: React.ReactNode }) {
       </h2>
       {children}
     </section>
+  );
+}
+
+function Columns() {
+  return (
+    <colgroup>
+      <col className="w-56" />
+      {TOTAL_PERIODS.map((period) => (
+        <col key={period} />
+      ))}
+    </colgroup>
+  );
+}
+
+const PLACEHOLDER_ROWS = [
+  { row: "current", height: "h-6" },
+  { row: "trend", height: "h-5" },
+  { row: "projected", height: "h-5" },
+];
+
+function LoadingTotals() {
+  return (
+    <Panel>
+      <p role="status" className="sr-only">
+        Loading revenue totals…
+      </p>
+      <table aria-hidden="true" className="w-full table-fixed border-collapse">
+        <Columns />
+        <thead>
+          <tr>
+            <td />
+            {TOTAL_PERIODS.map((period) => (
+              <td key={period} className={PERIOD_HEADER}>
+                <span className="font-semibold">{PERIOD_LABEL[period]}</span>
+              </td>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {PLACEHOLDER_ROWS.map(({ row, height }) => (
+            <tr key={row}>
+              <td />
+              {TOTAL_PERIODS.map((period) => (
+                <td key={period} className={CELL}>
+                  <div
+                    className={cn(height, "w-28 rounded bg-muted motion-safe:animate-pulse")}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Panel>
   );
 }
 
@@ -123,16 +175,8 @@ export default function RevenueTotals() {
     );
   }
 
-  // The headers gain a date line once the periods arrive, so a table rendered
-  // before them would reflow rather than fill in.
   if (isPending) {
-    return (
-      <Panel>
-        <p role="status" className="text-sm text-muted-foreground">
-          Loading revenue totals…
-        </p>
-      </Panel>
-    );
+    return <LoadingTotals />;
   }
 
   const currentFiscalYear = fiscalYearLabel(data.current.fiscalYear);
@@ -140,27 +184,32 @@ export default function RevenueTotals() {
 
   return (
     <Panel>
-      <div className="overflow-x-auto">
-      <table className="border-collapse text-center">
+      <table className="w-full table-fixed border-collapse">
         <caption className="sr-only">
           Revenue totals for the current day, week, month, fiscal quarter and
           fiscal year, to date
         </caption>
+        <Columns />
         <thead>
-          <tr className={HEADER_ROW}>
-            <td className={cn(CELL, "border-0 bg-background")} />
+          <tr>
+            <td />
             {TOTAL_PERIODS.map((period) => (
-              <th
-                key={period}
-                scope="col"
-                className={cn(CELL, "min-w-32 text-sm font-normal")}
-              >
-                <span className="font-bold">{PERIOD_LABEL[period]}</span>
-                {` - ${periodSubtitle(data.current[period], period)}`}
+              <th key={period} scope="col" className={PERIOD_HEADER}>
+                <span className="font-semibold">{PERIOD_LABEL[period]}</span>
+                <span className="sr-only">,</span>{" "}
+                <span aria-hidden="true" className="text-muted-foreground">
+                  ·{" "}
+                </span>
+                <span className="text-muted-foreground">
+                  {periodSubtitle(data.current[period], period)}
+                </span>
                 {/* The design shows only the subtitle; the summed window still
                     reads out where the subtitle alone doesn't date it. */}
                 {SUBTITLE_IS_DATED.has(period) ? null : (
-                  <span className="sr-only">{periodRange(data.current[period])}</span>
+                  <>
+                    <span className="sr-only">,</span>{" "}
+                    <span className="sr-only">{periodRange(data.current[period])}</span>
+                  </>
                 )}
               </th>
             ))}
@@ -170,12 +219,15 @@ export default function RevenueTotals() {
           <tr>
             <th
               scope="row"
-              className={cn(CELL, "border-0 text-right text-sm font-normal whitespace-nowrap")}
+              className={cn(CELL, "text-right text-sm font-semibold whitespace-nowrap")}
             >
               Current Total
             </th>
             {TOTAL_PERIODS.map((period) => (
-              <td key={period} className={cn(CELL, "text-base tabular-nums")}>
+              <td
+                key={period}
+                className={cn(CELL, "font-mono text-base font-semibold tabular-nums")}
+              >
                 {formatCurrency(data.current[period].total)}
               </td>
             ))}
@@ -183,9 +235,9 @@ export default function RevenueTotals() {
           <tr>
             <th
               scope="row"
-              className={cn(CELL, "border-0 text-right text-sm font-normal")}
+              className={cn(CELL, "text-right text-sm font-normal")}
             >
-              {`YoY Trend (${currentFiscalYear} vs ${priorYearFiscalYear})`}
+              {`YoY Trend (${currentFiscalYear} vs. ${priorYearFiscalYear})`}
             </th>
             {TOTAL_PERIODS.map((period) => (
               <TrendCell
@@ -199,7 +251,7 @@ export default function RevenueTotals() {
               scope="row"
               className={cn(
                 CELL,
-                "border-0 text-right text-sm font-normal whitespace-nowrap italic text-muted-foreground",
+                "text-right text-xs font-normal whitespace-nowrap text-muted-foreground",
               )}
             >
               Projected Total
@@ -210,7 +262,7 @@ export default function RevenueTotals() {
             {TOTAL_PERIODS.map((period) => (
               <td
                 key={period}
-                className={cn(CELL, "bg-muted text-sm tabular-nums italic text-muted-foreground")}
+                className={cn(CELL, "font-mono text-sm tabular-nums italic text-muted-foreground")}
               >
                 {formatWholeCurrency(
                   projectedFees(period, data.current[period]),
@@ -219,8 +271,7 @@ export default function RevenueTotals() {
             ))}
           </tr>
         </tbody>
-        </table>
-      </div>
+      </table>
     </Panel>
   );
 }

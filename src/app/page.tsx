@@ -74,7 +74,7 @@ export default async function Home({
         </header>
       </div>
 
-      <div className="mt-6 mb-6">
+      <div className="border-b bg-background px-6 py-4">
         <RevenueTotals />
       </div>
 
