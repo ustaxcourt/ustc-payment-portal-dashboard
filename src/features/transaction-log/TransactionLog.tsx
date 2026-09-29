@@ -181,8 +181,8 @@ export default function TransactionLog() {
           onRetry={refetch}
         />
       ) : (
-        <div className="flex flex-1 flex-col rounded-md border-2 table-border lg:min-h-0">
-          <div className="flex items-center justify-between rounded-t-[calc(var(--radius-md)-2px)] border-b-2 table-border bg-status-neutral px-4 py-2">
+        <div className="flex flex-1 flex-col rounded-md border-2 lg:min-h-0">
+          <div className="flex items-center justify-between rounded-t-[calc(var(--radius-md)-2px)] border-b-2 bg-status-neutral px-4 py-2">
             <h2 className="text-base font-bold tracking-tight">
               Transaction Log
               {typeof data?.total === "number" ? ` (${data.total})` : ""}
@@ -244,7 +244,7 @@ export default function TransactionLog() {
                 headerTone="bg-status-neutral-subtle"
                 sorting={activeSorting}
                 onSortingChange={setParams}
-                wrapperClassName="flex-1 overflow-auto rounded-br-[calc(var(--radius-md)-2px)] border table-border lg:min-h-0"
+                wrapperClassName="flex-1 overflow-auto rounded-br-[calc(var(--radius-md)-2px)] border lg:min-h-0"
                 emptyMessage={
                   isPending
                     ? "Loading transactions…"

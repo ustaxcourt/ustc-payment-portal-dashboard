@@ -52,7 +52,6 @@
   --color-status-pending-foreground: var(--status-pending-foreground);
   --color-status-pending-subtle: var(--status-pending-subtle);
   --color-totals-header: var(--totals-header);
-  --color-table-border: var(--table-border);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -74,10 +73,8 @@
   --secondary: var(--color-neutral-100);
   --secondary-foreground: var(--color-neutral-900);
   --muted: var(--color-slate-100);
-  /* No Tailwind swatch matches this gray; shared so muted-foreground and
-     table-border (below) can't drift apart while they happen to agree. */
-  --muted-gray: oklch(0.46 0 0);
-  --muted-foreground: var(--muted-gray);
+  /* No Tailwind swatch matches this gray. */
+  --muted-foreground: oklch(0.46 0 0);
   --accent: var(--color-neutral-100);
   --accent-foreground: var(--color-neutral-900);
   --destructive: var(--color-red-600);
@@ -113,7 +110,6 @@
   --status-pending-foreground: var(--color-yellow-900);
   --status-pending-subtle: var(--color-amber-50);
   --totals-header: var(--color-blue-100);
-  --table-border: var(--muted-gray);
 }
 
 @layer base {
