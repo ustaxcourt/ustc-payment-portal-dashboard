@@ -142,9 +142,10 @@ export default function TransactionTable({
   );
 }
 
-// Cells truncate to fit their column (see the colgroup above), so a click
-// copies — and a hover title shows — the untruncated value from the
-// column's `meta.copyText` rather than whatever's visibly clipped.
+// Cells truncate to fit their column (see the colgroup above), so clicking —
+// or focusing the cell's copy button and pressing Enter/Space — copies the
+// untruncated value from the column's `meta.copyText` rather than whatever's
+// visibly clipped. A hover title shows the same full value.
 function CopyableCell({
   text,
   className,
@@ -161,8 +162,11 @@ function CopyableCell({
 
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
-  const handleClick = async () => {
-    if (!text) return;
+  if (!text) {
+    return <TableCell className={className}>{children}</TableCell>;
+  }
+
+  const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -176,14 +180,19 @@ function CopyableCell({
   return (
     <TableCell
       title={text}
-      onClick={handleClick}
-      className={cn(
-        text && "cursor-pointer",
-        copied && "bg-primary/10",
-        className,
-      )}
+      className={cn(copied && "bg-primary/10", className, "p-0")}
     >
-      {children}
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={`Copy ${text}`}
+        className="block w-full truncate px-1.5 py-1 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+      >
+        {children}
+      </button>
+      <span aria-live="polite" className="sr-only">
+        {copied ? "Copied to clipboard" : ""}
+      </span>
     </TableCell>
   );
 }

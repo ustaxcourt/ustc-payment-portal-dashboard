@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getColumns } from "./columns";
 import TransactionTable from "./TransactionTable";
 import type { TransactionLogEntry } from "./types";
@@ -41,6 +41,10 @@ const renderTable = (
 
 const headerFor = (name: string) =>
   screen.getByRole("columnheader", { name: new RegExp(name) });
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("TransactionTable status rendering", () => {
   it("renders a cancelled transaction status as Cancelled", () => {
@@ -164,6 +168,21 @@ describe("TransactionTable sort state", () => {
     renderTable();
 
     expect(screen.getByText("Insufficient funds")).toBeInTheDocument();
+  });
+
+  it("copies a cell's value from the keyboard and announces it", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    renderTable();
+
+    const copyButton = screen.getByRole("button", {
+      name: "Copy Insufficient funds",
+    });
+    copyButton.focus();
+    await userEvent.keyboard("{Enter}");
+
+    expect(writeText).toHaveBeenCalledWith("Insufficient funds");
+    expect(await screen.findByText("Copied to clipboard")).toBeInTheDocument();
   });
 
   it("keeps the headers usable when there are no rows", () => {
