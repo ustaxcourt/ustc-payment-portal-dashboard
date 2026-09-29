@@ -33,6 +33,7 @@ export default function TransactionTable({
   sorting,
   onSortingChange,
   emptyMessage,
+  isRefreshing = false,
   wrapperClassName = "flex-1 overflow-auto rounded-md border-2 lg:min-h-0",
 }: {
   rows: TransactionLogEntry[];
@@ -42,6 +43,7 @@ export default function TransactionTable({
   sorting: TransactionSorting;
   onSortingChange: (next: TransactionSorting) => void;
   emptyMessage: string;
+  isRefreshing?: boolean;
   wrapperClassName?: string;
 }) {
   const sortingState: SortingState = useMemo(
@@ -77,8 +79,14 @@ export default function TransactionTable({
     <div
       data-testid="transaction-table-scroll"
       className={cn("relative", wrapperClassName)}
+      aria-busy={isRefreshing || undefined}
     >
-      <Table className="table-fixed text-xs">
+      <Table
+        className={cn(
+          "table-fixed text-xs",
+          isRefreshing && tableRows.length > 0 && "opacity-50",
+        )}
+      >
         <TableCaption className="sr-only">{caption}</TableCaption>
         <colgroup>
           {leafColumns.map((col) => (
@@ -136,6 +144,14 @@ export default function TransactionTable({
       {tableRows.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center bg-background text-center text-xs text-muted-foreground">
           {emptyMessage}
+        </div>
+      ) : null}
+      {isRefreshing && tableRows.length > 0 ? (
+        <div
+          role="status"
+          className="absolute inset-x-0 top-0 flex justify-center bg-status-neutral-subtle/90 py-1 text-xs text-muted-foreground"
+        >
+          Updating…
         </div>
       ) : null}
     </div>

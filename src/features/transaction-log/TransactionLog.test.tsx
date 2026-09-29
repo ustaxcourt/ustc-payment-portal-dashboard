@@ -298,6 +298,54 @@ describe("TransactionLog", () => {
       });
     });
 
+    it("marks stale rows as updating instead of presenting them as the new filter's results", async () => {
+      const staleRow = {
+        agencyTrackingId: "agency-1",
+        feeName: "Petition Filing Fee",
+        fee: "PETITION_FILING_FEE",
+        transactionAmount: 60,
+        clientName: "payment-portal",
+        transactionReferenceId: "ref-1",
+        paymentStatus: "success" as const,
+        createdAt: "2026-08-03T12:00:00.000Z",
+        lastUpdatedAt: "2026-08-03T13:00:00.000Z",
+      };
+
+      let resolveSecond: (value: TransactionLogResponse) => void = () => {};
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => response({ data: [staleRow], total: 1 }),
+        })
+        .mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              resolveSecond = (value) =>
+                resolve({ ok: true, status: 200, json: async () => value });
+            }),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+
+      renderLog("");
+      await screen.findByText("payment-portal");
+
+      await userEvent.click(screen.getByText("Failed (0)"));
+
+      // The old row stays visible (avoids a blank flash) but is explicitly
+      // marked stale rather than silently passed off as the "Failed" results.
+      expect(screen.getByText("payment-portal")).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent("Updating");
+
+      resolveSecond(response({ data: [], counts: { all: 0, success: 0, failed: 0, pending: 0 } }));
+
+      await waitFor(() =>
+        expect(screen.queryByRole("status")).not.toBeInTheDocument(),
+      );
+      expect(screen.queryByText("payment-portal")).not.toBeInTheDocument();
+    });
+
     it("disables Clear All until a filter is active, then resets on click", async () => {
       const fetchMock = mockFetch(response());
 
