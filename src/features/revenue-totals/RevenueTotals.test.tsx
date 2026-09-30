@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import RevenueTotals from "./RevenueTotals";
 import type { TotalsResponse } from "./types";
 
@@ -77,8 +77,27 @@ const renderTotals = () => {
 const hasText = (expected: string) => (_: string, element: Element | null) =>
   element?.textContent?.replace(/\s+/g, " ").trim() === expected;
 
+const TABLE_NAME = /^Revenue totals for the current day/;
+
+const overflowBy = (scrollWidth: number, clientWidth: number) => {
+  vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(scrollWidth);
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(clientWidth);
+};
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("RevenueTotals", () => {
@@ -268,6 +287,34 @@ describe("RevenueTotals", () => {
     await screen.findByText("$4,500.00");
     const region = screen.getByRole("region", { name: "Revenue Totals" });
     expect(within(region).queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("adds no tab stop when the table fits", async () => {
+    overflowBy(1200, 1200);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    await screen.findByText("$4,500.00");
+    expect(screen.queryByRole("region", { name: TABLE_NAME })).not.toBeInTheDocument();
+    expect(screen.getByRole("table").parentElement).not.toHaveAttribute("tabindex");
+  });
+
+  it("lets the keyboard scroll the table when it overflows", async () => {
+    overflowBy(960, 752);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => totals() }),
+    );
+
+    renderTotals();
+
+    const scrollArea = await screen.findByRole("region", { name: TABLE_NAME });
+    expect(scrollArea).toHaveAttribute("tabindex", "0");
+    expect(scrollArea).toContainElement(screen.getByRole("table"));
   });
 
   it("shows the retry affordance when the request fails", async () => {
