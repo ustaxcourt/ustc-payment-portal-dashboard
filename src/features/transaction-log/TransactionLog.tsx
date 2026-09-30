@@ -170,6 +170,7 @@ export default function TransactionLog() {
       }}
       onClear={clearSearch}
       hasActiveFilters={hasSearchCriteria}
+      onClose={isNarrow ? () => setFiltersOpen(false) : undefined}
     />
   );
 

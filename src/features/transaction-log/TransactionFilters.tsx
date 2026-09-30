@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import FilterSelect from "@/components/ui/FilterSelect";
+import { IconButton } from "@/components/ui/icon-button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -82,6 +83,8 @@ type Props = {
   onMetadataDraftChange?: (draft: MetadataDraft) => void;
   onClear: () => void;
   hasActiveFilters: boolean;
+  /** Present only when rendered inside the mobile filters Drawer; shows a close (X) button. */
+  onClose?: () => void;
 };
 
 export default function TransactionFilters({
@@ -93,21 +96,32 @@ export default function TransactionFilters({
   onMetadataDraftChange,
   onClear,
   hasActiveFilters,
+  onClose,
 }: Props) {
   return (
     <aside className="flex w-56 shrink-0 flex-col overflow-y-auto lg:min-h-0">
       <div className="flex flex-col gap-6 p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Filters</h3>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={!hasActiveFilters}
-            onClick={onClear}
-          >
-            Clear All
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={!hasActiveFilters}
+              onClick={onClear}
+            >
+              Clear All
+            </Button>
+            {onClose ? (
+              <IconButton
+                icon="close"
+                label="Close filters"
+                variant="ghost"
+                onClick={onClose}
+              />
+            ) : null}
+          </div>
         </div>
 
         <div>
