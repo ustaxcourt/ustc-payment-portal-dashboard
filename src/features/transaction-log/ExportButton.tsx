@@ -17,6 +17,8 @@ import {
 } from "./exportWorkbook";
 import type { TransactionSorting, TransactionTab } from "./types";
 import { Download, Loader2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipArrow } from "@base-ui/react";
 
 type ExportPhase =
   | { step: "idle" }
@@ -96,30 +98,56 @@ export default function ExportButton({
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
-        {busy ? (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => abortRef.current?.abort()}
+        <Tooltip>
+          <TooltipTrigger>
+            <span
+              onClick={!disabled && !busy ? startExport : undefined}
+              onKeyUp={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  if (!disabled && !busy) {
+                    void startExport();
+                  }
+                }
+              }}
+              className={`
+                flex h-8 w-8 items-center justify-center p-2
+                rounded-sm
+                bg-slate-300
+                text-slate-700
+                hover:bg-slate-400
+                ${disabled || busy ? "opacity-50" : "cursor-pointer"}
+              `}
+              aria-label="Export transaction log"
+              role="img"
+            >
+              {busy ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <Download className="h-6 w-6" />
+              )}
+            </span>
+          </TooltipTrigger>
+
+          <TooltipContent
+            side="top"
+            sideOffset={8}
+            className="
+              bg-white
+              text-slate-900
+              border
+              border-slate-200
+              shadow-md
+              rounded-xl
+              px-4
+              py-2
+              text-base
+              font-medium
+            "
           >
-            Cancel
-          </Button>
-        ) : null}
-          <Button
-            type="button"
-            variant="default"
-            size="icon"
-            onClick={startExport}
-            disabled={disabled || busy}
-            aria-label={busy ? "Exporting transactions" : "Export transaction log"}
-            title={busy ? "Exporting transactions" : "Export transaction log"}
-          >
-            {busy ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Download className="h-5 w-5" />
-            )}
-          </Button>
+            {busy ? "Exporting transaction log" : "Export transaction log"}
+          </TooltipContent>
+        </Tooltip>
+
       </div>
       <p aria-live="polite" className="text-sm text-muted-foreground">
         {progressText}
