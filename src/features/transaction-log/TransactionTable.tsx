@@ -81,6 +81,26 @@ export default function TransactionTable({
       className={cn("relative", wrapperClassName)}
       aria-busy={isRefreshing || undefined}
     >
+      {isRefreshing && tableRows.length > 0 ? (
+        // A zero-height sticky wrapper positioned before the table, so its
+        // un-stuck flow position already sits at top:0 and it's pinned from
+        // the start — not just once scrolled down to where it'd naturally
+        // sit — the same mechanism the header itself relies on, rather than
+        // position:absolute (which, anchored to this same scrolling
+        // element, scrolls away with the rest of the content instead of
+        // staying pinned like the sticky header does).
+        <div className="sticky top-0 z-20 h-0 overflow-visible">
+          <div
+            role="status"
+            className={cn(
+              "flex h-7 items-center justify-center text-xs text-muted-foreground",
+              headerTone,
+            )}
+          >
+            Updating…
+          </div>
+        </div>
+      ) : null}
       <Table
         className={cn(
           "table-fixed text-xs",
@@ -144,14 +164,6 @@ export default function TransactionTable({
       {tableRows.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center bg-background text-center text-xs text-muted-foreground">
           {emptyMessage}
-        </div>
-      ) : null}
-      {isRefreshing && tableRows.length > 0 ? (
-        <div
-          role="status"
-          className="absolute inset-x-0 top-0 flex justify-center bg-status-neutral-subtle/90 py-1 text-xs text-muted-foreground"
-        >
-          Updating…
         </div>
       ) : null}
     </div>
