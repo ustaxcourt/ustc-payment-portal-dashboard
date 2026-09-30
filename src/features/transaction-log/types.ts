@@ -55,6 +55,8 @@ export const FEE_METADATA_KEYS: Record<FeeType, readonly MetadataKey[]> = {
   NONATTORNEY_EXAM_REGISTRATION_FEE: ["email", "fullName", "accessCode"],
 };
 
+export type MetadataDraft = { key: MetadataKey | null; value: string };
+
 /** Mirrors the payment portal's `paymentMethod` label enum. */
 export const PAY_TYPES = ["Credit/Debit Card", "ACH", "PayPal"] as const;
 

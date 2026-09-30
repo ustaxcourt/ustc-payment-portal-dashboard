@@ -21,7 +21,12 @@ import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
 import TransactionTable from "./TransactionTable";
-import type { FeeType, PaymentStatus, TransactionSearchFilters } from "./types";
+import type {
+  FeeType,
+  MetadataDraft,
+  PaymentStatus,
+  TransactionSearchFilters,
+} from "./types";
 import { useRetainedCounts } from "./useRetainedCounts";
 import { useTransactionLog } from "./useTransactionLog";
 import { useTransactionLogParams } from "./useTransactionLogParams";
@@ -57,7 +62,11 @@ export default function TransactionLog() {
     height: number;
   } | null>(null);
 
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so this resolves before the browser
+  // paints — otherwise the first render always commits `isNarrow: false`
+  // (its initial value), and on an actual narrow screen that briefly paints
+  // the static sidebar before flipping to the drawer a frame later.
+  useLayoutEffect(() => {
     const query = window.matchMedia("(max-width: 1023px)");
     const handleChange = () => setIsNarrow(query.matches);
     handleChange();
@@ -95,6 +104,13 @@ export default function TransactionLog() {
     isPlaceholderData ? undefined : data?.counts,
     `${appliedRange.from}..${appliedRange.to}`,
   );
+
+  const metadataDraftRef = useRef<MetadataDraft | undefined>(undefined);
+  const previousFeeTypeRef = useRef(searchFilters.feeType);
+  if (previousFeeTypeRef.current !== searchFilters.feeType) {
+    previousFeeTypeRef.current = searchFilters.feeType;
+    metadataDraftRef.current = undefined;
+  }
 
   // Metadata columns follow the selected fee; memoized so react-table keeps
   // seeing a stable columns reference between renders.
@@ -148,6 +164,10 @@ export default function TransactionLog() {
       onMetadataSearch={(metadataKey, metadataValue) =>
         setParams({ metadataKey, metadataValue })
       }
+      metadataDraftCache={metadataDraftRef.current}
+      onMetadataDraftChange={(draft) => {
+        metadataDraftRef.current = draft;
+      }}
       onClear={clearSearch}
       hasActiveFilters={hasSearchCriteria}
     />

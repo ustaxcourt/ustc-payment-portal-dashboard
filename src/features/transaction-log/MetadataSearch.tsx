@@ -1,7 +1,7 @@
 "use client";
 
 import { XIcon } from "lucide-react";
-import { type SubmitEvent, useEffect, useState } from "react";
+import { type SubmitEvent, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import FilterSelect from "@/components/ui/FilterSelect";
 import { Label } from "@/components/ui/label";
@@ -9,45 +9,70 @@ import {
   FEE_METADATA_KEYS,
   type FeeType,
   METADATA_KEY_LABEL,
+  type MetadataDraft,
   type MetadataKey,
 } from "./types";
 
 type Props = {
   feeType: FeeType | null;
-  /** The key currently committed to the URL, if any. */
   metadataKey: MetadataKey | null;
-  /** The value currently committed to the URL, if any. */
   metadataValue: string | null;
-  /** Commit (or clear, with nulls) the lookup — the only path that runs a search. */
   onSearch: (key: MetadataKey | null, value: string | null) => void;
+  draftCache?: MetadataDraft;
+  onDraftChange?: (draft: MetadataDraft) => void;
 };
 
 /**
  * Direct-lookup control for the Search tab: pick one metadata key tied to the
  * selected fee, type a value, and commit it on Search / Enter. Remounted by a
- * `key` on the fee type, so drafts reset when the available keys change; an
- * effect covers Back/Forward navigation that changes the committed key/value
- * without changing the fee. A fee with a single metadata key shows a static
- * label; two or more show a dropdown.
+ * `key` on the fee type, so drafts reset when the available keys change. A
+ * fee with a single metadata key shows a static label; two or more show a
+ * dropdown.
  */
 export default function MetadataSearch({
   feeType,
   metadataKey,
   metadataValue,
   onSearch,
+  draftCache,
+  onDraftChange,
 }: Props) {
   const keys: readonly MetadataKey[] = feeType ? FEE_METADATA_KEYS[feeType] : [];
-  const [selectedKey, setSelectedKey] = useState<MetadataKey | null>(
-    metadataKey && keys.includes(metadataKey) ? metadataKey : (keys[0] ?? null),
+  const [selectedKey, setSelectedKeyState] = useState<MetadataKey | null>(
+    draftCache
+      ? draftCache.key
+      : metadataKey && keys.includes(metadataKey)
+        ? metadataKey
+        : (keys[0] ?? null),
   );
-  const [draft, setDraft] = useState(metadataValue ?? "");
+  const [draft, setDraftState] = useState(draftCache?.value ?? metadataValue ?? "");
 
-  useEffect(() => {
-    setSelectedKey(
+  // Resync local state when Back/Forward navigation changes the committed
+  // key/value out from under us, without touching a freshly seeded
+  // draftCache.
+  const previousMetadataKeyRef = useRef(metadataKey);
+  const previousMetadataValueRef = useRef(metadataValue);
+  if (
+    previousMetadataKeyRef.current !== metadataKey ||
+    previousMetadataValueRef.current !== metadataValue
+  ) {
+    previousMetadataKeyRef.current = metadataKey;
+    previousMetadataValueRef.current = metadataValue;
+    setSelectedKeyState(
       metadataKey && keys.includes(metadataKey) ? metadataKey : (keys[0] ?? null),
     );
-    setDraft(metadataValue ?? "");
-  }, [metadataKey, metadataValue, keys]);
+    setDraftState(metadataValue ?? "");
+  }
+
+  const setSelectedKey = (key: MetadataKey | null) => {
+    setSelectedKeyState(key);
+    onDraftChange?.({ key, value: draft });
+  };
+
+  const setDraft = (value: string) => {
+    setDraftState(value);
+    onDraftChange?.({ key: selectedKey, value });
+  };
 
   if (!feeType) {
     return (

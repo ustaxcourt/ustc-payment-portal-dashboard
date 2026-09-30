@@ -193,4 +193,31 @@ describe("MetadataSearch", () => {
       "Jane Doe",
     );
   });
+
+  describe("draft caching across a remount", () => {
+    it("seeds from a cached draft instead of the committed value, on mount", () => {
+      renderMetadataSearch({
+        feeType: "PETITION_FILING_FEE",
+        metadataKey: "docketNumber",
+        metadataValue: "123-26",
+        draftCache: { key: "docketNumber", value: "in-progress" },
+      });
+
+      expect(screen.getByLabelText("Docket Number")).toHaveValue(
+        "in-progress",
+      );
+    });
+
+    it("reports every local edit so a longer-lived parent can cache it", async () => {
+      const onDraftChange = vi.fn();
+      renderMetadataSearch({ feeType: "PETITION_FILING_FEE", onDraftChange });
+
+      await userEvent.type(screen.getByLabelText("Docket Number"), "1");
+
+      expect(onDraftChange).toHaveBeenCalledWith({
+        key: "docketNumber",
+        value: "1",
+      });
+    });
+  });
 });

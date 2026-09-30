@@ -10,6 +10,7 @@ import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TEXT_TONE } from "./statusStyles";
 import {
   FEE_TYPE_LABEL,
   FEE_TYPES,
+  type MetadataDraft,
   type MetadataKey,
   PAY_TYPES,
   PAYMENT_STATUSES,
@@ -77,6 +78,8 @@ type Props = {
   counts?: TransactionCounts;
   onFilterChange: (key: FilterKey, value: string | null) => void;
   onMetadataSearch: (key: MetadataKey | null, value: string | null) => void;
+  metadataDraftCache?: MetadataDraft;
+  onMetadataDraftChange?: (draft: MetadataDraft) => void;
   onClear: () => void;
   hasActiveFilters: boolean;
 };
@@ -86,6 +89,8 @@ export default function TransactionFilters({
   counts,
   onFilterChange,
   onMetadataSearch,
+  metadataDraftCache,
+  onMetadataDraftChange,
   onClear,
   hasActiveFilters,
 }: Props) {
@@ -161,11 +166,12 @@ export default function TransactionFilters({
           <>
             <div className="border-t border-status-neutral" />
             <MetadataSearch
-              key={filters.feeType}
               feeType={filters.feeType}
               metadataKey={filters.metadataKey}
               metadataValue={filters.metadataValue}
               onSearch={onMetadataSearch}
+              draftCache={metadataDraftCache}
+              onDraftChange={onMetadataDraftChange}
             />
           </>
         ) : null}
