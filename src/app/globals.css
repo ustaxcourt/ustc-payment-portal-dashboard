@@ -78,7 +78,7 @@
   --accent: var(--color-neutral-100);
   --accent-foreground: var(--color-neutral-900);
   --destructive: var(--color-red-600);
-  --border: oklch(0.967 0.0029 264.54);
+  --border: var(--color-gray-100);
   --input: var(--color-neutral-200);
   --ring: var(--primary);
   /* Categorical chart order, CVD-validated against white; assign in fixed
