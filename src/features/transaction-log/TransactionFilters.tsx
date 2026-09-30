@@ -125,9 +125,11 @@ export default function TransactionFilters({
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold">Payment Status</h4>
+          <h4 id="payment-status-heading" className="text-sm font-semibold">
+            Payment Status
+          </h4>
           <RadioGroup
-            aria-label="Payment Status"
+            aria-labelledby="payment-status-heading"
             className="mt-3 gap-4"
             value={filters.paymentStatus ?? "all"}
             onValueChange={(value) =>
