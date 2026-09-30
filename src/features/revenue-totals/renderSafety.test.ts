@@ -18,6 +18,10 @@ describe("an unparseable date reaches Intl and throws", () => {
     expect(() => periodSubtitle(broken, "quarter")).toThrow(RangeError);
   });
 
+  it("throws from the week's range", () => {
+    expect(() => periodSubtitle(broken, "week")).toThrow(RangeError);
+  });
+
   it("throws on an empty from, which formatCourtDate alone would tolerate", () => {
     expect(() =>
       periodSubtitle({ from: "", to: "", total: 0, fees: [] }, "month"),
