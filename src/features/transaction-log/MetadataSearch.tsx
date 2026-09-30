@@ -49,15 +49,23 @@ export default function MetadataSearch({
 
   // Resync local state when Back/Forward navigation changes the committed
   // key/value out from under us, without touching a freshly seeded
-  // draftCache.
+  // draftCache. Also resyncs on a feeType change even when metadataKey/Value
+  // don't themselves change (e.g. both were already null) — otherwise a
+  // `selectedKey` left over from the previous fee (like "docketNumber")
+  // could keep showing as selected even though it's not one of the new
+  // fee's `keys`, which the dropdown's own options are correctly rebuilt
+  // from every render.
   const previousMetadataKeyRef = useRef(metadataKey);
   const previousMetadataValueRef = useRef(metadataValue);
+  const previousFeeTypeRef = useRef(feeType);
   if (
     previousMetadataKeyRef.current !== metadataKey ||
-    previousMetadataValueRef.current !== metadataValue
+    previousMetadataValueRef.current !== metadataValue ||
+    previousFeeTypeRef.current !== feeType
   ) {
     previousMetadataKeyRef.current = metadataKey;
     previousMetadataValueRef.current = metadataValue;
+    previousFeeTypeRef.current = feeType;
     setSelectedKeyState(
       metadataKey && keys.includes(metadataKey) ? metadataKey : (keys[0] ?? null),
     );
