@@ -1,6 +1,10 @@
 "use client";
 
-import type { ColumnDef, HeaderContext } from "@tanstack/react-table";
+import type {
+  ColumnDef,
+  HeaderContext,
+  RowData,
+} from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
 import SortableHeader from "./SortableHeader";
@@ -31,7 +35,7 @@ export const COLUMN_LABEL: Record<TransactionSortField, string> = {
 // a hover tooltip + click-to-copy instead — see `meta.copyText` below,
 // which supplies the untruncated value for both.
 declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData, TValue> {
+  interface ColumnMeta<TData extends RowData, TValue> {
     copyText?: (row: TData) => string;
     headerLabel?: string;
   }
