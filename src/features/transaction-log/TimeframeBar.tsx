@@ -5,6 +5,7 @@ import ExportButton from "./ExportButton";
 import TimeframeControls from "./TimeframeControls";
 import { useTransactionLog } from "./useTransactionLog";
 import { useTransactionLogParams } from "./useTransactionLogParams";
+import ShareViewButton from "./ShareViewButton";
 
 export default function TimeframeBar() {
   const {
@@ -35,12 +36,15 @@ export default function TimeframeBar() {
         }
         onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
       />
-      <ExportButton
-        tab={tab === "search" ? "all" : tab}
-        range={appliedRange}
-        sorting={activeSorting}
-        disabled={tab === "search" || !data || data.data.length === 0}
-      />
+      <div className="flex gap-2">
+        <ShareViewButton />
+        <ExportButton
+          tab={tab === "search" ? "all" : tab}
+          range={appliedRange}
+          sorting={activeSorting}
+          disabled={tab === "search" || !data || data.data.length === 0}
+        />
+      </div>
     </div>
   );
 }
