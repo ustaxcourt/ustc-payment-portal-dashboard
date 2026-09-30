@@ -7,6 +7,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
+import type { KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Table,
@@ -75,6 +76,31 @@ export default function TransactionTable({
   const totalSize = leafColumns.reduce((sum, col) => sum + col.getSize(), 0);
   const tableRows = table.getRowModel().rows;
 
+  const activeCellRef = useRef({ row: 0, col: 0 });
+
+  const handleGridKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
+    const delta = ARROW_DELTAS[event.key];
+    if (!delta) return;
+
+    const current = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      "button[data-row][data-col]",
+    );
+    if (!current) return;
+
+    const nextRow = Number(current.dataset.row) + delta.row;
+    const nextCol = Number(current.dataset.col) + delta.col;
+    const next = event.currentTarget.querySelector<HTMLButtonElement>(
+      `button[data-row="${nextRow}"][data-col="${nextCol}"]`,
+    );
+    if (!next) return;
+
+    event.preventDefault();
+    current.tabIndex = -1;
+    next.tabIndex = 0;
+    activeCellRef.current = { row: nextRow, col: nextCol };
+    next.focus();
+  };
+
   return (
     <div
       data-testid="transaction-table-scroll"
@@ -102,6 +128,8 @@ export default function TransactionTable({
         </div>
       ) : null}
       <Table
+        role="grid"
+        onKeyDown={handleGridKeyDown}
         className={cn(
           "table-fixed text-xs",
           isRefreshing && tableRows.length > 0 && "opacity-50",
@@ -118,7 +146,11 @@ export default function TransactionTable({
         </colgroup>
         <TableHeader className={cn("sticky top-0 z-10", headerTone)}>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="hover:bg-transparent">
+            <TableRow
+              key={headerGroup.id}
+              role="row"
+              className="hover:bg-transparent"
+            >
               {headerGroup.headers.map((header, index) => (
                 <TableHead
                   key={header.id}
@@ -143,15 +175,21 @@ export default function TransactionTable({
           ))}
         </TableHeader>
         <TableBody>
-          {tableRows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getVisibleCells().map((cell, index) => (
+          {tableRows.map((row, rowIndex) => (
+            <TableRow key={row.id} role="row">
+              {row.getVisibleCells().map((cell, colIndex) => (
                 <CopyableCell
                   key={cell.id}
                   text={cell.column.columnDef.meta?.copyText?.(row.original)}
+                  rowIndex={rowIndex}
+                  colIndex={colIndex}
+                  isTabbable={
+                    activeCellRef.current.row === rowIndex &&
+                    activeCellRef.current.col === colIndex
+                  }
                   className={cn(
                     "px-1.5 py-1",
-                    cellBorder(index, row.getVisibleCells().length),
+                    cellBorder(colIndex, row.getVisibleCells().length),
                   )}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -181,10 +219,16 @@ function CopyableCell({
   text,
   className,
   children,
+  rowIndex,
+  colIndex,
+  isTabbable,
 }: {
   text?: string;
   className?: string;
   children: React.ReactNode;
+  rowIndex: number;
+  colIndex: number;
+  isTabbable: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -194,7 +238,11 @@ function CopyableCell({
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
   if (!text) {
-    return <TableCell className={className}>{children}</TableCell>;
+    return (
+      <TableCell role="gridcell" className={className}>
+        {children}
+      </TableCell>
+    );
   }
 
   const handleCopy = async () => {
@@ -210,6 +258,7 @@ function CopyableCell({
 
   return (
     <TableCell
+      role="gridcell"
       title={text}
       className={cn(copied && "bg-primary/10", className, "p-0")}
     >
@@ -217,6 +266,9 @@ function CopyableCell({
         type="button"
         onClick={handleCopy}
         aria-label={`Copy ${text}`}
+        data-row={rowIndex}
+        data-col={colIndex}
+        tabIndex={isTabbable ? 0 : -1}
         className="block w-full truncate px-1.5 py-1 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
       >
         {children}
@@ -227,6 +279,13 @@ function CopyableCell({
     </TableCell>
   );
 }
+
+const ARROW_DELTAS: Record<string, { row: number; col: number }> = {
+  ArrowUp: { row: -1, col: 0 },
+  ArrowDown: { row: 1, col: 0 },
+  ArrowLeft: { row: 0, col: -1 },
+  ArrowRight: { row: 0, col: 1 },
+};
 
 const cellBorder = (index: number, total: number) =>
   index === total - 1 ? undefined : "border-r";

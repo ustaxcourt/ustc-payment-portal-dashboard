@@ -60,7 +60,9 @@ describe("TransactionTable status rendering", () => {
       ],
     });
 
-    expect(screen.getByRole("cell", { name: "Cancelled" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("gridcell", { name: "Cancelled" }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -145,7 +147,7 @@ describe("TransactionTable sort state", () => {
     renderTable();
 
     expect(
-      screen.getByRole("table", { name: /Transaction log/ }),
+      screen.getByRole("grid", { name: /Transaction log/ }),
     ).toBeInTheDocument();
     expect(headerFor("Created")).toHaveAttribute("scope", "col");
   });
@@ -192,5 +194,51 @@ describe("TransactionTable sort state", () => {
       within(headerFor("Amount")).getByRole("button", { name: "Amount" }),
     ).toBeEnabled();
     expect(screen.getByText("No transactions to show.")).toBeInTheDocument();
+  });
+});
+
+describe("TransactionTable keyboard grid", () => {
+  const secondRow: TransactionLogEntry = {
+    ...row,
+    agencyTrackingId: "agency-2",
+    transactionReferenceId: "ref-2",
+  };
+
+  const cellButton = (r: number, c: number) =>
+    document.querySelector(
+      `button[data-row="${r}"][data-col="${c}"]`,
+    ) as HTMLButtonElement;
+
+  it("starts with only the first cell in the tab order", () => {
+    renderTable({ rows: [row, secondRow] });
+
+    expect(cellButton(0, 0)).toHaveAttribute("tabindex", "0");
+    expect(cellButton(0, 1)).toHaveAttribute("tabindex", "-1");
+    expect(cellButton(1, 0)).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("moves focus and the tab stop with the arrow keys", async () => {
+    renderTable({ rows: [row, secondRow] });
+
+    cellButton(0, 0).focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(document.activeElement).toBe(cellButton(0, 1));
+    expect(cellButton(0, 1)).toHaveAttribute("tabindex", "0");
+    expect(cellButton(0, 0)).toHaveAttribute("tabindex", "-1");
+
+    await userEvent.keyboard("{ArrowDown}");
+
+    expect(document.activeElement).toBe(cellButton(1, 1));
+  });
+
+  it("does nothing at the edge of the grid", async () => {
+    renderTable({ rows: [row, secondRow] });
+
+    cellButton(0, 0).focus();
+    await userEvent.keyboard("{ArrowUp}");
+
+    expect(document.activeElement).toBe(cellButton(0, 0));
+    expect(cellButton(0, 0)).toHaveAttribute("tabindex", "0");
   });
 });
