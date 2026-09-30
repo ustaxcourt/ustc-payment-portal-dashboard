@@ -194,6 +194,28 @@ describe("MetadataSearch", () => {
     );
   });
 
+  it("resets the selected key when the fee type changes with nothing committed", () => {
+    const { rerender } = renderMetadataSearch({
+      feeType: "PETITION_FILING_FEE",
+    });
+
+    expect(screen.getByText("Docket Number")).toBeInTheDocument();
+
+    rerender(
+      <MetadataSearch
+        feeType="NONATTORNEY_EXAM_REGISTRATION_FEE"
+        metadataKey={null}
+        metadataValue={null}
+        onSearch={vi.fn()}
+      />,
+    );
+
+    // Docket Number isn't one of this fee's keys — the dropdown must not
+    // keep it selected, which would let Search submit an invalid pair.
+    expect(screen.queryByText("Docket Number")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Search by")).toHaveTextContent("Email");
+  });
+
   describe("draft caching across a remount", () => {
     it("seeds from a cached draft instead of the committed value, on mount", () => {
       renderMetadataSearch({
