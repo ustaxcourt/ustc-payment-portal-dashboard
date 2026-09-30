@@ -118,6 +118,49 @@ describe("MetadataSearch", () => {
     expect(screen.getByLabelText("Search by Docket Number")).toHaveValue("");
   });
 
+  it("clears a committed value and re-queries when a different key is chosen", async () => {
+    const onSearch = vi.fn();
+    const { rerender } = renderMetadataSearch({
+      feeType: "NONATTORNEY_EXAM_REGISTRATION_FEE",
+      metadataKey: "email",
+      metadataValue: "foo@example.com",
+      onSearch,
+    });
+
+    await userEvent.click(screen.getByLabelText("Search by"));
+    await userEvent.click(await screen.findByRole("option", { name: "Full Name" }));
+
+    expect(onSearch).toHaveBeenCalledWith(null, null);
+    expect(screen.getByLabelText("Search by Full Name")).toHaveValue("");
+
+    // The parent applies the onSearch(null, null) call, which clears the
+    // committed props — the newly-picked key must survive that round-trip
+    // instead of resetting to the fee's first key ("email").
+    rerender(
+      <MetadataSearch
+        feeType="NONATTORNEY_EXAM_REGISTRATION_FEE"
+        metadataKey={null}
+        metadataValue={null}
+        onSearch={onSearch}
+      />,
+    );
+
+    expect(screen.getByLabelText("Search by Full Name")).toHaveValue("");
+  });
+
+  it("does not re-query when picking a key with no value committed yet", async () => {
+    const onSearch = vi.fn();
+    renderMetadataSearch({
+      feeType: "NONATTORNEY_EXAM_REGISTRATION_FEE",
+      onSearch,
+    });
+
+    await userEvent.click(screen.getByLabelText("Search by"));
+    await userEvent.click(await screen.findByRole("option", { name: "Full Name" }));
+
+    expect(onSearch).not.toHaveBeenCalled();
+  });
+
   it("hides the X until there is text, and does not re-query for an uncommitted draft", async () => {
     const onSearch = vi.fn();
     renderMetadataSearch({ feeType: "PETITION_FILING_FEE", onSearch });
