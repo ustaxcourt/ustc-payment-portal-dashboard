@@ -107,7 +107,7 @@
   --status-failed-foreground: var(--color-red-900);
   --status-failed-subtle: var(--color-red-50);
   --status-pending: var(--color-amber-200);
-  --status-pending-foreground: var(--color-yellow-900);
+  --status-pending-foreground: var(--color-amber-900);
   --status-pending-subtle: var(--color-amber-50);
   --totals-header: var(--color-blue-100);
 }
