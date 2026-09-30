@@ -162,7 +162,10 @@ export default function TransactionTable({
         </TableBody>
       </Table>
       {tableRows.length === 0 ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-background text-center text-xs text-muted-foreground">
+        <div
+          role="status"
+          className="absolute inset-0 flex items-center justify-center bg-background text-center text-xs text-muted-foreground"
+        >
           {emptyMessage}
         </div>
       ) : null}

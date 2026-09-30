@@ -340,8 +340,13 @@ describe("TransactionLog", () => {
 
       resolveSecond(response({ data: [], counts: { all: 0, success: 0, failed: 0, pending: 0 } }));
 
+      // The "Updating" status is replaced by the empty-results status (not
+      // by silence) — the table itself has no rows for a screen reader to
+      // land on, so this is what announces the outcome.
       await waitFor(() =>
-        expect(screen.queryByRole("status")).not.toBeInTheDocument(),
+        expect(screen.getByRole("status")).toHaveTextContent(
+          "No transactions match your filters.",
+        ),
       );
       expect(screen.queryByText("payment-portal")).not.toBeInTheDocument();
     });
