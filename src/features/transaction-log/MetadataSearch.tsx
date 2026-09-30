@@ -140,7 +140,7 @@ export default function MetadataSearch({
               type="button"
               onClick={clear}
               aria-label="Clear search"
-              className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+              className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <XIcon className="size-4" />
             </button>
