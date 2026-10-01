@@ -6,6 +6,7 @@ import {
   type OnUrlUpdateFunction,
 } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ToastProvider } from "../../components/ui/toast-context";
 import TimeframeBar from "./TimeframeBar";
 import TransactionLog from "./TransactionLog";
 import type { TransactionLogResponse } from "./types";
@@ -34,11 +35,11 @@ const renderLog = (
   });
 
   return render(
-    // hasMemory: interactions re-render with the params they just set,
-    // matching a real browser's address bar instead of a frozen snapshot.
     <NuqsTestingAdapter searchParams={searchParams} hasMemory {...options}>
       <QueryClientProvider client={client}>
-        <TransactionLog />
+        <ToastProvider>
+          <TransactionLog />
+        </ToastProvider>
       </QueryClientProvider>
     </NuqsTestingAdapter>,
   );
@@ -53,8 +54,10 @@ const renderDashboard = (searchParams = "") => {
   return render(
     <NuqsTestingAdapter searchParams={searchParams}>
       <QueryClientProvider client={client}>
-        <TimeframeBar />
-        <TransactionLog />
+        <ToastProvider>
+          <TimeframeBar />
+          <TransactionLog />
+        </ToastProvider>
       </QueryClientProvider>
     </NuqsTestingAdapter>,
   );
