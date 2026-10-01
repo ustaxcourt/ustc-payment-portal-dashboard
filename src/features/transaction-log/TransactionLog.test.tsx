@@ -26,6 +26,22 @@ const response = (
   ...overrides,
 });
 
+function TestProviders({
+  children,
+  client,
+}: {
+  children: React.ReactNode;
+  client: QueryClient;
+}) {
+  return (
+    <QueryClientProvider client={client}>
+      <ToastProvider>
+        {children}
+      </ToastProvider>
+    </QueryClientProvider>
+  );
+}
+
 const renderLog = (
   searchParams = "",
   options: { onUrlUpdate?: OnUrlUpdateFunction } = {},
@@ -36,11 +52,9 @@ const renderLog = (
 
   return render(
     <NuqsTestingAdapter searchParams={searchParams} hasMemory {...options}>
-      <QueryClientProvider client={client}>
-        <ToastProvider>
-          <TransactionLog />
-        </ToastProvider>
-      </QueryClientProvider>
+      <TestProviders client={client}>
+        <TransactionLog />
+      </TestProviders>
     </NuqsTestingAdapter>,
   );
 };
@@ -53,12 +67,10 @@ const renderDashboard = (searchParams = "") => {
 
   return render(
     <NuqsTestingAdapter searchParams={searchParams}>
-      <QueryClientProvider client={client}>
-        <ToastProvider>
-          <TimeframeBar />
-          <TransactionLog />
-        </ToastProvider>
-      </QueryClientProvider>
+      <TestProviders client={client}>
+        <TimeframeBar />
+        <TransactionLog />
+      </TestProviders>
     </NuqsTestingAdapter>,
   );
 };

@@ -45,7 +45,11 @@ export function ToastProvider({
     <ToastContext.Provider value={{ showToast }}>
       {children}
 
-      <div className="fixed top-24 right-4 z-[99999] flex flex-col gap-2">
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="fixed top-24 right-4 z-[99999] flex flex-col gap-2"
+      >
         {toasts.map((toast) => {
           return (
             <div

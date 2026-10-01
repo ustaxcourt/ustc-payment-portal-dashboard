@@ -194,12 +194,10 @@ export default function TransactionLog() {
   const copyShareLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-
-      console.log("copied");
       showToast("Link copied!");
-
     } catch (error) {
       console.error(error);
+      showToast("Unable to copy link.");
     }
   };
 
