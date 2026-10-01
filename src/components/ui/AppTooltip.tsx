@@ -15,9 +15,17 @@ export function AppTooltip({
   return (
     <Tooltip.Root>
       <Tooltip.Trigger
-        render={(props) => React.cloneElement(children, props)}
+        render={(props) =>
+          React.cloneElement(children, {
+            ...props,
+            ...children.props,
+            onClick: (event) => {
+              props.onClick?.(event);
+              children.props.onClick?.(event);
+            },
+          })
+        }
       />
-
       <Tooltip.Portal>
         <Tooltip.Positioner>
           <Tooltip.Popup>

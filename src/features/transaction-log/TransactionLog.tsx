@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/drawer";
 import ErrorPanel from "@/components/ui/ErrorPanel";
 import { IconButton } from "@/components/ui/icon-button";
+import { useToast } from "@/components/ui/toast-context";
 import { cn } from "@/lib/utils";
 import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
@@ -50,6 +51,8 @@ export default function TransactionLog() {
   const [isNarrow, setIsNarrow] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
+
+  const { showToast } = useToast();
 
   // The drawer is positioned `fixed` (see drawer.tsx) so it always lands
   // fully on-screen and can scroll, regardless of where filtersScopeRef sits
@@ -188,11 +191,17 @@ export default function TransactionLog() {
     />
   );
 
-const copyShareLink = async () => {
-  await navigator.clipboard.writeText(window.location.href);
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
 
-  // TODO: Show toast/snackbar
-};
+      console.log("copied");
+      showToast("Link copied!");
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const downloadReport = () => {
     // TODO: download the transaction log as a report.
