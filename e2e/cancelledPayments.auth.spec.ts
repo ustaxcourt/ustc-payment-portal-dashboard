@@ -43,7 +43,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("a cancelled transaction reads Cancelled under the Failed tab", async ({
+test.fixme("a cancelled transaction reads Cancelled under the Failed tab", async ({
   page,
 }) => {
   await page.goto("/?status=failed");

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getColumns } from "./columns";
+import { DEFAULT_COLUMN_VISIBILITY, getColumns } from "./columns";
 import TransactionTable from "./TransactionTable";
 import type { TransactionLogEntry } from "./types";
 
@@ -23,6 +23,10 @@ const row: TransactionLogEntry = {
   lastUpdatedAt: "2026-08-03T13:00:00.000Z",
 };
 
+const ALL_COLUMNS_VISIBLE = Object.fromEntries(
+  Object.keys(DEFAULT_COLUMN_VISIBILITY).map((id) => [id, true]),
+);
+
 const renderTable = (
   overrides: Partial<Parameters<typeof TransactionTable>[0]> = {},
 ) =>
@@ -34,6 +38,7 @@ const renderTable = (
       headerTone="bg-status-neutral-subtle"
       sorting={{ sort: "createdAt", order: "desc" }}
       onSortingChange={vi.fn()}
+      columnVisibility={ALL_COLUMNS_VISIBLE}
       emptyMessage="No transactions to show."
       {...overrides}
     />,
@@ -278,6 +283,75 @@ describe("TransactionTable keyboard grid", () => {
         headerTone="bg-status-neutral-subtle"
         sorting={{ sort: "createdAt", order: "desc" }}
         onSortingChange={vi.fn()}
+        columnVisibility={ALL_COLUMNS_VISIBLE}
+        emptyMessage="No transactions to show."
+      />,
+    );
+
+    const tabbable = document.querySelectorAll('button[tabindex="0"]');
+    expect(tabbable).toHaveLength(1);
+    expect(tabbable[0]).toBe(cellButton(0, 0));
+  });
+});
+
+describe("TransactionTable column visibility", () => {
+  const visibleHeaders = () =>
+    screen.getAllByRole("columnheader").map((header) => header.textContent);
+
+  it("renders only the visible columns, in order", () => {
+    renderTable({ columnVisibility: DEFAULT_COLUMN_VISIBILITY });
+
+    expect(visibleHeaders()).toEqual([
+      "Last updated",
+      "Fee",
+      "Amount",
+      "Payment status",
+    ]);
+    expect(screen.queryByText("Insufficient funds")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("gridcell")).toHaveLength(4);
+  });
+
+  it("sizes the colgroup and minimum width from the visible columns", () => {
+    const { container } = renderTable({
+      columnVisibility: DEFAULT_COLUMN_VISIBILITY,
+    });
+
+    expect(container.querySelectorAll("col")).toHaveLength(4);
+    expect(screen.getByRole("grid")).toHaveStyle({ minWidth: "410px" });
+  });
+
+  it("moves between visible columns only with the arrow keys", async () => {
+    renderTable({ columnVisibility: DEFAULT_COLUMN_VISIBILITY });
+
+    screen.getByRole("button", { name: /^Copy 2026-08-03/ }).focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Copy Petition Filing Fee" }),
+    );
+  });
+
+  it("returns the tab stop to the first cell when the visible columns change", async () => {
+    const { rerender } = renderTable();
+
+    const cellButton = (r: number, c: number) =>
+      document.querySelector(
+        `button[data-row="${r}"][data-col="${c}"]`,
+      ) as HTMLButtonElement;
+
+    cellButton(0, 0).focus();
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+    expect(document.activeElement).toBe(cellButton(0, 2));
+
+    rerender(
+      <TransactionTable
+        rows={[row]}
+        columns={getColumns()}
+        caption="Transaction log, All"
+        headerTone="bg-status-neutral-subtle"
+        sorting={{ sort: "createdAt", order: "desc" }}
+        onSortingChange={vi.fn()}
+        columnVisibility={DEFAULT_COLUMN_VISIBILITY}
         emptyMessage="No transactions to show."
       />,
     );

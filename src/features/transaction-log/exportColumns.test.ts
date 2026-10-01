@@ -35,7 +35,7 @@ describe("exportColumns", () => {
     expect(headers()).toHaveLength(12);
   });
 
-  it("tracks the table's column order, with timestamps split in place", () => {
+  it("follows the table's column order for the columns it carries, with timestamps split in place", () => {
     const tableOrder = getColumns().map((c) =>
       "accessorKey" in c ? c.accessorKey : c.id,
     );
@@ -64,7 +64,8 @@ describe("exportColumns", () => {
         })[h] ?? h,
     );
 
-    expect(exportOrder).toEqual(tableOrder);
+    const exported = new Set<string | undefined>(exportOrder);
+    expect(exportOrder).toEqual(tableOrder.filter((id) => exported.has(id)));
   });
 
   it("converts timestamps to Court-time date and time cells", () => {

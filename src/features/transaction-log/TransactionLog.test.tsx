@@ -329,13 +329,15 @@ describe("TransactionLog", () => {
       vi.stubGlobal("fetch", fetchMock);
 
       renderLog("");
-      await screen.findByText("payment-portal");
+      await screen.findByText("Petition Filing Fee", { selector: "button" });
 
       await userEvent.click(screen.getByText("Failed (0)"));
 
       // The old row stays visible (avoids a blank flash) but is explicitly
       // marked stale rather than silently passed off as the "Failed" results.
-      expect(screen.getByText("payment-portal")).toBeInTheDocument();
+      expect(
+        screen.getByText("Petition Filing Fee", { selector: "button" }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("status")).toHaveTextContent("Updating");
 
       resolveSecond(response({ data: [], counts: { all: 0, success: 0, failed: 0, pending: 0 } }));
@@ -348,7 +350,9 @@ describe("TransactionLog", () => {
           "No transactions match your filters.",
         ),
       );
-      expect(screen.queryByText("payment-portal")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Petition Filing Fee", { selector: "button" }),
+      ).not.toBeInTheDocument();
     });
 
     it("disables Clear All until a filter is active, then resets on click", async () => {

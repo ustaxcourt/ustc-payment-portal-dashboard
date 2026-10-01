@@ -3,7 +3,6 @@
 import {
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -17,7 +16,11 @@ import {
 import ErrorPanel from "@/components/ui/ErrorPanel";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
-import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
+import {
+  COLUMN_LABEL,
+  DEFAULT_COLUMN_VISIBILITY,
+  getColumns,
+} from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
 import TransactionTable from "./TransactionTable";
@@ -47,6 +50,7 @@ export default function TransactionLog() {
   // Below `lg` the filters live in a Drawer overlay instead of the static
   // sidebar, so they never compete with the table for vertical space.
   const [isNarrow, setIsNarrow] = useState(false);
+  const [columnVisibility] = useState(DEFAULT_COLUMN_VISIBILITY);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
 
@@ -124,13 +128,6 @@ export default function TransactionLog() {
     previousMetadataValueRef.current = searchFilters.metadataValue;
     metadataDraftRef.current = undefined;
   }
-
-  // Metadata columns follow the selected fee; memoized so react-table keeps
-  // seeing a stable columns reference between renders.
-  const columns = useMemo(
-    () => [...getColumns(), ...metadataColumns(searchFilters.feeType)],
-    [searchFilters.feeType],
-  );
 
   const onFilterChange = (
     key: keyof TransactionSearchFilters,
@@ -280,11 +277,12 @@ export default function TransactionLog() {
             <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
               <TransactionTable
                 rows={data?.data ?? []}
-                columns={columns}
+                columns={getColumns()}
                 caption={`Transaction log, ${statusLabel}`}
                 headerTone="bg-status-neutral-subtle"
                 sorting={activeSorting}
                 onSortingChange={setParams}
+                columnVisibility={columnVisibility}
                 wrapperClassName="flex-1 overflow-auto rounded-br-[calc(var(--radius-md)-2px)] border lg:min-h-0"
                 isRefreshing={isPlaceholderData}
                 emptyMessage={

@@ -1,77 +1,146 @@
+import type { ColumnDef } from "@tanstack/react-table";
 import { describe, expect, it } from "vitest";
-import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
+import {
+  COLUMN_LABEL,
+  DEFAULT_COLUMN_VISIBILITY,
+  getColumns,
+  type TransactionColumnId,
+} from "./columns";
 import type { TransactionLogEntry } from "./types";
 import { TRANSACTION_SORT_FIELDS } from "./types";
+
+const columnId = (column: ColumnDef<TransactionLogEntry>) =>
+  "accessorKey" in column ? column.accessorKey : column.id;
+
+const columnById = (id: TransactionColumnId) => {
+  const column = getColumns().find((c) => columnId(c) === id);
+  if (!column) throw new Error(`No column ${id}`);
+  return column;
+};
+
+const entry = (overrides: Partial<TransactionLogEntry>) =>
+  overrides as TransactionLogEntry;
+
+const renderCell = (
+  column: ColumnDef<TransactionLogEntry>,
+  overrides: Partial<TransactionLogEntry>,
+) =>
+  // biome-ignore lint/suspicious/noExplicitAny: minimal react-table cell context for the test
+  (column.cell as (context: any) => unknown)({
+    row: { original: entry(overrides) },
+  });
 
 describe("getColumns", () => {
   it("returns a stable reference, so react-table doesn't see new columns every render", () => {
     expect(getColumns()).toBe(getColumns());
   });
 
-  it("includes every sortable field, in the order it's rendered", () => {
-    const accessorKeys = getColumns().map((column) =>
-      "accessorKey" in column ? column.accessorKey : column.id,
-    );
-    expect(accessorKeys).toEqual(TRANSACTION_SORT_FIELDS);
+  it("lists every column, in the order it's rendered", () => {
+    expect(getColumns().map(columnId)).toEqual([
+      "createdAt",
+      "lastUpdatedAt",
+      "feeName",
+      "transactionAmount",
+      "paymentMethod",
+      "paymentStatus",
+      "returnDetail",
+      "transactionStatus",
+      "clientName",
+      "transactionReferenceId",
+      "paygovTrackingId",
+      "agencyTrackingId",
+      "metadata.docketNumber",
+      "metadata.email",
+      "metadata.fullName",
+      "metadata.accessCode",
+    ]);
+  });
+
+  it("makes exactly the API's sort fields sortable", () => {
+    const sortable = getColumns()
+      .filter((column) => column.enableSorting !== false)
+      .map(columnId);
+
+    expect(sortable).toEqual(TRANSACTION_SORT_FIELDS);
+  });
+
+  it("labels every column header from COLUMN_LABEL", () => {
+    for (const column of getColumns()) {
+      const id = columnId(column) as TransactionColumnId;
+      expect(column.meta?.headerLabel).toBe(COLUMN_LABEL[id]);
+    }
+  });
+
+  it("no longer scopes metadata columns to the selected fee", () => {
+    const ids = getColumns().map(columnId);
+
+    expect(ids).toContain("metadata.docketNumber");
+    expect(ids).toContain("metadata.accessCode");
   });
 });
 
 describe("COLUMN_LABEL", () => {
-  it("names every sortable column", () => {
-    for (const field of TRANSACTION_SORT_FIELDS) {
-      expect(COLUMN_LABEL[field]).toBeTruthy();
-    }
+  it("names the fee column Fee", () => {
+    expect(COLUMN_LABEL.feeName).toBe("Fee");
   });
 });
 
-describe("metadataColumns", () => {
-  const renderCell = (
-    // biome-ignore lint/suspicious/noExplicitAny: minimal react-table cell context for the test
-    column: any,
-    metadata: Record<string, string> | null | undefined,
-  ) =>
-    column.cell({
-      row: { original: { metadata } as TransactionLogEntry },
-    });
-
-  it("returns one non-sortable column per key of a single-key fee", () => {
-    const columns = metadataColumns("PETITION_FILING_FEE");
-
-    expect(columns).toHaveLength(1);
-    expect(columns[0]).toMatchObject({
-      id: "metadata.docketNumber",
-      header: "Docket Number",
-      enableSorting: false,
-    });
+describe("DEFAULT_COLUMN_VISIBILITY", () => {
+  it("has an entry for exactly the columns the table renders", () => {
+    expect(Object.keys(DEFAULT_COLUMN_VISIBILITY).sort()).toEqual(
+      getColumns().map(columnId).sort(),
+    );
   });
 
-  it("returns a column per key, in order, for a multi-key fee", () => {
+  it("shows only Last updated, Fee, Amount and Payment status", () => {
+    const visible = Object.entries(DEFAULT_COLUMN_VISIBILITY)
+      .filter(([, isVisible]) => isVisible)
+      .map(([id]) => id);
+
+    expect(visible).toEqual([
+      "lastUpdatedAt",
+      "feeName",
+      "transactionAmount",
+      "paymentStatus",
+    ]);
+  });
+});
+
+describe("tracking ID columns", () => {
+  it.each([
+    ["paygovTrackingId", "Pay.gov Tracking ID"],
+    ["agencyTrackingId", "Agency Tracking ID"],
+  ] as const)("renders %s under %s", (id, label) => {
+    expect(COLUMN_LABEL[id]).toBe(label);
     expect(
-      metadataColumns("NONATTORNEY_EXAM_REGISTRATION_FEE").map((c) => c.id),
-    ).toEqual(["metadata.email", "metadata.fullName", "metadata.accessCode"]);
+      columnById(id).meta?.copyText?.(
+        entry({ paygovTrackingId: "track-1", agencyTrackingId: "track-1" }),
+      ),
+    ).toBe("track-1");
   });
 
-  it("has no metadata columns when no fee is selected", () => {
-    expect(metadataColumns(null)).toEqual([]);
-  });
+  it("falls back to an em dash when Pay.gov hasn't assigned an ID", () => {
+    const column = columnById("paygovTrackingId");
 
+    expect(column.meta?.copyText?.(entry({ paygovTrackingId: null }))).toBe(
+      "—",
+    );
+  });
+});
+
+describe("metadata columns", () => {
   it("reads the value from the row's metadata bag", () => {
-    const [column] = metadataColumns("PETITION_FILING_FEE");
-
-    expect(renderCell(column, { docketNumber: "123-26" })).toBe("123-26");
+    expect(
+      renderCell(columnById("metadata.docketNumber"), {
+        metadata: { docketNumber: "123-26" },
+      }),
+    ).toBe("123-26");
   });
 
   it("falls back to an em dash when the key is missing", () => {
-    const [column] = metadataColumns("PETITION_FILING_FEE");
+    const column = columnById("metadata.docketNumber");
 
-    expect(renderCell(column, {})).toBe("—");
-    expect(renderCell(column, null)).toBe("—");
-  });
-
-  it("is kept out of the sortable set", () => {
-    // Metadata columns carry no accessorKey, so they're never sortable.
-    for (const column of metadataColumns("NONATTORNEY_EXAM_REGISTRATION_FEE")) {
-      expect(column).not.toHaveProperty("accessorKey");
-    }
+    expect(renderCell(column, { metadata: {} })).toBe("—");
+    expect(renderCell(column, { metadata: null })).toBe("—");
   });
 });

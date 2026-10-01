@@ -10,14 +10,26 @@ import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
 import SortableHeader from "./SortableHeader";
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
 import {
-  FEE_METADATA_KEYS,
-  type FeeType,
   METADATA_KEY_LABEL,
+  METADATA_KEYS,
+  type MetadataKey,
   type TransactionLogEntry,
   type TransactionSortField,
 } from "./types";
 
-export const COLUMN_LABEL: Record<TransactionSortField, string> = {
+type TrackingIdField = "paygovTrackingId" | "agencyTrackingId";
+
+type MetadataColumnId = `metadata.${MetadataKey}`;
+
+export type TransactionColumnId =
+  | TransactionSortField
+  | TrackingIdField
+  | MetadataColumnId;
+
+const metadataColumnId = (key: MetadataKey): MetadataColumnId =>
+  `metadata.${key}`;
+
+export const COLUMN_LABEL: Record<TransactionColumnId, string> = {
   createdAt: "Created",
   lastUpdatedAt: "Last updated",
   feeName: "Fee",
@@ -28,12 +40,34 @@ export const COLUMN_LABEL: Record<TransactionSortField, string> = {
   transactionStatus: "Transaction status",
   clientName: "Client",
   transactionReferenceId: "Reference ID",
+  paygovTrackingId: "Pay.gov Tracking ID",
+  agencyTrackingId: "Agency Tracking ID",
+  "metadata.docketNumber": METADATA_KEY_LABEL.docketNumber,
+  "metadata.email": METADATA_KEY_LABEL.email,
+  "metadata.fullName": METADATA_KEY_LABEL.fullName,
+  "metadata.accessCode": METADATA_KEY_LABEL.accessCode,
 };
 
-// The table's columns share the available width (see TransactionTable's
-// colgroup) instead of growing to fit content, so every cell truncates with
-// a hover tooltip + click-to-copy instead — see `meta.copyText` below,
-// which supplies the untruncated value for both.
+export const DEFAULT_COLUMN_VISIBILITY: Record<TransactionColumnId, boolean> =
+  {
+    createdAt: false,
+    lastUpdatedAt: true,
+    feeName: true,
+    transactionAmount: true,
+    paymentMethod: false,
+    paymentStatus: true,
+    returnDetail: false,
+    transactionStatus: false,
+    clientName: false,
+    transactionReferenceId: false,
+    paygovTrackingId: false,
+    agencyTrackingId: false,
+    "metadata.docketNumber": false,
+    "metadata.email": false,
+    "metadata.fullName": false,
+    "metadata.accessCode": false,
+  };
+
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     copyText?: (row: TData) => string;
@@ -49,7 +83,7 @@ const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
   />
 );
 
-const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
+const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   {
     accessorKey: "createdAt",
     header: sortable,
@@ -142,6 +176,16 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     },
   },
   {
+    accessorKey: "returnDetail",
+    header: sortable,
+    size: 150,
+    cell: ({ row }) => row.original.returnDetail ?? "—",
+    meta: {
+      copyText: (row) => row.returnDetail ?? "—",
+      headerLabel: COLUMN_LABEL.returnDetail,
+    },
+  },
+  {
     accessorKey: "transactionStatus",
     header: sortable,
     size: 100,
@@ -174,43 +218,39 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
 ];
 
-const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
-  accessorKey: "returnDetail",
-  header: sortable,
-  size: 150,
-  cell: ({ row }) => row.original.returnDetail ?? "—",
+const trackingIdColumn = (
+  field: TrackingIdField,
+): ColumnDef<TransactionLogEntry> => ({
+  accessorKey: field,
+  header: COLUMN_LABEL[field],
+  enableSorting: false,
+  size: 130,
+  cell: ({ row }) => (
+    <span className="font-mono">{row.original[field] ?? "—"}</span>
+  ),
   meta: {
-    copyText: (row) => row.returnDetail ?? "—",
-    headerLabel: COLUMN_LABEL.returnDetail,
+    copyText: (row) => row[field] ?? "—",
+    headerLabel: COLUMN_LABEL[field],
   },
-};
+});
 
-const COLUMNS_WITH_FAILURE_REASON: ColumnDef<TransactionLogEntry>[] = [
-  ...BASE_COLUMNS.slice(0, 6),
-  FAILURE_REASON,
-  ...BASE_COLUMNS.slice(6),
+const metadataColumn = (key: MetadataKey): ColumnDef<TransactionLogEntry> => ({
+  id: metadataColumnId(key),
+  header: COLUMN_LABEL[metadataColumnId(key)],
+  enableSorting: false,
+  size: 110,
+  meta: {
+    copyText: (row) => row.metadata?.[key] ?? "—",
+    headerLabel: COLUMN_LABEL[metadataColumnId(key)],
+  },
+  cell: ({ row }) => row.original.metadata?.[key] ?? "—",
+});
+
+const ALL_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
+  ...SORTABLE_COLUMNS,
+  trackingIdColumn("paygovTrackingId"),
+  trackingIdColumn("agencyTrackingId"),
+  ...METADATA_KEYS.map(metadataColumn),
 ];
 
-// Returns a stable reference — react-table's memoization (and any caller
-// passing this straight into useReactTable's columns option) relies on
-// that, not just a same-shape array, to avoid recomputing every render.
-export const getColumns = (): ColumnDef<TransactionLogEntry>[] =>
-  COLUMNS_WITH_FAILURE_REASON;
-
-// One column per metadata key of the selected fee. Kept out of the sortable
-// set on purpose: the API cannot ORDER BY a JSON key. Callers memoize on
-// feeType so react-table still sees a stable columns reference.
-export const metadataColumns = (
-  feeType: FeeType | null,
-): ColumnDef<TransactionLogEntry>[] =>
-  (feeType ? FEE_METADATA_KEYS[feeType] : []).map((key) => ({
-    id: `metadata.${key}`,
-    header: METADATA_KEY_LABEL[key],
-    enableSorting: false,
-    size: 110,
-    meta: {
-      copyText: (row) => row.metadata?.[key] ?? "—",
-      headerLabel: METADATA_KEY_LABEL[key],
-    },
-    cell: ({ row }) => row.original.metadata?.[key] ?? "—",
-  }));
+export const getColumns = (): ColumnDef<TransactionLogEntry>[] => ALL_COLUMNS;
