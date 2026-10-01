@@ -7,8 +7,7 @@ import { cn } from "@/lib/utils"
 const Tooltip = TooltipPrimitive.Root
 const TooltipTrigger = TooltipPrimitive.Trigger
 
-// Portal + Positioner are folded in here because every tooltip in this app
-// wants the same arrangement; callers only ever supply the label.
+
 function TooltipPopup({
   className,
   side = "top",

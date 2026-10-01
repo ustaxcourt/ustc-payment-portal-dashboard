@@ -19,8 +19,6 @@ import {
 } from "./exportWorkbook";
 import type { TransactionSorting, TransactionTab } from "./types";
 
-/** Doubles as the tooltip copy and the button's accessible name, so what a
- *  sighted user reads on hover is what a screen reader announces. */
 const LABEL = "Download Transaction Log";
 
 type DownloadPhase =
@@ -32,8 +30,6 @@ type DownloadPhase =
 const isAbort = (err: unknown) =>
   err instanceof DOMException && err.name === "AbortError";
 
-/** Renders a fragment, not a wrapper: the progress text, Cancel and the icon
- *  sit as siblings in the Transaction Log's toolbar row. */
 export default function DownloadTransactionLogButton({
   tab,
   range,
@@ -102,8 +98,6 @@ export default function DownloadTransactionLogButton({
 
   return (
     <>
-      {/* Always mounted (not conditional on `busy`) so assistive tech is
-          already watching the region when the text first appears. */}
       <p
         aria-live="polite"
         className="text-xs text-muted-foreground empty:hidden"

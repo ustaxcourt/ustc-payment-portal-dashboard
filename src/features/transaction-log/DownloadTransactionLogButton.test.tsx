@@ -192,7 +192,7 @@ describe("DownloadTransactionLogButton", () => {
   });
 
   it("offers Cancel while a download is running", async () => {
-    let release: (value: { rows: never[]; total: number }) => void = () => {};
+    let release: (value: { rows: never[]; total: number }) => void = () => { };
     vi.mocked(fetchAllTransactions).mockImplementation(
       (_tab, _range, _sorting, options) =>
         new Promise((resolve, reject) => {
@@ -220,14 +220,12 @@ describe("DownloadTransactionLogButton", () => {
 
     await userEvent.hover(downloadButton());
 
-    // Base UI wires no aria to the popup by design, so the tooltip copy is
-    // deliberately the button's aria-label too — the only text node is the popup.
     expect(await screen.findByText(LABEL)).toBeInTheDocument();
   });
 
   it("disables itself while the log is compiled and downloaded", async () => {
     vi.mocked(fetchAllTransactions).mockImplementation(
-      () => new Promise(() => {}),
+      () => new Promise(() => { }),
     );
 
     renderButton();
@@ -241,7 +239,7 @@ describe("DownloadTransactionLogButton", () => {
     vi.mocked(fetchAllTransactions).mockImplementation(
       (_tab, _range, _sorting, options) => {
         options?.onProgress?.({ fetched: 5_000, total: 12_000 });
-        return new Promise(() => {});
+        return new Promise(() => { });
       },
     );
 
