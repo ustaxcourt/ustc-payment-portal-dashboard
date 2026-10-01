@@ -180,7 +180,7 @@ const response = (
   to: NOW,
   page: 1,
   pageSize: 200,
-  sort: "createdAt",
+  sort: "lastUpdatedAt",
   order: "desc",
   total: 3,
   ...overrides,
@@ -188,7 +188,7 @@ const response = (
 
 const asSortField = (value: string | null): TransactionSortField => {
   switch (value) {
-    case "lastUpdatedAt":
+    case "createdAt":
     case "feeName":
     case "transactionAmount":
     case "paymentMethod":
@@ -199,7 +199,7 @@ const asSortField = (value: string | null): TransactionSortField => {
     case "transactionReferenceId":
       return value;
     default:
-      return "createdAt";
+      return "lastUpdatedAt";
   }
 };
 

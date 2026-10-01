@@ -20,7 +20,7 @@ import {
 export const COLUMN_LABEL: Record<TransactionSortField, string> = {
   createdAt: "Created",
   lastUpdatedAt: "Last updated",
-  feeName: "Fee type",
+  feeName: "Fee",
   transactionAmount: "Amount",
   paymentMethod: "Payment method",
   paymentStatus: "Payment status",

@@ -34,11 +34,11 @@ test("the column headers stay pinned while the log scrolls", async ({
   });
 });
 
-test("the log opens sorted by Created, descending", async ({ page }) => {
+test("the log opens sorted by Last updated, descending", async ({ page }) => {
   await page.goto("/");
 
-  const created = page.getByRole("columnheader", { name: /Created/ });
-  await expect(created).toHaveAttribute("aria-sort", "descending");
+  const lastUpdated = page.getByRole("columnheader", { name: /Last updated/ });
+  await expect(lastUpdated).toHaveAttribute("aria-sort", "descending");
 
   const amount = page.getByRole("columnheader", { name: /Amount/ });
   await expect(amount).toHaveAttribute("aria-sort", "none");
@@ -75,17 +75,17 @@ test("the headers are reachable and operable from the keyboard", async ({
 }) => {
   await page.goto("/");
 
-  const created = page
-    .getByRole("columnheader", { name: /Created/ })
-    .getByRole("button", { name: "Created" });
+  const lastUpdated = page
+    .getByRole("columnheader", { name: /Last updated/ })
+    .getByRole("button", { name: "Last updated" });
 
-  await created.focus();
-  await expect(created).toBeFocused();
+  await lastUpdated.focus();
+  await expect(lastUpdated).toBeFocused();
 
   await page.keyboard.press("Enter");
 
   await expect(
-    page.getByRole("columnheader", { name: /Created/ }),
+    page.getByRole("columnheader", { name: /Last updated/ }),
   ).toHaveAttribute("aria-sort", "ascending");
 
   await expect(page).toHaveURL(/order=asc/);

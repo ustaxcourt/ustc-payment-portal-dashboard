@@ -53,7 +53,7 @@ describe("exportColumns", () => {
     const exportOrder = collapsed.map(
       (h) =>
         ({
-          "Fee type": "feeName",
+          Fee: "feeName",
           Amount: "transactionAmount",
           "Payment method": "paymentMethod",
           "Payment status": "paymentStatus",

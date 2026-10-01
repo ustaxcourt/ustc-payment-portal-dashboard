@@ -54,7 +54,7 @@ const BASE_COLUMNS: ExportColumn[] = [
     value: (row) => courtTimeCell(row.lastUpdatedAt),
   },
   {
-    header: "Fee type",
+    header: "Fee",
     width: 28,
     value: (row) => row.feeName,
   },
