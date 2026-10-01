@@ -61,6 +61,10 @@ describe("TransactionTable status rendering", () => {
     });
 
     expect(
+      // jsdom's accessible-name computation for a container role like
+      // gridcell doesn't inherit a descendant button's aria-label the way a
+      // real browser does, so this reads the plain cell text, not "Copy
+      // Cancelled" (which the live/e2e accessibility tree does report).
       screen.getByRole("gridcell", { name: "Cancelled" }),
     ).toBeInTheDocument();
   });
@@ -240,5 +244,35 @@ describe("TransactionTable keyboard grid", () => {
 
     expect(document.activeElement).toBe(cellButton(0, 0));
     expect(cellButton(0, 0)).toHaveAttribute("tabindex", "0");
+  });
+
+  it("keeps exactly one tab stop after a filter drops the active row", async () => {
+    const { rerender } = renderTable({ rows: [row, secondRow] });
+
+    cellButton(0, 0).focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(cellButton(1, 0));
+
+    // Narrowing the filter drops row 1 — the old tab stop goes with it, and
+    // the clamped-back-to-(0,0) cell must pick it up. React's own prop diff
+    // can't be trusted to flip that cell's tabIndex here: it was never
+    // re-rendered since mount (the keydown handler mutates the DOM
+    // directly), so React still believes row 0's tabIndex is unchanged from
+    // mount and may skip writing it.
+    rerender(
+      <TransactionTable
+        rows={[row]}
+        columns={getColumns()}
+        caption="Transaction log, All"
+        headerTone="bg-status-neutral-subtle"
+        sorting={{ sort: "createdAt", order: "desc" }}
+        onSortingChange={vi.fn()}
+        emptyMessage="No transactions to show."
+      />,
+    );
+
+    const tabbable = document.querySelectorAll('button[tabindex="0"]');
+    expect(tabbable).toHaveLength(1);
+    expect(tabbable[0]).toBe(cellButton(0, 0));
   });
 });

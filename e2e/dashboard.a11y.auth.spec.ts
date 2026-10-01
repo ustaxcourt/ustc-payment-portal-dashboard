@@ -73,4 +73,33 @@ test.describe("dashboard accessibility", () => {
       },
     });
   });
+
+  test.describe("narrow layout", () => {
+    test.use({ viewport: { width: 375, height: 800 } });
+
+    test("the open filters drawer meets WCAG 2.1 Level A and AA", async ({
+      page,
+    }) => {
+      const route = "/";
+
+      await page.goto(route);
+
+      await expectAccessiblePage({
+        page,
+        pageName: "Dashboard narrow filters drawer",
+        route,
+        ready: async () => {
+          await page.getByRole("button", { name: "Show filters" }).click();
+
+          await expect(
+            page.getByRole("heading", { name: "Filters" }),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole("button", { name: "Close filters" }),
+          ).toBeVisible();
+        },
+      });
+    });
+  });
 });

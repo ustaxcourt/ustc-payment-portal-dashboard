@@ -49,12 +49,15 @@ test("a cancelled transaction reads Cancelled under the Failed tab", async ({
   await page.goto("/?status=failed");
 
   await expect(
-    page.getByRole("gridcell", { name: "Cancelled", exact: true }),
+    page.getByRole("gridcell", { name: "Copy Cancelled", exact: true }),
   ).toBeVisible();
 
   // Same row, or the assertion above could pass against an unrelated one.
   await expect(
-    page.getByRole("gridcell", { name: CANCELLED_ROW.transactionReferenceId }),
+    page.getByRole("gridcell", {
+      name: `Copy ${CANCELLED_ROW.transactionReferenceId}`,
+      exact: true,
+    }),
   ).toBeVisible();
 });
 
