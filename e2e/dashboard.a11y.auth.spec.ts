@@ -21,11 +21,13 @@ test.describe("dashboard accessibility", () => {
       route,
       ready: async () => {
         await expect(
-          page.getByRole("heading", { name: "Payment Portal" }),
+          page.getByRole("heading", {
+            name: "Case Services & Finance Dashboard",
+          }),
         ).toBeVisible();
 
         await expect(
-          page.getByRole("table", { name: /Transaction log, All/i }),
+          page.getByRole("grid", { name: /Transaction log, All/i }),
         ).toBeVisible();
 
         await expect(
@@ -52,11 +54,13 @@ test.describe("dashboard accessibility", () => {
       route,
       ready: async () => {
         await expect(
-          page.getByRole("heading", { name: "Payment Portal" }),
+          page.getByRole("heading", {
+            name: "Case Services & Finance Dashboard",
+          }),
         ).toBeVisible();
 
         await expect(
-          page.getByRole("table", { name: /Transaction log, Failed/i }),
+          page.getByRole("grid", { name: /Transaction log, Failed/i }),
         ).toBeVisible();
 
         await expect(
@@ -67,6 +71,53 @@ test.describe("dashboard accessibility", () => {
           page.getByRole("button", { name: "Download Transaction Log" }),
         ).toBeEnabled();
       },
+    });
+  });
+
+  test.describe("narrow layout", () => {
+    test.use({ viewport: { width: 375, height: 800 } });
+
+    test("the open filters drawer meets WCAG 2.1 Level A and AA", async ({
+      page,
+    }) => {
+      const route = "/";
+
+      await page.goto(route);
+
+      await expectAccessiblePage({
+        page,
+        pageName: "Dashboard narrow filters drawer",
+        route,
+        ready: async () => {
+          await expect(
+            page.getByRole("heading", {
+              name: "Case Services & Finance Dashboard",
+            }),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole("grid", { name: /Transaction log, All/i }),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole("table", { name: /Revenue totals/i }),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole("button", { name: "Export" }),
+          ).toBeEnabled();
+
+          await page.getByRole("button", { name: "Show filters" }).click();
+
+          await expect(
+            page.getByRole("heading", { name: "Filters" }),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole("button", { name: "Close filters" }),
+          ).toBeVisible();
+        },
+      });
     });
   });
 });

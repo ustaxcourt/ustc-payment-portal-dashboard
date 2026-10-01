@@ -372,8 +372,13 @@ describe("TransactionLog", () => {
 
       resolveSecond(response({ data: [], counts: { all: 0, success: 0, failed: 0, pending: 0 } }));
 
+      // The "Updating" status is replaced by the empty-results status (not
+      // by silence) — the table itself has no rows for a screen reader to
+      // land on, so this is what announces the outcome.
       await waitFor(() =>
-        expect(screen.queryByRole("status")).not.toBeInTheDocument(),
+        expect(screen.getByRole("status")).toHaveTextContent(
+          "No transactions match your filters.",
+        ),
       );
       expect(screen.queryByText("payment-portal")).not.toBeInTheDocument();
     });
@@ -398,5 +403,134 @@ describe("TransactionLog", () => {
         ).toBeDisabled(),
       );
     });
+  });
+});
+
+// Below `lg` (1023px) the filters move into a Drawer — forcing the media
+// query here is the only way to reach that layout in jsdom, which otherwise
+// always reports no match (see vitest.setup.ts).
+const stubNarrowViewport = () => {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query === "(max-width: 1023px)",
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(() => false),
+  }));
+};
+
+describe("TransactionLog narrow layout", () => {
+  // Returns a `navigate` helper (not RTL's own rerender) that changes the
+  // NuqsTestingAdapter's `searchParams` prop on an already-mounted tree —
+  // with `hasMemory`, the adapter re-syncs its internal URL state when that
+  // prop changes, which is what simulates a real Back/Forward navigation
+  // landing on a different committed URL without unmounting anything.
+  const renderNarrow = (searchParams = "") => {
+    stubNarrowViewport();
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const tree = (params: string) => (
+      <NuqsTestingAdapter searchParams={params} hasMemory>
+        <QueryClientProvider client={client}>
+          <TransactionLog />
+        </QueryClientProvider>
+      </NuqsTestingAdapter>
+    );
+    const result = render(tree(searchParams));
+    return {
+      ...result,
+      navigate: (params: string) => result.rerender(tree(params)),
+    };
+  };
+
+  const openDrawer = async () => {
+    await userEvent.click(screen.getByRole("button", { name: "Show filters" }));
+    await screen.findByRole("heading", { name: "Filters" });
+  };
+
+  const closeDrawer = async () => {
+    await userEvent.click(screen.getByRole("button", { name: "Close filters" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Filters" }),
+      ).not.toBeInTheDocument(),
+    );
+  };
+
+  it("opens the filters drawer from the filter button and closes it with the close button", async () => {
+    mockFetch(response());
+    renderNarrow();
+
+    expect(
+      screen.queryByRole("heading", { name: "Filters" }),
+    ).not.toBeInTheDocument();
+
+    await openDrawer();
+    await closeDrawer();
+  });
+
+  it("shows an indicator on the filter button once a filter is active", async () => {
+    mockFetch(response());
+    const { container } = renderNarrow("?feeType=PETITION_FILING_FEE");
+
+    expect(container.querySelector(".bg-primary")).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("button", { name: "Show filters" }),
+    ).toHaveAccessibleDescription("Filters active");
+  });
+
+  it("gives the filter button no active-filter description when nothing is active", async () => {
+    mockFetch(response());
+    renderNarrow();
+
+    expect(
+      screen.getByRole("button", { name: "Show filters" }),
+    ).toHaveAccessibleDescription("");
+  });
+
+  it("keeps an uncommitted metadata draft when the drawer closes and reopens", async () => {
+    mockFetch(response());
+    renderNarrow("?feeType=NONATTORNEY_EXAM_REGISTRATION_FEE");
+
+    await openDrawer();
+    await userEvent.type(
+      screen.getByLabelText("Search by Email"),
+      "draft@example.com",
+    );
+    await closeDrawer();
+
+    await openDrawer();
+
+    expect(screen.getByLabelText("Search by Email")).toHaveValue(
+      "draft@example.com",
+    );
+  });
+
+  it("drops the cached draft once the URL's committed value changes externally", async () => {
+    mockFetch(response());
+    const { navigate } = renderNarrow(
+      "?feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=foo%40example.com",
+    );
+
+    await openDrawer();
+    await userEvent.type(screen.getByLabelText("Search by Email"), "-stale");
+    await closeDrawer();
+
+    // Simulates Back/Forward landing on the same key but a different
+    // committed value — the scenario the draft cache must not survive.
+    navigate(
+      "?feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=bar%40example.com",
+    );
+
+    await openDrawer();
+
+    expect(screen.getByLabelText("Search by Email")).toHaveValue(
+      "bar@example.com",
+    );
   });
 });

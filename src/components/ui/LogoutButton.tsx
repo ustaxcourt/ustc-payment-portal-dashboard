@@ -1,33 +1,21 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import {
-  LAST_ACTIVITY_STORAGE_KEY,
-  LOGOUT_SIGNAL_STORAGE_KEY,
-} from "@/lib/session";
-
-function broadcastLogout() {
-  try {
-    window.localStorage.setItem(
-      LOGOUT_SIGNAL_STORAGE_KEY,
-      Date.now().toString(),
-    );
-    window.localStorage.removeItem(LAST_ACTIVITY_STORAGE_KEY);
-  } catch {
-    return;
-  }
-}
+import { broadcastLogout } from "@/lib/sessionStorage";
 
 export default function LogoutButton() {
   return (
-    <Button
+    <button
+      type="button"
       onClick={() => {
         broadcastLogout();
-        void signOut({ callbackUrl: "/api/auth/federated-logout" });
+        void signOut({ callbackUrl: "/login" });
       }}
+      className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary cursor-pointer"
     >
-      Logout
-    </Button>
+      <LogOut className="h-5 w-5" />
+      <span>Logout</span>
+    </button>
   );
 }

@@ -106,10 +106,23 @@ export default function TransactionLog() {
     `${appliedRange.from}..${appliedRange.to}`,
   );
 
+  // The draft cache only needs to survive a remount (e.g. the mobile drawer
+  // closing/reopening) while nothing committed has changed underneath it —
+  // any actual change to the committed fee/key/value (a real Search, Clear,
+  // or Back/Forward navigation) makes a cached in-progress draft stale, so
+  // it's dropped in favor of the fresh committed values on the next render.
   const metadataDraftRef = useRef<MetadataDraft | undefined>(undefined);
   const previousFeeTypeRef = useRef(searchFilters.feeType);
-  if (previousFeeTypeRef.current !== searchFilters.feeType) {
+  const previousMetadataKeyRef = useRef(searchFilters.metadataKey);
+  const previousMetadataValueRef = useRef(searchFilters.metadataValue);
+  if (
+    previousFeeTypeRef.current !== searchFilters.feeType ||
+    previousMetadataKeyRef.current !== searchFilters.metadataKey ||
+    previousMetadataValueRef.current !== searchFilters.metadataValue
+  ) {
     previousFeeTypeRef.current = searchFilters.feeType;
+    previousMetadataKeyRef.current = searchFilters.metadataKey;
+    previousMetadataValueRef.current = searchFilters.metadataValue;
     metadataDraftRef.current = undefined;
   }
 
@@ -216,6 +229,7 @@ export default function TransactionLog() {
                 <IconButton
                   icon="filter"
                   label="Show filters"
+                  description={hasSearchCriteria ? "Filters active" : undefined}
                   onClick={() => setFiltersOpen(true)}
                 />
                 {hasSearchCriteria ? (

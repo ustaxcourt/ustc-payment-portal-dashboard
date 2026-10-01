@@ -321,28 +321,6 @@ export function getSessionAuthOptions(): Pick<
   };
 }
 
-export function getFederatedLogoutUrl(
-  postLogoutPath = "/login",
-): string | null {
-  const env = loadEnv();
-  const issuer = env.AUTH_MICROSOFT_ENTRA_ID_ISSUER;
-  const baseUrl = env.NEXTAUTH_URL;
-
-  if (!issuer || !baseUrl) {
-    return null;
-  }
-
-  const logoutUrl = new URL(`${issuerBaseUrl(issuer)}/oauth2/v2.0/logout`);
-  const postLogoutRedirectUrl = new URL(postLogoutPath, baseUrl);
-
-  logoutUrl.searchParams.set(
-    "post_logout_redirect_uri",
-    postLogoutRedirectUrl.toString(),
-  );
-
-  return logoutUrl.toString();
-}
-
 function buildAuthOptions(): NextAuthOptions {
   const env = loadEnv();
 
