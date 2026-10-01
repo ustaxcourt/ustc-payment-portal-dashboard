@@ -109,6 +109,8 @@ export default function TransactionTable({
     );
     if (!current) return;
 
+    event.preventDefault();
+
     const nextRow = Number(current.dataset.row) + delta.row;
     const nextCol = Number(current.dataset.col) + delta.col;
     const next = event.currentTarget.querySelector<HTMLButtonElement>(
@@ -116,7 +118,6 @@ export default function TransactionTable({
     );
     if (!next) return;
 
-    event.preventDefault();
     current.tabIndex = -1;
     next.tabIndex = 0;
     activeCellRef.current = { row: nextRow, col: nextCol };

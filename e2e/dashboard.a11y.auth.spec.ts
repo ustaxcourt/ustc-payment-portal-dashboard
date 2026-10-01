@@ -89,6 +89,24 @@ test.describe("dashboard accessibility", () => {
         pageName: "Dashboard narrow filters drawer",
         route,
         ready: async () => {
+          await expect(
+            page.getByRole("heading", {
+              name: "Case Services & Finance Dashboard",
+            }),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole("grid", { name: /Transaction log, All/i }),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole("table", { name: /Revenue totals/i }),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole("button", { name: "Export" }),
+          ).toBeEnabled();
+
           await page.getByRole("button", { name: "Show filters" }).click();
 
           await expect(

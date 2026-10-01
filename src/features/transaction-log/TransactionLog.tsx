@@ -232,6 +232,7 @@ export default function TransactionLog() {
                 <IconButton
                   icon="filter"
                   label="Show filters"
+                  description={hasSearchCriteria ? "Filters active" : undefined}
                   onClick={() => setFiltersOpen(true)}
                 />
                 {hasSearchCriteria ? (

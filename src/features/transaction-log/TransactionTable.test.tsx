@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -244,6 +244,17 @@ describe("TransactionTable keyboard grid", () => {
 
     expect(document.activeElement).toBe(cellButton(0, 0));
     expect(cellButton(0, 0)).toHaveAttribute("tabindex", "0");
+  });
+
+  it("still prevents the native scroll at the edge of the grid", () => {
+    renderTable({ rows: [row, secondRow] });
+
+    const notPrevented = fireEvent.keyDown(cellButton(0, 0), {
+      key: "ArrowUp",
+      code: "ArrowUp",
+    });
+
+    expect(notPrevented).toBe(false);
   });
 
   it("keeps exactly one tab stop after a filter drops the active row", async () => {
