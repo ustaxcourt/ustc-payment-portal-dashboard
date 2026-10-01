@@ -34,6 +34,10 @@ test.describe("dashboard accessibility", () => {
         ).toBeVisible();
 
         await expect(
+          page.getByRole("table", { name: /Successful payments by fee/i }),
+        ).toBeVisible();
+
+        await expect(
           page.getByRole("button", { name: "Download Transaction Log" }),
         ).toBeEnabled();
       },
@@ -64,6 +68,10 @@ test.describe("dashboard accessibility", () => {
 
         await expect(
           page.getByRole("table", { name: /Revenue totals/i }),
+        ).toBeVisible();
+
+        await expect(
+          page.getByRole("table", { name: /Successful payments by fee/i }),
         ).toBeVisible();
 
         await expect(
@@ -100,6 +108,10 @@ test.describe("dashboard accessibility", () => {
 
           await expect(
             page.getByRole("table", { name: /Revenue totals/i }),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole("table", { name: /Successful payments by fee/i }),
           ).toBeVisible();
 
           await expect(
