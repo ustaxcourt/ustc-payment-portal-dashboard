@@ -2,7 +2,6 @@ import { expect, test } from "@playwright/test";
 import { expectAccessiblePage } from "./accessibility/axe";
 import { stubDashboardResponses } from "./accessibility/dashboardData";
 
-// TODO: For PAY-467: Update for refactored Payment Breakdown Pane
 test.describe("dashboard accessibility", () => {
   test.beforeEach(async ({ page }) => {
     await stubDashboardResponses(page);

@@ -2,10 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const TOTAL = /^Total: \$[\d,]+\.\d{2}$/;
 
-// TODO: For PAY-467: PaymentBreakdownPane is pulled from the page pending its rework into a
-// full-width header bar; re-enable once that story lands. Kept skipped
-// (not deleted) since the assertions still describe the target behavior.
-test.describe.skip("payment breakdown pane (pending header-bar rework)", () => {
+test.describe("payment breakdown pane", () => {
   test("the breakdown shows a row per fee and a grand total", async ({
     page,
   }) => {
@@ -43,9 +40,9 @@ test.describe.skip("payment breakdown pane (pending header-bar rework)", () => {
     await expect(total).toHaveText(TOTAL);
     const before = await total.textContent();
 
-    const failedTab = page.getByRole("tab", { name: /Failed/ });
-    await failedTab.click();
-    await expect(failedTab).toHaveAttribute("aria-selected", "true");
+    const failedRadio = page.getByRole("radio", { name: /Failed/ });
+    await failedRadio.click();
+    await expect(failedRadio).toBeChecked();
 
     await expect(total).toHaveText(before ?? "");
   });
