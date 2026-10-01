@@ -35,8 +35,6 @@ export function ToastProvider({
     setToasts((current) => [...current, { id, message }]);
 
     window.setTimeout(() => {
-      console.log("removing toast", id);
-
       setToasts((current) =>
         current.filter((toast) => toast.id !== id),
       );
@@ -49,12 +47,10 @@ export function ToastProvider({
 
       <div className="fixed top-24 right-4 z-[99999] flex flex-col gap-2">
         {toasts.map((toast) => {
-          console.log("rendering toast", toast);
-
           return (
             <div
               key={toast.id}
-              className="rounded-md bg-green-200 px-4 py-3 text-black border-1 shadow-2xl"
+              className="rounded-md bg-green-100 px-4 py-3 text-black border-1 shadow-2xl"
             >
               {toast.message}
             </div>

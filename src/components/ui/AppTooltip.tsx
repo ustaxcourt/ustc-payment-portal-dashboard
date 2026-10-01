@@ -4,7 +4,9 @@ import { Tooltip } from "@base-ui/react";
 import React, { ReactElement, ReactNode, useState } from "react";
 
 type AppTooltipProps = {
-  children: ReactElement;
+  children: ReactElement<{
+    onClick?: (event: React.MouseEvent<HTMLElement>) => void;
+  }>;
   content: ReactNode;
 };
 
@@ -17,9 +19,9 @@ export function AppTooltip({
       <Tooltip.Trigger
         render={(props) =>
           React.cloneElement(children, {
-            ...props,
             ...children.props,
-            onClick: (event) => {
+            ...props,
+            onClick: (event: React.MouseEvent<HTMLElement>) => {
               props.onClick?.(event);
               children.props.onClick?.(event);
             },
