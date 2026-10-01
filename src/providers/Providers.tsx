@@ -5,6 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useState } from "react";
 import { SESSION_MAX_AGE_SECONDS } from "@/lib/session";
+import { AppTooltipProvider } from "./AppTooltipProvider";
 import { useIdleLogout } from "./useIdleLogout";
 
 const SESSION_REFETCH_INTERVAL_SECONDS = Math.max(
@@ -37,7 +38,9 @@ export default function Providers({
       <IdleLogout />
       <NuqsAdapter>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <AppTooltipProvider>
+            {children}
+          </AppTooltipProvider>
         </QueryClientProvider>
       </NuqsAdapter>
     </SessionProvider>

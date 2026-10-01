@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { AppTooltip } from "@/components/ui/AppTooltip";
 import {
   Drawer,
   DrawerBackdrop,
@@ -49,6 +50,7 @@ export default function TransactionLog() {
   const [isNarrow, setIsNarrow] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
 
   // The drawer is positioned `fixed` (see drawer.tsx) so it always lands
   // fully on-screen and can scroll, regardless of where filtersScopeRef sits
@@ -188,8 +190,13 @@ export default function TransactionLog() {
   );
 
   const copyShareLink = async () => {
-    // TODO: copy a shareable link for the current filters/timeframe.
     await navigator.clipboard.writeText(window.location.href);
+
+    setCopied(true);
+
+    window.setTimeout(() => {
+      setCopied(false);
+    }, 500);
   };
 
   const downloadReport = () => {
@@ -242,11 +249,13 @@ export default function TransactionLog() {
                   />
                 ) : null}
               </span>
-              <IconButton
-                icon="link"
-                label="Copy share link"
-                onClick={copyShareLink}
-              />
+              <AppTooltip content={copied ? "Link copied!" : "Copy share link"}>
+                <IconButton
+                  icon="link"
+                  label="Copy share link"
+                  onClick={copyShareLink}
+                />
+              </AppTooltip>
               <IconButton
                 icon="download"
                 label="Download report"

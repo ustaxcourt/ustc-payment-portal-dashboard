@@ -1,7 +1,9 @@
-import type { VariantProps } from "class-variance-authority"
-import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react"
+import type { ComponentProps } from "react";
+import { forwardRef } from "react";
+import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react";
 
-import { Button, type buttonVariants } from "@/components/ui/button"
+import { Button, type buttonVariants } from "@/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
 
 const ICONS = {
   link: Link2,
@@ -9,33 +11,43 @@ const ICONS = {
   columns: Columns3,
   filter: Filter,
   close: X,
-} satisfies Record<string, LucideIcon>
+} satisfies Record<string, LucideIcon>;
 
-export type IconButtonIcon = keyof typeof ICONS
+export type IconButtonIcon = keyof typeof ICONS;
 
-function IconButton({
-  icon,
-  label,
-  onClick,
-  variant = "outline",
-}: {
-  icon: IconButtonIcon
-  label: string
-  onClick: () => void
-  variant?: VariantProps<typeof buttonVariants>["variant"]
-}) {
-  const Icon = ICONS[icon]
+type IconButtonProps = Omit<
+  ComponentProps<typeof Button>,
+  "children"
+> & {
+  icon: IconButtonIcon;
+  label: string;
+  variant?: VariantProps<typeof buttonVariants>["variant"];
+};
+
+export const IconButton = forwardRef<
+  HTMLButtonElement,
+  IconButtonProps
+>(function IconButton(
+  {
+    icon,
+    label,
+    variant = "outline",
+    ...props
+  },
+  ref,
+) {
+  const Icon = ICONS[icon];
+
   return (
     <Button
+      ref={ref}
       type="button"
       variant={variant}
       size="icon-sm"
       aria-label={label}
-      onClick={onClick}
+      {...props}
     >
       <Icon />
     </Button>
-  )
-}
-
-export { IconButton }
+  );
+});
