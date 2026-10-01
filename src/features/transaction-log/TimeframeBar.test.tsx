@@ -70,7 +70,7 @@ afterEach(() => {
 });
 
 describe("TimeframeBar", () => {
-  it("shows the timeframe presets and the export button", async () => {
+  it("shows the timeframe presets", async () => {
     mockFetch(response());
     renderBar();
 
@@ -84,27 +84,17 @@ describe("TimeframeBar", () => {
     expect(
       screen.getByRole("button", { name: "Custom range" }),
     ).toBeInTheDocument();
-    expect(
-      await screen.findByRole("button", { name: "Export" }),
-    ).toBeInTheDocument();
   });
 
-  it("disables export while the log is empty", async () => {
-    mockFetch(response({ data: [], total: 0 }));
-    renderBar();
-
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Export" })).toBeDisabled(),
-    );
-  });
-
-  it("enables export once the log has rows", async () => {
+  it("no longer carries a download control — it lives in the log toolbar", async () => {
     mockFetch(response({ data: [entry()], total: 1 }));
     renderBar();
 
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Export" })).toBeEnabled(),
-    );
+    // Wait for the query to settle, so a late-rendering control can't slip past.
+    await screen.findByText(`Today – ${formatCourtDate("2026-08-03T04:00:00.000Z")}`);
+    expect(
+      screen.queryByRole("button", { name: /Export|Download/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the server-confirmed date beside the applied preset", async () => {

@@ -33,7 +33,7 @@ test.describe("dashboard accessibility", () => {
         ).toBeVisible();
 
         await expect(
-          page.getByRole("button", { name: "Export" }),
+          page.getByRole("button", { name: "Download Transaction Log" }),
         ).toBeEnabled();
       },
     });
@@ -64,7 +64,7 @@ test.describe("dashboard accessibility", () => {
         ).toBeVisible();
 
         await expect(
-          page.getByRole("button", { name: "Export" }),
+          page.getByRole("button", { name: "Download Transaction Log" }),
         ).toBeEnabled();
       },
     });

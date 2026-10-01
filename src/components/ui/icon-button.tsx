@@ -1,7 +1,9 @@
+import type { Button as ButtonPrimitive } from "@base-ui/react/button"
 import type { VariantProps } from "class-variance-authority"
 import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react"
 
 import { Button, type buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 const ICONS = {
   link: Link2,
@@ -13,17 +15,23 @@ const ICONS = {
 
 export type IconButtonIcon = keyof typeof ICONS
 
+// Every prop other than the icon and its label passes straight through, so
+// callers can disable the button, and so popup primitives (Tooltip.Trigger)
+// can merge their own ref/aria/handlers in via `render`.
+type IconButtonProps = Omit<ButtonPrimitive.Props, "children" | "className"> & {
+  icon: IconButtonIcon
+  label: string
+  className?: string
+  variant?: VariantProps<typeof buttonVariants>["variant"]
+}
+
 function IconButton({
   icon,
   label,
-  onClick,
+  className,
   variant = "outline",
-}: {
-  icon: IconButtonIcon
-  label: string
-  onClick: () => void
-  variant?: VariantProps<typeof buttonVariants>["variant"]
-}) {
+  ...props
+}: IconButtonProps) {
   const Icon = ICONS[icon]
   return (
     <Button
@@ -31,7 +39,8 @@ function IconButton({
       variant={variant}
       size="icon-sm"
       aria-label={label}
-      onClick={onClick}
+      className={cn("text-muted-foreground hover:text-primary", className)}
+      {...props}
     >
       <Icon />
     </Button>

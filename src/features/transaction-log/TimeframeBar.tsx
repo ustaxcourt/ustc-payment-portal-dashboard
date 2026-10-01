@@ -1,7 +1,6 @@
 "use client";
 
 import { formatCourtDate } from "@/lib/format";
-import ExportButton from "./ExportButton";
 import TimeframeControls from "./TimeframeControls";
 import { useTransactionLog } from "./useTransactionLog";
 import { useTransactionLogParams } from "./useTransactionLogParams";
@@ -22,12 +21,6 @@ export default function TimeframeBar() {
           setParams({ from: null, range: preset, to: null })
         }
         onApplyCustom={(from, to) => setParams({ from, range: "custom", to })}
-      />
-      <ExportButton
-        tab={searchFilters.paymentStatus ?? "all"}
-        range={appliedRange}
-        sorting={activeSorting}
-        disabled={!data || data.data.length === 0}
       />
     </div>
   );
