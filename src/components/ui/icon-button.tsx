@@ -21,6 +21,7 @@ type IconButtonProps = Omit<ButtonPrimitive.Props, "children" | "className"> & {
   label: string
   className?: string
   variant?: VariantProps<typeof buttonVariants>["variant"]
+  description?: string
 }
 
 function IconButton({
@@ -28,21 +29,30 @@ function IconButton({
   label,
   className,
   variant = "outline",
+  description,
   ...props
 }: IconButtonProps) {
   const Icon = ICONS[icon]
   const descriptionId = useId()
   return (
-    <Button
-      type="button"
-      variant={variant}
-      size="icon-sm"
-      aria-label={label}
-      className={cn("text-muted-foreground hover:text-primary", className)}
-      {...props}
-    >
-      <Icon />
-    </Button>
+    <>
+      <Button
+        type="button"
+        variant={variant}
+        size="icon-sm"
+        aria-label={label}
+        aria-describedby={description ? descriptionId : undefined}
+        className={cn("text-muted-foreground hover:text-primary", className)}
+        {...props}
+      >
+        <Icon />
+      </Button>
+      {description ? (
+        <span id={descriptionId} className="sr-only">
+          {description}
+        </span>
+      ) : null}
+    </>
   )
 }
 
