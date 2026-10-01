@@ -104,7 +104,7 @@ test.describe("dashboard accessibility", () => {
           ).toBeVisible();
 
           await expect(
-            page.getByRole("button", { name: "Export" }),
+            page.getByRole("button", { name: "Download Transaction Log" }),
           ).toBeEnabled();
 
           await page.getByRole("button", { name: "Show filters" }).click();
