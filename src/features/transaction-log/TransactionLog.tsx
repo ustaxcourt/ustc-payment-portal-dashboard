@@ -187,8 +187,9 @@ export default function TransactionLog() {
     />
   );
 
-  const copyShareLink = () => {
+  const copyShareLink = async () => {
     // TODO: copy a shareable link for the current filters/timeframe.
+    await navigator.clipboard.writeText(window.location.href);
   };
 
   const downloadReport = () => {
