@@ -242,8 +242,6 @@ export default function RevenueTotals() {
                   <span className="text-muted-foreground">
                     {periodSubtitle(data.current[period], period)}
                   </span>
-                  {/* The design shows only the subtitle; the summed window still
-                      reads out where the subtitle alone doesn't date it. */}
                   {SUBTITLE_IS_DATED.has(period) ? null : (
                     <>
                       <span className="sr-only">,</span>{" "}
