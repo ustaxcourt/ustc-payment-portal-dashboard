@@ -8,6 +8,7 @@ import TransactionLog from "@/features/transaction-log/TransactionLog";
 import { getSessionAuthOptions, hasValidDashboardSession } from "@/lib/auth";
 import { loginUrlReturningTo } from "@/lib/callbackUrl";
 import Image from "next/image";
+import PaymentBreakdownPane from "@/features/payment-breakdown/PaymentBreakdownPane";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -86,6 +87,9 @@ export default async function Home({
         tabIndex={-1}
         className="flex flex-1 flex-col p-6 sm:p-8 lg:min-h-0"
       >
+         <Suspense fallback={<div aria-hidden="true" />}>
+          <PaymentBreakdownPane />
+        </Suspense>
         <Suspense
           fallback={
             <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
