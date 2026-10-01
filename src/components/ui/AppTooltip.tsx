@@ -1,7 +1,7 @@
 "use client";
 
 import { Tooltip } from "@base-ui/react";
-import React, { ReactElement, ReactNode } from "react";
+import React, { ReactElement, ReactNode, useState } from "react";
 
 type AppTooltipProps = {
   children: ReactElement;
@@ -15,15 +15,13 @@ export function AppTooltip({
   return (
     <Tooltip.Root>
       <Tooltip.Trigger
-        render={(props) =>
-          React.cloneElement(children, props)
-        }
+        render={(props) => React.cloneElement(children, props)}
       />
 
       <Tooltip.Portal>
         <Tooltip.Positioner>
           <Tooltip.Popup>
-            <div className="rounded-md border border-border bg-background px-3 py-2 mb-1 text-sm shadow-md">
+            <div className="mb-1 rounded-md border border-border bg-background px-3 py-2 text-sm shadow-md">
               {content}
             </div>
           </Tooltip.Popup>

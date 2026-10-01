@@ -50,7 +50,6 @@ export default function TransactionLog() {
   const [isNarrow, setIsNarrow] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState(false);
 
   // The drawer is positioned `fixed` (see drawer.tsx) so it always lands
   // fully on-screen and can scroll, regardless of where filtersScopeRef sits
@@ -189,15 +188,11 @@ export default function TransactionLog() {
     />
   );
 
-  const copyShareLink = async () => {
-    await navigator.clipboard.writeText(window.location.href);
+const copyShareLink = async () => {
+  await navigator.clipboard.writeText(window.location.href);
 
-    setCopied(true);
-
-    window.setTimeout(() => {
-      setCopied(false);
-    }, 500);
-  };
+  // TODO: Show toast/snackbar
+};
 
   const downloadReport = () => {
     // TODO: download the transaction log as a report.
@@ -249,7 +244,7 @@ export default function TransactionLog() {
                   />
                 ) : null}
               </span>
-              <AppTooltip content={copied ? "Link copied!" : "Copy share link"}>
+              <AppTooltip content="Copy share link">
                 <IconButton
                   icon="link"
                   label="Copy share link"

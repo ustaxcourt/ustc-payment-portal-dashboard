@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { forwardRef } from "react";
-import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react";
+import { Columns3, Download, Filter, Icon, Link2, type LucideIcon, X } from "lucide-react";
 
 import { Button, type buttonVariants } from "@/components/ui/button";
 import type { VariantProps } from "class-variance-authority";
@@ -24,30 +24,23 @@ type IconButtonProps = Omit<
   variant?: VariantProps<typeof buttonVariants>["variant"];
 };
 
-export const IconButton = forwardRef<
-  HTMLButtonElement,
-  IconButtonProps
->(function IconButton(
-  {
-    icon,
-    label,
-    variant = "outline",
-    ...props
-  },
-  ref,
-) {
-  const Icon = ICONS[icon];
+export function IconButton({
+  icon,
+  label,
+  variant = "outline",
+  ...props
+}: IconButtonProps) {
+  const IconComponent = ICONS[icon];
 
   return (
     <Button
-      ref={ref}
       type="button"
       variant={variant}
       size="icon-sm"
       aria-label={label}
       {...props}
     >
-      <Icon />
+      <IconComponent />
     </Button>
   );
-});
+}
