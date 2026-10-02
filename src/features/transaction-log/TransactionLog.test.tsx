@@ -6,6 +6,7 @@ import {
   type OnUrlUpdateFunction,
 } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ToastProvider } from "../../components/ui/toast-context";
 import TimeframeBar from "./TimeframeBar";
 import TransactionLog from "./TransactionLog";
 import type { TransactionLogResponse } from "./types";
@@ -25,6 +26,22 @@ const response = (
   ...overrides,
 });
 
+function TestProviders({
+  children,
+  client,
+}: {
+  children: React.ReactNode;
+  client: QueryClient;
+}) {
+  return (
+    <QueryClientProvider client={client}>
+      <ToastProvider>
+        {children}
+      </ToastProvider>
+    </QueryClientProvider>
+  );
+}
+
 const renderLog = (
   searchParams = "",
   options: { onUrlUpdate?: OnUrlUpdateFunction } = {},
@@ -34,12 +51,10 @@ const renderLog = (
   });
 
   return render(
-    // hasMemory: interactions re-render with the params they just set,
-    // matching a real browser's address bar instead of a frozen snapshot.
     <NuqsTestingAdapter searchParams={searchParams} hasMemory {...options}>
-      <QueryClientProvider client={client}>
+      <TestProviders client={client}>
         <TransactionLog />
-      </QueryClientProvider>
+      </TestProviders>
     </NuqsTestingAdapter>,
   );
 };
@@ -52,10 +67,10 @@ const renderDashboard = (searchParams = "") => {
 
   return render(
     <NuqsTestingAdapter searchParams={searchParams}>
-      <QueryClientProvider client={client}>
+      <TestProviders client={client}>
         <TimeframeBar />
         <TransactionLog />
-      </QueryClientProvider>
+      </TestProviders>
     </NuqsTestingAdapter>,
   );
 };
@@ -404,7 +419,9 @@ describe("TransactionLog narrow layout", () => {
     const tree = (params: string) => (
       <NuqsTestingAdapter searchParams={params} hasMemory>
         <QueryClientProvider client={client}>
-          <TransactionLog />
+          <ToastProvider>
+            <TransactionLog />
+          </ToastProvider>
         </QueryClientProvider>
       </NuqsTestingAdapter>
     );
@@ -446,7 +463,6 @@ describe("TransactionLog narrow layout", () => {
     const { container } = renderNarrow("?feeType=PETITION_FILING_FEE");
 
     expect(container.querySelector(".bg-primary")).toBeInTheDocument();
-
     expect(
       screen.getByRole("button", { name: "Show filters" }),
     ).toHaveAccessibleDescription("Filters active");

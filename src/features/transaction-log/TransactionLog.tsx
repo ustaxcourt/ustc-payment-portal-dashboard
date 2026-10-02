@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { AppTooltip } from "@/components/ui/AppTooltip";
 import {
   Drawer,
   DrawerBackdrop,
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/drawer";
 import ErrorPanel from "@/components/ui/ErrorPanel";
 import { IconButton } from "@/components/ui/icon-button";
+import { useToast } from "@/components/ui/toast-context";
 import { cn } from "@/lib/utils";
 import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
@@ -49,6 +51,8 @@ export default function TransactionLog() {
   const [isNarrow, setIsNarrow] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
+
+  const { showToast } = useToast();
 
   // The drawer is positioned `fixed` (see drawer.tsx) so it always lands
   // fully on-screen and can scroll, regardless of where filtersScopeRef sits
@@ -187,8 +191,14 @@ export default function TransactionLog() {
     />
   );
 
-  const copyShareLink = () => {
-    // TODO: copy a shareable link for the current filters/timeframe.
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast("Link copied!");
+    } catch (error) {
+      console.error(error);
+      showToast("Unable to copy link.");
+    }
   };
 
   const downloadReport = () => {
@@ -242,11 +252,13 @@ export default function TransactionLog() {
                   />
                 ) : null}
               </span>
-              <IconButton
-                icon="link"
-                label="Copy share link"
-                onClick={copyShareLink}
-              />
+              <AppTooltip content="Copy share link">
+                <IconButton
+                  icon="link"
+                  label="Copy share link"
+                  onClick={copyShareLink}
+                />
+              </AppTooltip>
               <IconButton
                 icon="download"
                 label="Download report"

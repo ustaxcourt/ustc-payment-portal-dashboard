@@ -1,8 +1,8 @@
-import type { VariantProps } from "class-variance-authority"
-import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react"
-import { useId } from "react"
+import type { ComponentProps } from "react";
+import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react";
 
-import { Button, type buttonVariants } from "@/components/ui/button"
+import { Button, type buttonVariants } from "@/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
 
 const ICONS = {
   link: Link2,
@@ -10,45 +10,39 @@ const ICONS = {
   columns: Columns3,
   filter: Filter,
   close: X,
-} satisfies Record<string, LucideIcon>
+} satisfies Record<string, LucideIcon>;
 
-export type IconButtonIcon = keyof typeof ICONS
+export type IconButtonIcon = keyof typeof ICONS;
 
-function IconButton({
+type IconButtonProps = Omit<
+  ComponentProps<typeof Button>,
+  "children"
+> & {
+  icon: IconButtonIcon;
+  label: string;
+  variant?: VariantProps<typeof buttonVariants>["variant"];
+  description?: string;
+};
+
+export function IconButton({
   icon,
   label,
-  onClick,
-  variant = "outline",
   description,
-}: {
-  icon: IconButtonIcon
-  label: string
-  onClick: () => void
-  variant?: VariantProps<typeof buttonVariants>["variant"]
-  /** Extra screen-reader-only context (e.g. a visual-only badge's state) announced alongside `label`, via `aria-describedby`. */
-  description?: string
-}) {
-  const Icon = ICONS[icon]
-  const descriptionId = useId()
-  return (
-    <>
-      <Button
-        type="button"
-        variant={variant}
-        size="icon-sm"
-        aria-label={label}
-        aria-describedby={description ? descriptionId : undefined}
-        onClick={onClick}
-      >
-        <Icon />
-      </Button>
-      {description ? (
-        <span id={descriptionId} className="sr-only">
-          {description}
-        </span>
-      ) : null}
-    </>
-  )
-}
+  variant = "outline",
+  ...props
+}: IconButtonProps) {
+  const IconComponent = ICONS[icon];
 
-export { IconButton }
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      size="icon-sm"
+      aria-label={label}
+      aria-description={description}
+      {...props}
+    >
+      <IconComponent />
+    </Button>
+  );
+}
