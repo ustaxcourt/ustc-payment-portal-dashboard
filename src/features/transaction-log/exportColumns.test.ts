@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COLUMN_LABEL, getColumns } from "./columns";
+import { COLUMN_IDS, COLUMN_LABEL } from "./columns";
 import { exportColumns } from "./exportColumns";
 import type { TransactionLogEntry } from "./types";
 
@@ -32,13 +32,10 @@ const cell = (header: string) => {
 
 describe("exportColumns", () => {
   it("writes every table column, with both timestamps split into date and time", () => {
-    expect(headers()).toHaveLength(getColumns().length + 2);
+    expect(headers()).toHaveLength(COLUMN_IDS.length + 2);
   });
 
   it("matches the table's column order, with timestamps split in place", () => {
-    const tableOrder = getColumns().map((c) =>
-      "accessorKey" in c ? c.accessorKey : c.id,
-    );
 
     // Collapse the split date/time pairs back to the display column name.
     const collapsed = headers()
@@ -70,7 +67,7 @@ describe("exportColumns", () => {
         })[h] ?? h,
     );
 
-    expect(exportOrder).toEqual(tableOrder);
+    expect(exportOrder).toEqual(COLUMN_IDS);
   });
 
   it("converts timestamps to Court-time date and time cells", () => {

@@ -20,7 +20,7 @@ import ColumnPicker from "./ColumnPicker";
 import {
   COLUMN_LABEL,
   DEFAULT_COLUMN_VISIBILITY,
-  getColumns,
+  TRANSACTION_COLUMNS,
 } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
@@ -281,7 +281,7 @@ export default function TransactionLog() {
             <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
               <TransactionTable
                 rows={data?.data ?? []}
-                columns={getColumns()}
+                columns={TRANSACTION_COLUMNS}
                 caption={`Transaction log, ${statusLabel}`}
                 headerTone="bg-status-neutral-subtle"
                 sorting={activeSorting}

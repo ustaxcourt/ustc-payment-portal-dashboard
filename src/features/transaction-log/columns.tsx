@@ -69,10 +69,6 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   "metadata.accessCode": false,
 };
 
-export const COLUMN_IDS = Object.keys(
-  DEFAULT_COLUMN_VISIBILITY,
-) as TransactionColumnId[];
-
 export const isMetadataColumnId = (id: TransactionColumnId) =>
   id.startsWith("metadata.");
 
@@ -91,8 +87,13 @@ const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
   />
 );
 
-const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
+type TransactionColumnDef = ColumnDef<TransactionLogEntry> & {
+  id: TransactionColumnId;
+};
+
+const SORTABLE_COLUMNS: TransactionColumnDef[] = [
   {
+    id: "createdAt",
     accessorKey: "createdAt",
     header: sortable,
     sortDescFirst: true,
@@ -115,6 +116,7 @@ const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     },
   },
   {
+    id: "lastUpdatedAt",
     accessorKey: "lastUpdatedAt",
     header: sortable,
     sortDescFirst: true,
@@ -137,12 +139,14 @@ const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     },
   },
   {
+    id: "feeName",
     accessorKey: "feeName",
     header: sortable,
     size: 130,
     meta: { copyText: (row) => row.feeName, headerLabel: COLUMN_LABEL.feeName },
   },
   {
+    id: "transactionAmount",
     accessorKey: "transactionAmount",
     header: sortable,
     size: 80,
@@ -157,6 +161,7 @@ const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     },
   },
   {
+    id: "paymentMethod",
     accessorKey: "paymentMethod",
     header: sortable,
     size: 100,
@@ -167,6 +172,7 @@ const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     },
   },
   {
+    id: "paymentStatus",
     accessorKey: "paymentStatus",
     header: sortable,
     size: 85,
@@ -184,6 +190,7 @@ const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     },
   },
   {
+    id: "returnDetail",
     accessorKey: "returnDetail",
     header: sortable,
     size: 150,
@@ -194,6 +201,7 @@ const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     },
   },
   {
+    id: "transactionStatus",
     accessorKey: "transactionStatus",
     header: sortable,
     size: 100,
@@ -204,6 +212,7 @@ const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     },
   },
   {
+    id: "clientName",
     accessorKey: "clientName",
     header: sortable,
     size: 120,
@@ -213,6 +222,7 @@ const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
     },
   },
   {
+    id: "transactionReferenceId",
     accessorKey: "transactionReferenceId",
     header: sortable,
     size: 130,
@@ -226,9 +236,8 @@ const SORTABLE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
   },
 ];
 
-const trackingIdColumn = (
-  field: TrackingIdField,
-): ColumnDef<TransactionLogEntry> => ({
+const trackingIdColumn = (field: TrackingIdField): TransactionColumnDef => ({
+  id: field,
   accessorKey: field,
   header: COLUMN_LABEL[field],
   enableSorting: false,
@@ -242,7 +251,7 @@ const trackingIdColumn = (
   },
 });
 
-const metadataColumn = (key: MetadataKey): ColumnDef<TransactionLogEntry> => ({
+const metadataColumn = (key: MetadataKey): TransactionColumnDef => ({
   id: metadataColumnId(key),
   header: COLUMN_LABEL[metadataColumnId(key)],
   enableSorting: false,
@@ -254,11 +263,13 @@ const metadataColumn = (key: MetadataKey): ColumnDef<TransactionLogEntry> => ({
   cell: ({ row }) => row.original.metadata?.[key] ?? "—",
 });
 
-const ALL_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
+export const TRANSACTION_COLUMNS: TransactionColumnDef[] = [
   ...SORTABLE_COLUMNS,
   trackingIdColumn("paygovTrackingId"),
   trackingIdColumn("agencyTrackingId"),
   ...METADATA_KEYS.map(metadataColumn),
 ];
 
-export const getColumns = (): ColumnDef<TransactionLogEntry>[] => ALL_COLUMNS;
+export const COLUMN_IDS: TransactionColumnId[] = TRANSACTION_COLUMNS.map(
+  (column) => column.id,
+);

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_COLUMN_VISIBILITY, getColumns } from "./columns";
+import { DEFAULT_COLUMN_VISIBILITY, TRANSACTION_COLUMNS } from "./columns";
 import TransactionTable from "./TransactionTable";
 import type { TransactionLogEntry } from "./types";
 
@@ -33,7 +33,7 @@ const renderTable = (
   render(
     <TransactionTable
       rows={[row]}
-      columns={getColumns()}
+      columns={TRANSACTION_COLUMNS}
       caption="Transaction log, All"
       headerTone="bg-status-neutral-subtle"
       sorting={{ sort: "createdAt", order: "desc" }}
@@ -278,7 +278,7 @@ describe("TransactionTable keyboard grid", () => {
     rerender(
       <TransactionTable
         rows={[row]}
-        columns={getColumns()}
+        columns={TRANSACTION_COLUMNS}
         caption="Transaction log, All"
         headerTone="bg-status-neutral-subtle"
         sorting={{ sort: "createdAt", order: "desc" }}
@@ -352,7 +352,7 @@ describe("TransactionTable column visibility", () => {
     rerender(
       <TransactionTable
         rows={[row]}
-        columns={getColumns()}
+        columns={TRANSACTION_COLUMNS}
         caption="Transaction log, All"
         headerTone="bg-status-neutral-subtle"
         sorting={{ sort: "createdAt", order: "desc" }}

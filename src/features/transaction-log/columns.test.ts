@@ -4,17 +4,14 @@ import {
   COLUMN_IDS,
   COLUMN_LABEL,
   DEFAULT_COLUMN_VISIBILITY,
-  getColumns,
+  TRANSACTION_COLUMNS,
   type TransactionColumnId,
 } from "./columns";
 import type { TransactionLogEntry } from "./types";
 import { TRANSACTION_SORT_FIELDS } from "./types";
 
-const columnId = (column: ColumnDef<TransactionLogEntry>) =>
-  "accessorKey" in column ? column.accessorKey : column.id;
-
 const columnById = (id: TransactionColumnId) => {
-  const column = getColumns().find((c) => columnId(c) === id);
+  const column = TRANSACTION_COLUMNS.find((c) => c.id === id);
   if (!column) throw new Error(`No column ${id}`);
   return column;
 };
@@ -34,13 +31,9 @@ const renderCell = (
     row: { original: entry(overrides) },
   });
 
-describe("getColumns", () => {
-  it("returns a stable reference, so react-table doesn't see new columns every render", () => {
-    expect(getColumns()).toBe(getColumns());
-  });
-
+describe("TRANSACTION_COLUMNS", () => {
   it("lists every column, in the order it's rendered", () => {
-    expect(getColumns().map(columnId)).toEqual([
+    expect(COLUMN_IDS).toEqual([
       "createdAt",
       "lastUpdatedAt",
       "feeName",
@@ -61,25 +54,22 @@ describe("getColumns", () => {
   });
 
   it("makes exactly the API's sort fields sortable", () => {
-    const sortable = getColumns()
-      .filter((column) => column.enableSorting !== false)
-      .map(columnId);
+    const sortable = TRANSACTION_COLUMNS.filter(
+      (column) => column.enableSorting !== false,
+    ).map((column) => column.id);
 
     expect(sortable).toEqual(TRANSACTION_SORT_FIELDS);
   });
 
   it("labels every column header from COLUMN_LABEL", () => {
-    for (const column of getColumns()) {
-      const id = columnId(column) as TransactionColumnId;
-      expect(column.meta?.headerLabel).toBe(COLUMN_LABEL[id]);
+    for (const column of TRANSACTION_COLUMNS) {
+      expect(column.meta?.headerLabel).toBe(COLUMN_LABEL[column.id]);
     }
   });
 
   it("no longer scopes metadata columns to the selected fee", () => {
-    const ids = getColumns().map(columnId);
-
-    expect(ids).toContain("metadata.docketNumber");
-    expect(ids).toContain("metadata.accessCode");
+    expect(COLUMN_IDS).toContain("metadata.docketNumber");
+    expect(COLUMN_IDS).toContain("metadata.accessCode");
   });
 });
 
@@ -89,16 +79,10 @@ describe("COLUMN_LABEL", () => {
   });
 });
 
-describe("COLUMN_IDS", () => {
-  it("lists every column in the order the table renders them", () => {
-    expect(COLUMN_IDS).toEqual(getColumns().map(columnId));
-  });
-});
-
 describe("DEFAULT_COLUMN_VISIBILITY", () => {
   it("has an entry for exactly the columns the table renders", () => {
     expect(Object.keys(DEFAULT_COLUMN_VISIBILITY).sort()).toEqual(
-      getColumns().map(columnId).sort(),
+      [...COLUMN_IDS].sort(),
     );
   });
 

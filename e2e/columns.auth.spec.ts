@@ -63,8 +63,10 @@ test("the last visible column cannot be hidden", async ({ page }) => {
 test("the chosen columns are not kept in the url and reset on reload", async ({
   page,
 }) => {
+  const urlBefore = page.url();
+
   await showColumns(page, "Client");
-  await expect(page).not.toHaveURL(/client/i);
+  await expect(page).toHaveURL(urlBefore);
 
   await page.reload();
 
@@ -99,7 +101,9 @@ test("with every column shown the log scrolls sideways instead of squeezing", as
 }) => {
   await showColumns(page, ...HIDDEN_BY_DEFAULT_COLUMNS);
 
-  await expect.poll(() => transactionLogHeaders(page)).toHaveLength(16);
+  await expect
+    .poll(() => transactionLogHeaders(page))
+    .toHaveLength(DEFAULT_COLUMNS.length + HIDDEN_BY_DEFAULT_COLUMNS.length);
 
   const overflows = await page
     .getByTestId("transaction-table-scroll")
