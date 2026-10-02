@@ -6,6 +6,7 @@ import {
   getCoreRowModel,
   type SortingState,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import type { KeyboardEvent } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -33,6 +34,7 @@ export default function TransactionTable({
   headerTone,
   sorting,
   onSortingChange,
+  columnVisibility,
   emptyMessage,
   isRefreshing = false,
   wrapperClassName = "flex-1 overflow-auto rounded-md border-2 lg:min-h-0",
@@ -43,6 +45,7 @@ export default function TransactionTable({
   headerTone: string;
   sorting: TransactionSorting;
   onSortingChange: (next: TransactionSorting) => void;
+  columnVisibility: VisibilityState;
   emptyMessage: string;
   isRefreshing?: boolean;
   wrapperClassName?: string;
@@ -58,7 +61,7 @@ export default function TransactionTable({
     getCoreRowModel: getCoreRowModel(),
     manualSorting: true,
     enableSortingRemoval: false,
-    state: { sorting: sortingState },
+    state: { sorting: sortingState, columnVisibility },
     onSortingChange: (updater) => {
       const next =
         typeof updater === "function" ? updater(sortingState) : updater;
@@ -78,6 +81,12 @@ export default function TransactionTable({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeCellRef = useRef({ row: 0, col: 0 });
+  const visibleColumnKey = leafColumns.map((col) => col.id).join(",");
+  const previousVisibleColumnKeyRef = useRef(visibleColumnKey);
+  if (previousVisibleColumnKeyRef.current !== visibleColumnKey) {
+    previousVisibleColumnKeyRef.current = visibleColumnKey;
+    activeCellRef.current = { row: 0, col: 0 };
+  }
   activeCellRef.current = {
     row: Math.min(activeCellRef.current.row,
       Math.max(tableRows.length - 1, 0)),
@@ -139,7 +148,7 @@ export default function TransactionTable({
         // position:absolute (which, anchored to this same scrolling
         // element, scrolls away with the rest of the content instead of
         // staying pinned like the sticky header does).
-        <div className="sticky top-0 z-20 h-0 overflow-visible">
+        <div className="sticky top-0 left-0 z-20 h-0 overflow-visible">
           <div
             role="status"
             className={cn(
@@ -154,6 +163,7 @@ export default function TransactionTable({
       <Table
         role="grid"
         onKeyDown={handleGridKeyDown}
+        style={tableRows.length > 0 ? { minWidth: totalSize } : undefined}
         className={cn(
           "table-fixed text-xs",
           isRefreshing && tableRows.length > 0 && "opacity-50",

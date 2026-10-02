@@ -1,5 +1,6 @@
 import type { VariantProps } from "class-variance-authority"
 import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react"
+import type * as React from "react"
 import { useId } from "react"
 
 import { Button, type buttonVariants } from "@/components/ui/button"
@@ -17,13 +18,16 @@ export type IconButtonIcon = keyof typeof ICONS
 function IconButton({
   icon,
   label,
-  onClick,
   variant = "outline",
   description,
-}: {
+  "aria-describedby": ariaDescribedBy,
+  ...props
+}: Omit<
+  React.ComponentProps<typeof Button>,
+  "children" | "aria-label" | "size" | "variant"
+> & {
   icon: IconButtonIcon
   label: string
-  onClick: () => void
   variant?: VariantProps<typeof buttonVariants>["variant"]
   /** Extra screen-reader-only context (e.g. a visual-only badge's state) announced alongside `label`, via `aria-describedby`. */
   description?: string
@@ -34,11 +38,15 @@ function IconButton({
     <>
       <Button
         type="button"
+        {...props}
         variant={variant}
         size="icon-sm"
         aria-label={label}
-        aria-describedby={description ? descriptionId : undefined}
-        onClick={onClick}
+        aria-describedby={
+          [ariaDescribedBy, description ? descriptionId : undefined]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
       >
         <Icon />
       </Button>

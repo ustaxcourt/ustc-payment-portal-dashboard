@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getColumns } from "./columns";
+import { COLUMN_IDS, COLUMN_LABEL } from "./columns";
 import { exportColumns } from "./exportColumns";
 import type { TransactionLogEntry } from "./types";
 
@@ -19,6 +19,7 @@ const row: TransactionLogEntry = {
   // 23:30 UTC on Aug 17 is 19:30 on Aug 17 in Court time (EDT).
   createdAt: "2026-08-17T23:30:45.000Z",
   lastUpdatedAt: "2026-08-18T03:59:59.000Z",
+  metadata: { docketNumber: "123-26" },
 };
 
 const headers = () => exportColumns().map((column) => column.header);
@@ -30,15 +31,11 @@ const cell = (header: string) => {
 };
 
 describe("exportColumns", () => {
-  it("always includes Failure reason", () => {
-    expect(headers()).toContain("Failure reason");
-    expect(headers()).toHaveLength(12);
+  it("writes every table column, with both timestamps split into date and time", () => {
+    expect(headers()).toHaveLength(COLUMN_IDS.length + 2);
   });
 
-  it("tracks the table's column order, with timestamps split in place", () => {
-    const tableOrder = getColumns().map((c) =>
-      "accessorKey" in c ? c.accessorKey : c.id,
-    );
+  it("matches the table's column order, with timestamps split in place", () => {
 
     // Collapse the split date/time pairs back to the display column name.
     const collapsed = headers()
@@ -53,7 +50,7 @@ describe("exportColumns", () => {
     const exportOrder = collapsed.map(
       (h) =>
         ({
-          "Fee type": "feeName",
+          Fee: "feeName",
           Amount: "transactionAmount",
           "Payment method": "paymentMethod",
           "Payment status": "paymentStatus",
@@ -61,10 +58,16 @@ describe("exportColumns", () => {
           "Transaction status": "transactionStatus",
           Client: "clientName",
           "Reference ID": "transactionReferenceId",
+          [COLUMN_LABEL.paygovTrackingId]: "paygovTrackingId",
+          [COLUMN_LABEL.agencyTrackingId]: "agencyTrackingId",
+          [COLUMN_LABEL["metadata.docketNumber"]]: "metadata.docketNumber",
+          [COLUMN_LABEL["metadata.email"]]: "metadata.email",
+          [COLUMN_LABEL["metadata.fullName"]]: "metadata.fullName",
+          [COLUMN_LABEL["metadata.accessCode"]]: "metadata.accessCode",
         })[h] ?? h,
     );
 
-    expect(exportOrder).toEqual(tableOrder);
+    expect(exportOrder).toEqual(COLUMN_IDS);
   });
 
   it("converts timestamps to Court-time date and time cells", () => {
@@ -88,13 +91,33 @@ describe("exportColumns", () => {
     expect(cell("Transaction status")).toBe("Pending settlement");
   });
 
+  it("writes the tracking IDs and each metadata value", () => {
+    expect(cell("Pay.gov tracking ID")).toBe("paygov-1");
+    expect(cell("Agency tracking ID")).toBe("agency-1");
+    expect(cell("Docket number")).toBe("123-26");
+    expect(cell("Email")).toBe("");
+  });
+
   it("writes empty cells, never placeholder dashes", () => {
-    const bare = { ...row, paymentMethod: null, returnDetail: null };
+    const bare = {
+      ...row,
+      paymentMethod: null,
+      returnDetail: null,
+      paygovTrackingId: null,
+      metadata: null,
+    };
     for (const column of exportColumns()) {
       const value = column.value(bare);
       expect(value).not.toBe("—");
     }
-    const failure = exportColumns().find((c) => c.header === "Failure reason");
-    expect(failure?.value(bare)).toBe("");
+    for (const header of [
+      "Failure reason",
+      "Pay.gov tracking ID",
+      "Docket number",
+      "Access code",
+    ]) {
+      const column = exportColumns().find((c) => c.header === header);
+      expect(column?.value(bare)).toBe("");
+    }
   });
 });
