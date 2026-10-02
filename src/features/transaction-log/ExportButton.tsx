@@ -57,7 +57,7 @@ export default function ExportButton({
         onProgress: (progress) => setPhase({ step: "fetching", ...progress }),
       });
       setPhase({ step: "building" });
-      const buffer = await buildWorkbookInWorker(rows, tab, controller.signal);
+      const buffer = await buildWorkbookInWorker(rows, controller.signal);
       // A cancel landing after the build resolves must not write the file.
       if (controller.signal.aborted) {
         throw new DOMException("Export cancelled", "AbortError");

@@ -92,19 +92,21 @@ test("the headers are reachable and operable from the keyboard", async ({
   await expect(page).not.toHaveURL(/sort=/);
 });
 
-test("leaving a tab drops a sort that tab cannot offer", async ({ page }) => {
+test("changing the payment status filter keeps the current sort", async ({
+  page,
+}) => {
   await page.goto("/?status=failed&sort=returnDetail&order=asc");
 
   await expect(
     page.getByRole("columnheader", { name: /Failure reason/ }),
   ).toHaveAttribute("aria-sort", "ascending");
 
-  await page.getByRole("tab", { name: /Successful/ }).click();
+  await page.getByRole("radio", { name: /Successful/ }).click();
 
-  await expect(page).not.toHaveURL(/returnDetail/);
+  await expect(page).toHaveURL(/sort=returnDetail/);
   await expect(
-    page.getByRole("columnheader", { name: /Created/ }),
-  ).toHaveAttribute("aria-sort", "descending");
+    page.getByRole("columnheader", { name: /Failure reason/ }),
+  ).toHaveAttribute("aria-sort", "ascending");
 });
 
 test("a shared sorted link reproduces the same view", async ({ page }) => {
@@ -113,8 +115,5 @@ test("a shared sorted link reproduces the same view", async ({ page }) => {
   await expect(
     page.getByRole("columnheader", { name: /Client/ }),
   ).toHaveAttribute("aria-sort", "ascending");
-  await expect(page.getByRole("tab", { name: /Failed/ })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(page.getByRole("radio", { name: /Failed/ })).toBeChecked();
 });

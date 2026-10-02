@@ -118,6 +118,49 @@ describe("MetadataSearch", () => {
     expect(screen.getByLabelText("Search by Docket Number")).toHaveValue("");
   });
 
+  it("clears a committed value and re-queries when a different key is chosen", async () => {
+    const onSearch = vi.fn();
+    const { rerender } = renderMetadataSearch({
+      feeType: "NONATTORNEY_EXAM_REGISTRATION_FEE",
+      metadataKey: "email",
+      metadataValue: "foo@example.com",
+      onSearch,
+    });
+
+    await userEvent.click(screen.getByLabelText("Search by"));
+    await userEvent.click(await screen.findByRole("option", { name: "Full Name" }));
+
+    expect(onSearch).toHaveBeenCalledWith(null, null);
+    expect(screen.getByLabelText("Search by Full Name")).toHaveValue("");
+
+    // The parent applies the onSearch(null, null) call, which clears the
+    // committed props — the newly-picked key must survive that round-trip
+    // instead of resetting to the fee's first key ("email").
+    rerender(
+      <MetadataSearch
+        feeType="NONATTORNEY_EXAM_REGISTRATION_FEE"
+        metadataKey={null}
+        metadataValue={null}
+        onSearch={onSearch}
+      />,
+    );
+
+    expect(screen.getByLabelText("Search by Full Name")).toHaveValue("");
+  });
+
+  it("does not re-query when picking a key with no value committed yet", async () => {
+    const onSearch = vi.fn();
+    renderMetadataSearch({
+      feeType: "NONATTORNEY_EXAM_REGISTRATION_FEE",
+      onSearch,
+    });
+
+    await userEvent.click(screen.getByLabelText("Search by"));
+    await userEvent.click(await screen.findByRole("option", { name: "Full Name" }));
+
+    expect(onSearch).not.toHaveBeenCalled();
+  });
+
   it("hides the X until there is text, and does not re-query for an uncommitted draft", async () => {
     const onSearch = vi.fn();
     renderMetadataSearch({ feeType: "PETITION_FILING_FEE", onSearch });
@@ -192,5 +235,54 @@ describe("MetadataSearch", () => {
     expect(screen.getByLabelText("Search by Full Name")).toHaveValue(
       "Jane Doe",
     );
+  });
+
+  it("resets the selected key when the fee type changes with nothing committed", () => {
+    const { rerender } = renderMetadataSearch({
+      feeType: "PETITION_FILING_FEE",
+    });
+
+    expect(screen.getByText("Docket Number")).toBeInTheDocument();
+
+    rerender(
+      <MetadataSearch
+        feeType="NONATTORNEY_EXAM_REGISTRATION_FEE"
+        metadataKey={null}
+        metadataValue={null}
+        onSearch={vi.fn()}
+      />,
+    );
+
+    // Docket Number isn't one of this fee's keys — the dropdown must not
+    // keep it selected, which would let Search submit an invalid pair.
+    expect(screen.queryByText("Docket Number")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Search by")).toHaveTextContent("Email");
+  });
+
+  describe("draft caching across a remount", () => {
+    it("seeds from a cached draft instead of the committed value, on mount", () => {
+      renderMetadataSearch({
+        feeType: "PETITION_FILING_FEE",
+        metadataKey: "docketNumber",
+        metadataValue: "123-26",
+        draftCache: { key: "docketNumber", value: "in-progress" },
+      });
+
+      expect(screen.getByLabelText("Docket Number")).toHaveValue(
+        "in-progress",
+      );
+    });
+
+    it("reports every local edit so a longer-lived parent can cache it", async () => {
+      const onDraftChange = vi.fn();
+      renderMetadataSearch({ feeType: "PETITION_FILING_FEE", onDraftChange });
+
+      await userEvent.type(screen.getByLabelText("Docket Number"), "1");
+
+      expect(onDraftChange).toHaveBeenCalledWith({
+        key: "docketNumber",
+        value: "1",
+      });
+    });
   });
 });

@@ -1,6 +1,6 @@
 import type { AppliedDateRange } from "./dateRange";
 import { toDatePickerValue } from "./dateRange";
-import { TAB_LABEL } from "./statusStyles";
+import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import type { TransactionTab } from "./types";
 
 /** Named for the data's date range (PO decision), not the export moment:
@@ -12,6 +12,6 @@ export const exportFilename = (
   const from = toDatePickerValue(range.from);
   const to = toDatePickerValue(range.to);
   const span = from === to ? from : `${from} to ${to}`;
-  const status = tab === "all" ? "" : ` (${TAB_LABEL[tab]})`;
+  const status = tab === "all" ? "" : ` (${PAYMENT_STATUS_LABEL[tab]})`;
   return `${span} - USTC Fee Payment Summary${status}.xlsx`;
 };

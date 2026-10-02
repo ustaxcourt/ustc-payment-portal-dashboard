@@ -28,14 +28,14 @@ export default function SortableHeader({
       type="button"
       onClick={onToggle}
       className={cn(
-        "flex w-full items-center gap-1.5 rounded-sm py-1 text-left font-medium",
+        "flex w-full min-w-0 items-center gap-1.5 rounded-sm py-1 text-left font-medium",
         "outline-none transition-colors",
         "hover:bg-black/5",
         "focus-visible:ring-2 focus-visible:ring-foreground",
         className,
       )}
     >
-      <span>{label}</span>
+      <span className="min-w-0 truncate">{label}</span>
       <Icon
         aria-hidden="true"
         className={cn("size-3.5 shrink-0", sorted ? "opacity-100" : "opacity-40")}

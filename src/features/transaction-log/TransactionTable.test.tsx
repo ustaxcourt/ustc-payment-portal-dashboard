@@ -1,9 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getColumns } from "./columns";
-import { TAB_HEADER_TONE, TAB_LABEL } from "./statusStyles";
 import TransactionTable from "./TransactionTable";
 import type { TransactionLogEntry } from "./types";
 
@@ -30,9 +29,9 @@ const renderTable = (
   render(
     <TransactionTable
       rows={[row]}
-      columns={getColumns("all")}
-      caption={`Transaction log, ${TAB_LABEL.all}`}
-      headerTone={TAB_HEADER_TONE.all}
+      columns={getColumns()}
+      caption="Transaction log, All"
+      headerTone="bg-status-neutral-subtle"
       sorting={{ sort: "createdAt", order: "desc" }}
       onSortingChange={vi.fn()}
       emptyMessage="No transactions to show."
@@ -42,6 +41,10 @@ const renderTable = (
 
 const headerFor = (name: string) =>
   screen.getByRole("columnheader", { name: new RegExp(name) });
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("TransactionTable status rendering", () => {
   it("renders a cancelled transaction status as Cancelled", () => {
@@ -57,7 +60,13 @@ describe("TransactionTable status rendering", () => {
       ],
     });
 
-    expect(screen.getByRole("cell", { name: "Cancelled" })).toBeInTheDocument();
+    expect(
+      // jsdom's accessible-name computation for a container role like
+      // gridcell doesn't inherit a descendant button's aria-label the way a
+      // real browser does, so this reads the plain cell text, not "Copy
+      // Cancelled" (which the live/e2e accessibility tree does report).
+      screen.getByRole("gridcell", { name: "Cancelled" }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -142,7 +151,7 @@ describe("TransactionTable sort state", () => {
     renderTable();
 
     expect(
-      screen.getByRole("table", { name: /Transaction log/ }),
+      screen.getByRole("grid", { name: /Transaction log/ }),
     ).toBeInTheDocument();
     expect(headerFor("Created")).toHaveAttribute("scope", "col");
   });
@@ -167,6 +176,21 @@ describe("TransactionTable sort state", () => {
     expect(screen.getByText("Insufficient funds")).toBeInTheDocument();
   });
 
+  it("copies a cell's value from the keyboard and announces it", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    renderTable();
+
+    const copyButton = screen.getByRole("button", {
+      name: "Copy Insufficient funds",
+    });
+    copyButton.focus();
+    await userEvent.keyboard("{Enter}");
+
+    expect(writeText).toHaveBeenCalledWith("Insufficient funds");
+    expect(await screen.findByText("Copied to clipboard")).toBeInTheDocument();
+  });
+
   it("keeps the headers usable when there are no rows", () => {
     renderTable({ rows: [] });
 
@@ -174,5 +198,92 @@ describe("TransactionTable sort state", () => {
       within(headerFor("Amount")).getByRole("button", { name: "Amount" }),
     ).toBeEnabled();
     expect(screen.getByText("No transactions to show.")).toBeInTheDocument();
+  });
+});
+
+describe("TransactionTable keyboard grid", () => {
+  const secondRow: TransactionLogEntry = {
+    ...row,
+    agencyTrackingId: "agency-2",
+    transactionReferenceId: "ref-2",
+  };
+
+  const cellButton = (r: number, c: number) =>
+    document.querySelector(
+      `button[data-row="${r}"][data-col="${c}"]`,
+    ) as HTMLButtonElement;
+
+  it("starts with only the first cell in the tab order", () => {
+    renderTable({ rows: [row, secondRow] });
+
+    expect(cellButton(0, 0)).toHaveAttribute("tabindex", "0");
+    expect(cellButton(0, 1)).toHaveAttribute("tabindex", "-1");
+    expect(cellButton(1, 0)).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("moves focus and the tab stop with the arrow keys", async () => {
+    renderTable({ rows: [row, secondRow] });
+
+    cellButton(0, 0).focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(document.activeElement).toBe(cellButton(0, 1));
+    expect(cellButton(0, 1)).toHaveAttribute("tabindex", "0");
+    expect(cellButton(0, 0)).toHaveAttribute("tabindex", "-1");
+
+    await userEvent.keyboard("{ArrowDown}");
+
+    expect(document.activeElement).toBe(cellButton(1, 1));
+  });
+
+  it("does nothing at the edge of the grid", async () => {
+    renderTable({ rows: [row, secondRow] });
+
+    cellButton(0, 0).focus();
+    await userEvent.keyboard("{ArrowUp}");
+
+    expect(document.activeElement).toBe(cellButton(0, 0));
+    expect(cellButton(0, 0)).toHaveAttribute("tabindex", "0");
+  });
+
+  it("still prevents the native scroll at the edge of the grid", () => {
+    renderTable({ rows: [row, secondRow] });
+
+    const notPrevented = fireEvent.keyDown(cellButton(0, 0), {
+      key: "ArrowUp",
+      code: "ArrowUp",
+    });
+
+    expect(notPrevented).toBe(false);
+  });
+
+  it("keeps exactly one tab stop after a filter drops the active row", async () => {
+    const { rerender } = renderTable({ rows: [row, secondRow] });
+
+    cellButton(0, 0).focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(cellButton(1, 0));
+
+    // Narrowing the filter drops row 1 — the old tab stop goes with it, and
+    // the clamped-back-to-(0,0) cell must pick it up. React's own prop diff
+    // can't be trusted to flip that cell's tabIndex here: it was never
+    // re-rendered since mount (the keydown handler mutates the DOM
+    // directly), so React still believes row 0's tabIndex is unchanged from
+    // mount and may skip writing it.
+    rerender(
+      <TransactionTable
+        rows={[row]}
+        columns={getColumns()}
+        caption="Transaction log, All"
+        headerTone="bg-status-neutral-subtle"
+        sorting={{ sort: "createdAt", order: "desc" }}
+        onSortingChange={vi.fn()}
+        emptyMessage="No transactions to show."
+      />,
+    );
+
+    const tabbable = document.querySelectorAll('button[tabindex="0"]');
+    expect(tabbable).toHaveLength(1);
+    expect(tabbable[0]).toBe(cellButton(0, 0));
   });
 });

@@ -19,10 +19,6 @@ export const TRANSACTION_TABS = ["all", ...PAYMENT_STATUSES] as const;
 
 export type TransactionTab = (typeof TRANSACTION_TABS)[number];
 
-export const VIEW_TABS = [...TRANSACTION_TABS, "search"] as const;
-
-export type ViewTab = (typeof VIEW_TABS)[number];
-
 /** The one frontend fee registry, mirroring `staticFees` in the payment
  *  portal. When a fee is added to the backend, one entry here gives it a
  *  search filter option; the breakdown table renders whatever fees the API
@@ -58,6 +54,8 @@ export const FEE_METADATA_KEYS: Record<FeeType, readonly MetadataKey[]> = {
   PETITION_FILING_FEE: ["docketNumber"],
   NONATTORNEY_EXAM_REGISTRATION_FEE: ["email", "fullName", "accessCode"],
 };
+
+export type MetadataDraft = { key: MetadataKey | null; value: string };
 
 /** Mirrors the payment portal's `paymentMethod` label enum. */
 export const PAY_TYPES = ["Credit/Debit Card", "ACH", "PayPal"] as const;

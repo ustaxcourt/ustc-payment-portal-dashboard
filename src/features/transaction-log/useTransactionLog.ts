@@ -6,7 +6,6 @@ import type {
   TransactionLogResponse,
   TransactionSearchFilters,
   TransactionSorting,
-  ViewTab,
 } from "./types";
 
 // The table shows one page; the footer reports the true total and the export
@@ -19,7 +18,6 @@ const pairedMetadata = (filters?: TransactionSearchFilters) =>
     : null;
 
 const fetchTransactionLogPage = async (
-  tab: ViewTab,
   range: AppliedDateRange,
   sorting: TransactionSorting,
   filters: TransactionSearchFilters | undefined,
@@ -36,7 +34,6 @@ const fetchTransactionLogPage = async (
     sort: sorting.sort,
     to: bounds.to,
   });
-  if (tab !== "all" && tab !== "search") params.set("status", tab);
 
   if (filters?.feeType) params.set("fee", filters.feeType);
   if (filters?.payType) params.set("paymentMethod", filters.payType);
@@ -60,18 +57,15 @@ const fetchTransactionLogPage = async (
 };
 
 export const useTransactionLog = (
-  tab: ViewTab,
   range: AppliedDateRange,
   sorting: TransactionSorting,
   filters?: TransactionSearchFilters,
-  enabled = true,
 ) => {
   const metadata = pairedMetadata(filters);
 
   return useQuery({
     queryKey: [
       "transaction-log",
-      tab,
       range.from,
       range.to,
       sorting.sort,
@@ -84,8 +78,7 @@ export const useTransactionLog = (
       metadata?.value ?? null,
     ],
     queryFn: ({ signal }) =>
-      fetchTransactionLogPage(tab, range, sorting, filters, 1, PAGE_SIZE, signal),
-    placeholderData: (previous) => (enabled ? previous : undefined),
-    enabled,
+      fetchTransactionLogPage(range, sorting, filters, 1, PAGE_SIZE, signal),
+    placeholderData: (previous) => previous,
   });
 };

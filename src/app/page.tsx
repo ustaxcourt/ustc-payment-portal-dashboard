@@ -2,13 +2,13 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { Suspense } from "react";
 import LogoutButton from "@/components/ui/LogoutButton";
-import PaymentBreakdownPane from "@/features/payment-breakdown/PaymentBreakdownPane";
 import RevenueTotals from "@/features/revenue-totals/RevenueTotals";
 import TimeframeBar from "@/features/transaction-log/TimeframeBar";
 import TransactionLog from "@/features/transaction-log/TransactionLog";
 import { getSessionAuthOptions, hasValidDashboardSession } from "@/lib/auth";
 import { loginUrlReturningTo } from "@/lib/callbackUrl";
 import Image from "next/image";
+import PaymentBreakdownPane from "@/features/payment-breakdown/PaymentBreakdownPane";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -78,29 +78,27 @@ export default async function Home({
         <RevenueTotals />
       </div>
 
-      <Suspense fallback={<div className="bg-muted px-6 py-4 sm:px-8" />}>
+      <Suspense fallback={<div className="bg-status-neutral px-6 py-4 sm:px-8" />}>
         <TimeframeBar />
       </Suspense>
 
       <main
         id="main-content"
         tabIndex={-1}
-        className="grid min-h-0 flex-1 grid-cols-3 gap-6 p-6 sm:p-8"
+        className="flex flex-1 flex-col p-6 sm:p-8 lg:min-h-0"
       >
-        <Suspense fallback={<div aria-hidden="true" />}>
+         <Suspense fallback={<div aria-hidden="true" />}>
           <PaymentBreakdownPane />
         </Suspense>
-        <div className="col-span-2 flex min-h-0 flex-col">
-          <Suspense
-            fallback={
-              <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-                Loading transaction log…
-              </p>
-            }
-          >
-            <TransactionLog />
-          </Suspense>
-        </div>
+        <Suspense
+          fallback={
+            <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
+              Loading transaction log…
+            </p>
+          }
+        >
+          <TransactionLog />
+        </Suspense>
       </main>
     </>
   );

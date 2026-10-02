@@ -70,7 +70,6 @@ describe("ExportButton", () => {
     );
     expect(buildWorkbookInWorker).toHaveBeenCalledWith(
       rows,
-      "all",
       expect.any(AbortSignal),
     );
   });

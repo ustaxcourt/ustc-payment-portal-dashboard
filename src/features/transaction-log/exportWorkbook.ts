@@ -1,9 +1,8 @@
 import type { WorkbookResult } from "./exportWorkbook.worker";
-import type { TransactionLogEntry, TransactionTab } from "./types";
+import type { TransactionLogEntry } from "./types";
 
 export const buildWorkbookInWorker = (
   rows: TransactionLogEntry[],
-  tab: TransactionTab,
   signal?: AbortSignal,
 ): Promise<ArrayBuffer> =>
   new Promise((resolve, reject) => {
@@ -39,7 +38,7 @@ export const buildWorkbookInWorker = (
       );
     };
 
-    worker.postMessage({ rows, tab });
+    worker.postMessage({ rows });
   });
 
 const XLSX_MIME =
