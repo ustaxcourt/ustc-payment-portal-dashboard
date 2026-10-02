@@ -1,8 +1,10 @@
+import type { Button as ButtonPrimitive } from "@base-ui/react/button"
 import type { VariantProps } from "class-variance-authority"
 import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react"
 import { useId } from "react"
 
 import { Button, type buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 const ICONS = {
   link: Link2,
@@ -14,20 +16,22 @@ const ICONS = {
 
 export type IconButtonIcon = keyof typeof ICONS
 
+type IconButtonProps = Omit<ButtonPrimitive.Props, "children" | "className"> & {
+  icon: IconButtonIcon
+  label: string
+  className?: string
+  variant?: VariantProps<typeof buttonVariants>["variant"]
+  description?: string
+}
+
 function IconButton({
   icon,
   label,
-  onClick,
+  className,
   variant = "outline",
   description,
-}: {
-  icon: IconButtonIcon
-  label: string
-  onClick: () => void
-  variant?: VariantProps<typeof buttonVariants>["variant"]
-  /** Extra screen-reader-only context (e.g. a visual-only badge's state) announced alongside `label`, via `aria-describedby`. */
-  description?: string
-}) {
+  ...props
+}: IconButtonProps) {
   const Icon = ICONS[icon]
   const descriptionId = useId()
   return (
@@ -38,7 +42,8 @@ function IconButton({
         size="icon-sm"
         aria-label={label}
         aria-describedby={description ? descriptionId : undefined}
-        onClick={onClick}
+        className={cn("text-muted-foreground hover:text-primary", className)}
+        {...props}
       >
         <Icon />
       </Button>

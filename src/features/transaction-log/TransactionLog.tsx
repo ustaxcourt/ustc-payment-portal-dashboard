@@ -18,6 +18,7 @@ import ErrorPanel from "@/components/ui/ErrorPanel";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
+import DownloadTransactionLogButton from "./DownloadTransactionLogButton";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
 import TransactionTable from "./TransactionTable";
@@ -191,10 +192,6 @@ export default function TransactionLog() {
     // TODO: copy a shareable link for the current filters/timeframe.
   };
 
-  const downloadReport = () => {
-    // TODO: download the transaction log as a report.
-  };
-
   const selectColumns = () => {
     // TODO: let the user choose which columns are visible.
   };
@@ -217,7 +214,7 @@ export default function TransactionLog() {
         />
       ) : (
         <div className="flex flex-1 flex-col rounded-md border-2 lg:min-h-0">
-          <div className="flex items-center justify-between rounded-t-[calc(var(--radius-md)-2px)] border-b-2 bg-status-neutral px-4 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-[calc(var(--radius-md)-2px)] border-b-2 bg-status-neutral px-4 py-2">
             <h2
               className={cn(
                 "text-base font-bold tracking-tight",
@@ -227,7 +224,7 @@ export default function TransactionLog() {
               Transaction Log
               {typeof data?.total === "number" ? ` (${data.total})` : ""}
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <span className="relative lg:hidden">
                 <IconButton
                   icon="filter"
@@ -247,10 +244,11 @@ export default function TransactionLog() {
                 label="Copy share link"
                 onClick={copyShareLink}
               />
-              <IconButton
-                icon="download"
-                label="Download report"
-                onClick={downloadReport}
+              <DownloadTransactionLogButton
+                tab={searchFilters.paymentStatus ?? "all"}
+                range={appliedRange}
+                sorting={activeSorting}
+                disabled={!data || data.data.length === 0}
               />
               <IconButton
                 icon="columns"

@@ -75,6 +75,38 @@ afterEach(() => {
 });
 
 describe("TransactionLog", () => {
+  describe("toolbar", () => {
+    it("offers the download control beside the other toolbar actions", async () => {
+      mockFetch(response({ data: [{} as never], total: 1 }));
+
+      renderLog();
+
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "Download Transaction Log" }),
+        ).toBeEnabled(),
+      );
+      expect(
+        screen.getByRole("button", { name: "Copy share link" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Select columns" }),
+      ).toBeInTheDocument();
+    });
+
+    it("disables the download while the view has no rows", async () => {
+      mockFetch(response({ data: [], total: 0 }));
+
+      renderLog();
+
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "Download Transaction Log" }),
+        ).toBeDisabled(),
+      );
+    });
+  });
+
   it("announces the order the server confirms", async () => {
     mockFetch(response({ sort: "transactionAmount", order: "desc" }));
 

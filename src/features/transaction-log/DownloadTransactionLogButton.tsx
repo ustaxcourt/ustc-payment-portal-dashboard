@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AppliedDateRange } from "./dateRange";
 import { exportFilename } from "./exportFilename";
 import {
@@ -17,7 +19,9 @@ import {
 } from "./exportWorkbook";
 import type { TransactionSorting, TransactionTab } from "./types";
 
-type ExportPhase =
+const LABEL = "Download Transaction Log";
+
+type DownloadPhase =
   | { step: "idle" }
   | { step: "fetching"; fetched: number; total: number }
   | { step: "building" }
@@ -26,7 +30,7 @@ type ExportPhase =
 const isAbort = (err: unknown) =>
   err instanceof DOMException && err.name === "AbortError";
 
-export default function ExportButton({
+export default function DownloadTransactionLogButton({
   tab,
   range,
   sorting,
@@ -37,12 +41,12 @@ export default function ExportButton({
   sorting: TransactionSorting;
   disabled?: boolean;
 }) {
-  const [phase, setPhase] = useState<ExportPhase>({ step: "idle" });
+  const [phase, setPhase] = useState<DownloadPhase>({ step: "idle" });
   const abortRef = useRef<AbortController | null>(null);
 
   const busy = phase.step === "fetching" || phase.step === "building";
 
-  const startExport = async () => {
+  const startDownload = async () => {
     const controller = new AbortController();
     abortRef.current = controller;
     let destination: SaveDestination | null = null;
@@ -60,7 +64,7 @@ export default function ExportButton({
       const buffer = await buildWorkbookInWorker(rows, controller.signal);
       // A cancel landing after the build resolves must not write the file.
       if (controller.signal.aborted) {
-        throw new DOMException("Export cancelled", "AbortError");
+        throw new DOMException("Download cancelled", "AbortError");
       }
       await saveWorkbook(destination, buffer, filename);
       setPhase({ step: "idle" });
@@ -69,13 +73,13 @@ export default function ExportButton({
       if (isAbort(err)) {
         setPhase({ step: "idle" });
       } else {
-        console.error("Export failed:", err);
+        console.error("Transaction log download failed:", err);
         setPhase({
           step: "error",
           message:
             err instanceof ExportTooLargeError
               ? `${err.message} Narrow the timeframe and try again.`
-              : "The export failed. Try again.",
+              : "The download failed. Try again.",
         });
       }
     } finally {
@@ -85,41 +89,49 @@ export default function ExportButton({
 
   const progressText =
     phase.step === "fetching" && phase.total > 0
-      ? `Preparing export… ${phase.fetched.toLocaleString()} of ${phase.total.toLocaleString()}`
+      ? `Preparing download… ${phase.fetched.toLocaleString()} of ${phase.total.toLocaleString()}`
       : phase.step === "fetching"
-        ? "Preparing export…"
+        ? "Preparing download…"
         : phase.step === "building"
           ? "Building file…"
           : "";
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-2">
-        {busy ? (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => abortRef.current?.abort()}
-          >
-            Cancel
-          </Button>
-        ) : null}
-        <Button
-          type="button"
-          onClick={startExport}
-          disabled={disabled || busy}
-        >
-          {busy ? "Exporting…" : "Export"}
-        </Button>
-      </div>
-      <p aria-live="polite" className="text-sm text-muted-foreground">
+    <>
+      <p
+        aria-live="polite"
+        className="text-xs text-muted-foreground empty:hidden"
+      >
         {progressText}
       </p>
+      {busy ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => abortRef.current?.abort()}
+        >
+          Cancel
+        </Button>
+      ) : null}
       {phase.step === "error" ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-xs text-destructive">
           {phase.message}
         </p>
       ) : null}
-    </div>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <IconButton
+              icon="download"
+              label={LABEL}
+              disabled={disabled || busy}
+              onClick={startDownload}
+            />
+          }
+        />
+        <TooltipPopup>{LABEL}</TooltipPopup>
+      </Tooltip>
+    </>
   );
 }
