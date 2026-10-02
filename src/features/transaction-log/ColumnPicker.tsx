@@ -58,6 +58,7 @@ export default function ColumnPicker({
       />
       <PopoverContent
         align="end"
+        collisionAvoidance={{ fallbackAxisSide: "none" }}
         className="max-h-[min(32rem,var(--available-height))] w-64 overflow-y-auto"
       >
         <div className="flex items-center justify-between gap-2">

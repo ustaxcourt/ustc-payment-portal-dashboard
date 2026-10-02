@@ -14,12 +14,12 @@ export const HIDDEN_BY_DEFAULT_COLUMNS = [
   "Transaction status",
   "Client",
   "Reference ID",
-  "Pay.gov Tracking ID",
-  "Agency Tracking ID",
-  "Docket Number",
+  "Pay.gov tracking ID",
+  "Agency tracking ID",
+  "Docket number",
   "Email",
-  "Full Name",
-  "Access Code",
+  "Full name",
+  "Access code",
 ];
 
 export const columnPicker = (page: Page) =>

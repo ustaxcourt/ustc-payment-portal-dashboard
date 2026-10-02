@@ -20,6 +20,7 @@ test("the column headers stay pinned while the log scrolls", async ({
 
   const scrolled = await page
     .getByTestId("transaction-table-scroll")
+    .filter({ visible: true })
     .evaluate((el) => {
       el.scrollTop = el.scrollHeight;
       return el.scrollTop;

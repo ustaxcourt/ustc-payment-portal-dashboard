@@ -529,7 +529,7 @@ describe("TransactionLog column picker", () => {
     renderLog("?feeType=PETITION_FILING_FEE");
 
     await waitFor(() => expect(headers()).toHaveLength(4));
-    expect(headers()).not.toContain("Docket Number");
+    expect(headers()).not.toContain("Docket number");
   });
 
   it("still sorts by a hidden column carried in the url", async () => {

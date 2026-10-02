@@ -51,7 +51,7 @@ describe("ColumnPicker", () => {
       within(dialog).getByRole("checkbox", { name: "Created" }),
     ).not.toBeChecked();
     expect(
-      within(dialog).getByRole("checkbox", { name: "Docket Number" }),
+      within(dialog).getByRole("checkbox", { name: "Docket number" }),
     ).not.toBeChecked();
   });
 

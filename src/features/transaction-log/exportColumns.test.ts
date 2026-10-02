@@ -92,9 +92,9 @@ describe("exportColumns", () => {
   });
 
   it("writes the tracking IDs and each metadata value", () => {
-    expect(cell("Pay.gov Tracking ID")).toBe("paygov-1");
-    expect(cell("Agency Tracking ID")).toBe("agency-1");
-    expect(cell("Docket Number")).toBe("123-26");
+    expect(cell("Pay.gov tracking ID")).toBe("paygov-1");
+    expect(cell("Agency tracking ID")).toBe("agency-1");
+    expect(cell("Docket number")).toBe("123-26");
     expect(cell("Email")).toBe("");
   });
 
@@ -112,9 +112,9 @@ describe("exportColumns", () => {
     }
     for (const header of [
       "Failure reason",
-      "Pay.gov Tracking ID",
-      "Docket Number",
-      "Access Code",
+      "Pay.gov tracking ID",
+      "Docket number",
+      "Access code",
     ]) {
       const column = exportColumns().find((c) => c.header === header);
       expect(column?.value(bare)).toBe("");

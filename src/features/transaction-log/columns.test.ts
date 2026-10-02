@@ -104,8 +104,8 @@ describe("DEFAULT_COLUMN_VISIBILITY", () => {
 
 describe("tracking ID columns", () => {
   it.each([
-    ["paygovTrackingId", "Pay.gov Tracking ID"],
-    ["agencyTrackingId", "Agency Tracking ID"],
+    ["paygovTrackingId", "Pay.gov tracking ID"],
+    ["agencyTrackingId", "Agency tracking ID"],
   ] as const)("renders %s under %s", (id, label) => {
     expect(COLUMN_LABEL[id]).toBe(label);
     expect(

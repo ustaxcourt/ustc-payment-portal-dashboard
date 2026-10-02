@@ -10,9 +10,10 @@ import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
 import SortableHeader from "./SortableHeader";
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
 import {
-  METADATA_KEY_LABEL,
+  METADATA_COLUMN_LABEL,
   METADATA_KEYS,
   type MetadataKey,
+  TRACKING_ID_COLUMN_LABEL,
   type TransactionLogEntry,
   type TransactionSearchFilters,
   type TransactionSortField,
@@ -41,12 +42,11 @@ export const COLUMN_LABEL: Record<TransactionColumnId, string> = {
   transactionStatus: "Transaction status",
   clientName: "Client",
   transactionReferenceId: "Reference ID",
-  paygovTrackingId: "Pay.gov Tracking ID",
-  agencyTrackingId: "Agency Tracking ID",
-  "metadata.docketNumber": METADATA_KEY_LABEL.docketNumber,
-  "metadata.email": METADATA_KEY_LABEL.email,
-  "metadata.fullName": METADATA_KEY_LABEL.fullName,
-  "metadata.accessCode": METADATA_KEY_LABEL.accessCode,
+  ...TRACKING_ID_COLUMN_LABEL,
+  "metadata.docketNumber": METADATA_COLUMN_LABEL.docketNumber,
+  "metadata.email": METADATA_COLUMN_LABEL.email,
+  "metadata.fullName": METADATA_COLUMN_LABEL.fullName,
+  "metadata.accessCode": METADATA_COLUMN_LABEL.accessCode,
 };
 
 export type ColumnVisibility = Record<TransactionColumnId, boolean>;

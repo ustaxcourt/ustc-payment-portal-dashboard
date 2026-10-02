@@ -131,7 +131,7 @@ test.describe("dashboard accessibility", () => {
         await showColumns(page, ...HIDDEN_BY_DEFAULT_COLUMNS);
 
         await expect(
-          page.getByRole("columnheader", { name: "Access Code" }),
+          page.getByRole("columnheader", { name: "Access code" }),
         ).toBeVisible();
       },
     });

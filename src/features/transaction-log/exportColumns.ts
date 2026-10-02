@@ -1,8 +1,9 @@
 import { formatCourtStamp, formatLabel } from "@/lib/format";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import {
-  METADATA_KEY_LABEL,
+  METADATA_COLUMN_LABEL,
   METADATA_KEYS,
+  TRACKING_ID_COLUMN_LABEL,
   type TransactionLogEntry,
 } from "./types";
 
@@ -105,19 +106,19 @@ const FAILURE_REASON: ExportColumn = {
 /** Matches the table: Failure reason always appears right after Payment status. */
 const TRACKING_ID_COLUMNS: ExportColumn[] = [
   {
-    header: "Pay.gov Tracking ID",
+    header: TRACKING_ID_COLUMN_LABEL.paygovTrackingId,
     width: 24,
     value: (row) => row.paygovTrackingId ?? "",
   },
   {
-    header: "Agency Tracking ID",
+    header: TRACKING_ID_COLUMN_LABEL.agencyTrackingId,
     width: 24,
     value: (row) => row.agencyTrackingId,
   },
 ];
 
 const METADATA_COLUMNS: ExportColumn[] = METADATA_KEYS.map((key) => ({
-  header: METADATA_KEY_LABEL[key],
+  header: METADATA_COLUMN_LABEL[key],
   width: 20,
   value: (row) => row.metadata?.[key] ?? "",
 }));

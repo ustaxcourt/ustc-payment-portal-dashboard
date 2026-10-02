@@ -31,10 +31,10 @@ describe("buildWorkbook", () => {
     // Failure reason always appears, right after Payment status.
     expect(sheet.getCell("I1").value).toBe("Failure reason");
     expect(sheet.getCell("L1").value).toBe("Reference ID");
-    expect(sheet.getCell("M1").value).toBe("Pay.gov Tracking ID");
-    expect(sheet.getCell("N1").value).toBe("Agency Tracking ID");
-    expect(sheet.getCell("O1").value).toBe("Docket Number");
-    expect(sheet.getCell("R1").value).toBe("Access Code");
+    expect(sheet.getCell("M1").value).toBe("Pay.gov tracking ID");
+    expect(sheet.getCell("N1").value).toBe("Agency tracking ID");
+    expect(sheet.getCell("O1").value).toBe("Docket number");
+    expect(sheet.getCell("R1").value).toBe("Access code");
     expect(sheet.getCell("S1").value).toBeNull();
 
     const amount = sheet.getRow(2).getCell(6);

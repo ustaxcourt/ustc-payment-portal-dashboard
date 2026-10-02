@@ -34,7 +34,7 @@ test("checking a column shows it and unchecking hides it", async ({ page }) => {
 });
 
 test("Reset to defaults restores the default columns", async ({ page }) => {
-  await showColumns(page, "Client", "Docket Number");
+  await showColumns(page, "Client", "Docket number");
 
   await openColumnPicker(page);
   await columnPicker(page)
@@ -107,6 +107,7 @@ test("with every column shown the log scrolls sideways instead of squeezing", as
 
   const overflows = await page
     .getByTestId("transaction-table-scroll")
+    .filter({ visible: true })
     .evaluate((el) => el.scrollWidth > el.clientWidth);
   expect(overflows).toBe(true);
 });
@@ -127,4 +128,32 @@ test("a filter shows the column it searches by and locks it in the picker", asyn
   });
   await expect(transactionStatus).toBeChecked();
   await expect(transactionStatus).toBeDisabled();
+});
+
+test("on a short window the picker stays clear of the neighboring header buttons", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 360 });
+  const trigger = page.getByRole("button", { name: "Select columns" });
+  await trigger.evaluate((el) => el.scrollIntoView({ block: "center" }));
+
+  await openColumnPicker(page);
+  await columnPicker(page).evaluate((el) =>
+    Promise.all(el.getAnimations().map((animation) => animation.finished)),
+  );
+
+  const picker = await columnPicker(page).boundingBox();
+  expect(picker).not.toBeNull();
+  for (const name of ["Copy share link", "Download report"]) {
+    const button = await page.getByRole("button", { name }).boundingBox();
+    expect(button).not.toBeNull();
+    if (!picker || !button) return;
+    const overlaps =
+      picker.x < button.x + button.width &&
+      button.x < picker.x + picker.width &&
+      picker.y < button.y + button.height &&
+      button.y < picker.y + picker.height;
+    expect(overlaps, `picker covers ${name}`).toBe(false);
+  }
+  expect(picker?.height ?? 0).toBeLessThanOrEqual(360);
 });
