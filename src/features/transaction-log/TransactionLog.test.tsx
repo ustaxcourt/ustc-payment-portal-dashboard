@@ -463,6 +463,9 @@ describe("TransactionLog narrow layout", () => {
     const { container } = renderNarrow("?feeType=PETITION_FILING_FEE");
 
     expect(container.querySelector(".bg-primary")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Show filters" }),
+    ).toHaveAccessibleDescription("Filters active");
   });
 
   it("gives the filter button no active-filter description when nothing is active", async () => {
