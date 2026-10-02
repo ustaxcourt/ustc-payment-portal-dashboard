@@ -21,11 +21,13 @@ type IconButtonProps = Omit<
   icon: IconButtonIcon;
   label: string;
   variant?: VariantProps<typeof buttonVariants>["variant"];
+  description?: string;
 };
 
 export function IconButton({
   icon,
   label,
+  description,
   variant = "outline",
   ...props
 }: IconButtonProps) {
@@ -37,6 +39,7 @@ export function IconButton({
       variant={variant}
       size="icon-sm"
       aria-label={label}
+      aria-description={description}
       {...props}
     >
       <IconComponent />
