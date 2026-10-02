@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { expectAccessiblePage } from "./accessibility/axe";
 import { stubDashboardResponses } from "./accessibility/dashboardData";
+import {
+  columnPicker,
+  HIDDEN_BY_DEFAULT_COLUMNS,
+  openColumnPicker,
+  showColumns,
+} from "./transactionColumns";
 
 test.describe("dashboard accessibility", () => {
   test.beforeEach(async ({ page }) => {
@@ -77,6 +83,56 @@ test.describe("dashboard accessibility", () => {
         await expect(
           page.getByRole("button", { name: "Export" }),
         ).toBeEnabled();
+      },
+    });
+  });
+
+  test("the open column picker meets WCAG 2.1 Level A and AA", async ({
+    page,
+  }) => {
+    const route = "/";
+
+    await page.goto(route);
+
+    await expectAccessiblePage({
+      page,
+      pageName: "Dashboard open column picker",
+      route,
+      ready: async () => {
+        await expect(
+          page.getByRole("grid", { name: /Transaction log, All/i }),
+        ).toBeVisible();
+
+        await openColumnPicker(page);
+
+        await expect(
+          columnPicker(page).getByRole("group", { name: "Metadata" }),
+        ).toBeVisible();
+      },
+    });
+  });
+
+  test("every column shown meets WCAG 2.1 Level A and AA", async ({
+    page,
+  }) => {
+    const route = "/";
+
+    await page.goto(route);
+
+    await expectAccessiblePage({
+      page,
+      pageName: "Dashboard every column shown",
+      route,
+      ready: async () => {
+        await expect(
+          page.getByRole("grid", { name: /Transaction log, All/i }),
+        ).toBeVisible();
+
+        await showColumns(page, ...HIDDEN_BY_DEFAULT_COLUMNS);
+
+        await expect(
+          page.getByRole("columnheader", { name: "Access Code" }),
+        ).toBeVisible();
       },
     });
   });

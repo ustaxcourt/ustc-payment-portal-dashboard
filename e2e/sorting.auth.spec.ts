@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { showColumns } from "./transactionColumns";
 
 test("the dashboard opens for a signed-in user", async ({ page }) => {
   await page.goto("/");
@@ -92,10 +93,11 @@ test("the headers are reachable and operable from the keyboard", async ({
   await expect(page).not.toHaveURL(/sort=/);
 });
 
-test.fixme("changing the payment status filter keeps the current sort", async ({
+test("changing the payment status filter keeps the current sort", async ({
   page,
 }) => {
   await page.goto("/?status=failed&sort=returnDetail&order=asc");
+  await showColumns(page, "Failure reason");
 
   await expect(
     page.getByRole("columnheader", { name: /Failure reason/ }),
@@ -109,10 +111,9 @@ test.fixme("changing the payment status filter keeps the current sort", async ({
   ).toHaveAttribute("aria-sort", "ascending");
 });
 
-test.fixme("a shared sorted link reproduces the same view", async ({
-  page,
-}) => {
+test("a shared sorted link reproduces the same view", async ({ page }) => {
   await page.goto("/?status=failed&sort=clientName&order=asc");
+  await showColumns(page, "Client");
 
   await expect(
     page.getByRole("columnheader", { name: /Client/ }),
