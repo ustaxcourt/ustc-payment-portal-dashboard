@@ -8,7 +8,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import type { KeyboardEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Table,
   TableBody,
@@ -76,7 +76,29 @@ export default function TransactionTable({
   const totalSize = leafColumns.reduce((sum, col) => sum + col.getSize(), 0);
   const tableRows = table.getRowModel().rows;
 
+  const scrollRef = useRef<HTMLDivElement>(null);
   const activeCellRef = useRef({ row: 0, col: 0 });
+  activeCellRef.current = {
+    row: Math.min(activeCellRef.current.row,
+      Math.max(tableRows.length - 1, 0)),
+    col: Math.min(activeCellRef.current.col,
+      Math.max(leafColumns.length - 1, 0)),
+  };
+
+  useLayoutEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const { row, col } = activeCellRef.current;
+    const target = container.querySelector<HTMLButtonElement>(
+      `button[data-row="${row}"][data-col="${col}"]`,
+    );
+    for (const stale of container.querySelectorAll<HTMLButtonElement>(
+      'button[tabindex="0"]',
+    )) {
+      if (stale !== target) stale.tabIndex = -1;
+    }
+    if (target) target.tabIndex = 0;
+  });
 
   const handleGridKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
     const delta = ARROW_DELTAS[event.key];
@@ -87,6 +109,8 @@ export default function TransactionTable({
     );
     if (!current) return;
 
+    event.preventDefault();
+
     const nextRow = Number(current.dataset.row) + delta.row;
     const nextCol = Number(current.dataset.col) + delta.col;
     const next = event.currentTarget.querySelector<HTMLButtonElement>(
@@ -94,7 +118,6 @@ export default function TransactionTable({
     );
     if (!next) return;
 
-    event.preventDefault();
     current.tabIndex = -1;
     next.tabIndex = 0;
     activeCellRef.current = { row: nextRow, col: nextCol };
@@ -103,6 +126,7 @@ export default function TransactionTable({
 
   return (
     <div
+      ref={scrollRef}
       data-testid="transaction-table-scroll"
       className={cn("relative", wrapperClassName)}
       aria-busy={isRefreshing || undefined}

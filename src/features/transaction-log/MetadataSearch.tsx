@@ -22,13 +22,6 @@ type Props = {
   onDraftChange?: (draft: MetadataDraft) => void;
 };
 
-/**
- * Direct-lookup control for the Search tab: pick one metadata key tied to the
- * selected fee, type a value, and commit it on Search / Enter. Remounted by a
- * `key` on the fee type, so drafts reset when the available keys change. A
- * fee with a single metadata key shows a static label; two or more show a
- * dropdown.
- */
 export default function MetadataSearch({
   feeType,
   metadataKey,

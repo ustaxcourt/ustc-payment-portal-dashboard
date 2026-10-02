@@ -1,6 +1,5 @@
 import type { ComponentProps } from "react";
-import { forwardRef } from "react";
-import { Columns3, Download, Filter, Icon, Link2, type LucideIcon, X } from "lucide-react";
+import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react";
 
 import { Button, type buttonVariants } from "@/components/ui/button";
 import type { VariantProps } from "class-variance-authority";
