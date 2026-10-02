@@ -250,7 +250,12 @@ export default function TransactionLog() {
               />
               <ColumnPicker
                 visibility={columnVisibility}
-                onVisibilityChange={setColumnVisibility}
+                onToggle={(id, visible) =>
+                  setColumnVisibility((previous) => ({
+                    ...previous,
+                    [id]: visible,
+                  }))
+                }
                 onReset={() => setColumnVisibility(DEFAULT_COLUMN_VISIBILITY)}
               />
             </div>

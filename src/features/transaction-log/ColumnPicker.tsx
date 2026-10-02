@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { IconButton } from "@/components/ui/icon-button";
@@ -27,15 +28,18 @@ const COLUMN_GROUPS: { legend: string; ids: TransactionColumnId[] }[] = [
   { legend: "Metadata", ids: COLUMN_IDS.filter(isMetadataColumnId) },
 ];
 
+const LAST_COLUMN_HINT = "At least one column must stay visible";
+
 export default function ColumnPicker({
   visibility,
-  onVisibilityChange,
+  onToggle,
   onReset,
 }: {
   visibility: ColumnVisibility;
-  onVisibilityChange: (next: ColumnVisibility) => void;
+  onToggle: (id: TransactionColumnId, visible: boolean) => void;
   onReset: () => void;
 }) {
+  const lastColumnHintId = useId();
   const visibleCount = COLUMN_IDS.filter((id) => visibility[id]).length;
   const isDefault = COLUMN_IDS.every(
     (id) => visibility[id] === DEFAULT_COLUMN_VISIBILITY[id],
@@ -76,14 +80,16 @@ export default function ColumnPicker({
               return (
                 <Label
                   key={id}
-                  className="cursor-pointer font-normal leading-normal has-data-disabled:cursor-not-allowed"
+                  title={isLastVisible ? LAST_COLUMN_HINT : undefined}
+                  className="cursor-pointer font-normal leading-normal has-data-disabled:cursor-not-allowed has-data-disabled:opacity-60"
                 >
                   <Checkbox
                     checked={isChecked}
                     disabled={isLastVisible}
-                    onCheckedChange={(checked) =>
-                      onVisibilityChange({ ...visibility, [id]: checked })
+                    aria-describedby={
+                      isLastVisible ? lastColumnHintId : undefined
                     }
+                    onCheckedChange={(checked) => onToggle(id, checked)}
                   />
                   <span>{COLUMN_LABEL[id]}</span>
                 </Label>
@@ -91,6 +97,9 @@ export default function ColumnPicker({
             })}
           </fieldset>
         ))}
+        <p id={lastColumnHintId} className="sr-only">
+          {LAST_COLUMN_HINT}
+        </p>
       </PopoverContent>
     </Popover>
   );

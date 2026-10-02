@@ -148,7 +148,7 @@ export default function TransactionTable({
         // position:absolute (which, anchored to this same scrolling
         // element, scrolls away with the rest of the content instead of
         // staying pinned like the sticky header does).
-        <div className="sticky top-0 z-20 h-0 overflow-visible">
+        <div className="sticky top-0 left-0 z-20 h-0 overflow-visible">
           <div
             role="status"
             className={cn(
@@ -163,7 +163,7 @@ export default function TransactionTable({
       <Table
         role="grid"
         onKeyDown={handleGridKeyDown}
-        style={{ minWidth: totalSize }}
+        style={tableRows.length > 0 ? { minWidth: totalSize } : undefined}
         className={cn(
           "table-fixed text-xs",
           isRefreshing && tableRows.length > 0 && "opacity-50",

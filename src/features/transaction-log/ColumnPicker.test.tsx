@@ -14,7 +14,7 @@ const renderPicker = (
 ) => {
   const props = {
     visibility: DEFAULT_COLUMN_VISIBILITY,
-    onVisibilityChange: vi.fn(),
+    onToggle: vi.fn(),
     onReset: vi.fn(),
     ...overrides,
   };
@@ -54,49 +54,46 @@ describe("ColumnPicker", () => {
     ).not.toBeChecked();
   });
 
-  it("reports the next visibility when a column is checked", async () => {
-    const { onVisibilityChange } = renderPicker();
+  it("reports the column and its new state when checked", async () => {
+    const { onToggle } = renderPicker();
     const dialog = await openPicker();
 
     await userEvent.click(
       within(dialog).getByRole("checkbox", { name: "Created" }),
     );
 
-    expect(onVisibilityChange).toHaveBeenCalledWith({
-      ...DEFAULT_COLUMN_VISIBILITY,
-      createdAt: true,
-    });
+    expect(onToggle).toHaveBeenCalledWith("createdAt", true);
   });
 
-  it("reports the next visibility when a column is unchecked", async () => {
-    const { onVisibilityChange } = renderPicker();
+  it("reports the column and its new state when unchecked", async () => {
+    const { onToggle } = renderPicker();
     const dialog = await openPicker();
 
     await userEvent.click(
       within(dialog).getByRole("checkbox", { name: "Amount" }),
     );
 
-    expect(onVisibilityChange).toHaveBeenCalledWith({
-      ...DEFAULT_COLUMN_VISIBILITY,
-      transactionAmount: false,
-    });
+    expect(onToggle).toHaveBeenCalledWith("transactionAmount", false);
   });
 
-  it("won't let the last visible column be hidden", async () => {
-    const { onVisibilityChange } = renderPicker({
+  it("won't let the last visible column be hidden, and says why", async () => {
+    const { onToggle } = renderPicker({
       visibility: onlyVisible("feeName"),
     });
     const dialog = await openPicker();
 
     const fee = within(dialog).getByRole("checkbox", { name: "Fee" });
     expect(fee).toHaveAttribute("aria-disabled", "true");
+    expect(fee).toHaveAccessibleDescription(
+      "At least one column must stay visible",
+    );
 
     await userEvent.click(fee);
 
-    expect(onVisibilityChange).not.toHaveBeenCalled();
-    expect(
-      within(dialog).getByRole("checkbox", { name: "Amount" }),
-    ).not.toHaveAttribute("aria-disabled", "true");
+    expect(onToggle).not.toHaveBeenCalled();
+    const amount = within(dialog).getByRole("checkbox", { name: "Amount" });
+    expect(amount).not.toHaveAttribute("aria-disabled", "true");
+    expect(amount).not.toHaveAccessibleDescription();
   });
 
   it("disables Reset to defaults while showing the defaults", async () => {
@@ -122,7 +119,7 @@ describe("ColumnPicker", () => {
   });
 
   it("works from the keyboard and returns focus to the trigger on Escape", async () => {
-    const { onVisibilityChange } = renderPicker();
+    const { onToggle } = renderPicker();
     const trigger = screen.getByRole("button", { name: "Select columns" });
 
     trigger.focus();
@@ -135,10 +132,7 @@ describe("ColumnPicker", () => {
     created.focus();
     await userEvent.keyboard(" ");
 
-    expect(onVisibilityChange).toHaveBeenCalledWith({
-      ...DEFAULT_COLUMN_VISIBILITY,
-      createdAt: true,
-    });
+    expect(onToggle).toHaveBeenCalledWith("createdAt", true);
 
     await userEvent.keyboard("{Escape}");
 

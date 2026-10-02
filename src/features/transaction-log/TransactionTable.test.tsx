@@ -320,6 +320,12 @@ describe("TransactionTable column visibility", () => {
     expect(screen.getByRole("grid")).toHaveStyle({ minWidth: "410px" });
   });
 
+  it("drops the minimum width when there are no rows, so the empty message spans the table", () => {
+    renderTable({ rows: [], columnVisibility: ALL_COLUMNS_VISIBLE });
+
+    expect(screen.getByRole("grid").style.minWidth).toBe("");
+  });
+
   it("moves between visible columns only with the arrow keys", async () => {
     renderTable({ columnVisibility: DEFAULT_COLUMN_VISIBILITY });
 
