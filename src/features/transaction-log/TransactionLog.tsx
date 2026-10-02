@@ -16,6 +16,7 @@ import {
 import ErrorPanel from "@/components/ui/ErrorPanel";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
+import ColumnPicker from "./ColumnPicker";
 import {
   COLUMN_LABEL,
   DEFAULT_COLUMN_VISIBILITY,
@@ -50,7 +51,9 @@ export default function TransactionLog() {
   // Below `lg` the filters live in a Drawer overlay instead of the static
   // sidebar, so they never compete with the table for vertical space.
   const [isNarrow, setIsNarrow] = useState(false);
-  const [columnVisibility] = useState(DEFAULT_COLUMN_VISIBILITY);
+  const [columnVisibility, setColumnVisibility] = useState(
+    DEFAULT_COLUMN_VISIBILITY,
+  );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
 
@@ -192,10 +195,6 @@ export default function TransactionLog() {
     // TODO: download the transaction log as a report.
   };
 
-  const selectColumns = () => {
-    // TODO: let the user choose which columns are visible.
-  };
-
   return (
     <section className="flex w-full flex-1 flex-col lg:min-h-0">
       <p aria-live="polite" className="sr-only">
@@ -249,10 +248,10 @@ export default function TransactionLog() {
                 label="Download report"
                 onClick={downloadReport}
               />
-              <IconButton
-                icon="columns"
-                label="Select columns"
-                onClick={selectColumns}
+              <ColumnPicker
+                visibility={columnVisibility}
+                onVisibilityChange={setColumnVisibility}
+                onReset={() => setColumnVisibility(DEFAULT_COLUMN_VISIBILITY)}
               />
             </div>
           </div>

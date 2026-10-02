@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { describe, expect, it } from "vitest";
 import {
+  COLUMN_IDS,
   COLUMN_LABEL,
   DEFAULT_COLUMN_VISIBILITY,
   getColumns,
@@ -25,8 +26,11 @@ const renderCell = (
   column: ColumnDef<TransactionLogEntry>,
   overrides: Partial<TransactionLogEntry>,
 ) =>
-  // biome-ignore lint/suspicious/noExplicitAny: minimal react-table cell context for the test
-  (column.cell as (context: any) => unknown)({
+  (
+    column.cell as unknown as (context: {
+      row: { original: TransactionLogEntry };
+    }) => unknown
+  )({
     row: { original: entry(overrides) },
   });
 
@@ -82,6 +86,12 @@ describe("getColumns", () => {
 describe("COLUMN_LABEL", () => {
   it("names the fee column Fee", () => {
     expect(COLUMN_LABEL.feeName).toBe("Fee");
+  });
+});
+
+describe("COLUMN_IDS", () => {
+  it("lists every column in the order the table renders them", () => {
+    expect(COLUMN_IDS).toEqual(getColumns().map(columnId));
   });
 });
 

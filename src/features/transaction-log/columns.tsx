@@ -48,25 +48,33 @@ export const COLUMN_LABEL: Record<TransactionColumnId, string> = {
   "metadata.accessCode": METADATA_KEY_LABEL.accessCode,
 };
 
-export const DEFAULT_COLUMN_VISIBILITY: Record<TransactionColumnId, boolean> =
-  {
-    createdAt: false,
-    lastUpdatedAt: true,
-    feeName: true,
-    transactionAmount: true,
-    paymentMethod: false,
-    paymentStatus: true,
-    returnDetail: false,
-    transactionStatus: false,
-    clientName: false,
-    transactionReferenceId: false,
-    paygovTrackingId: false,
-    agencyTrackingId: false,
-    "metadata.docketNumber": false,
-    "metadata.email": false,
-    "metadata.fullName": false,
-    "metadata.accessCode": false,
-  };
+export type ColumnVisibility = Record<TransactionColumnId, boolean>;
+
+export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
+  createdAt: false,
+  lastUpdatedAt: true,
+  feeName: true,
+  transactionAmount: true,
+  paymentMethod: false,
+  paymentStatus: true,
+  returnDetail: false,
+  transactionStatus: false,
+  clientName: false,
+  transactionReferenceId: false,
+  paygovTrackingId: false,
+  agencyTrackingId: false,
+  "metadata.docketNumber": false,
+  "metadata.email": false,
+  "metadata.fullName": false,
+  "metadata.accessCode": false,
+};
+
+export const COLUMN_IDS = Object.keys(
+  DEFAULT_COLUMN_VISIBILITY,
+) as TransactionColumnId[];
+
+export const isMetadataColumnId = (id: TransactionColumnId) =>
+  id.startsWith("metadata.");
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {

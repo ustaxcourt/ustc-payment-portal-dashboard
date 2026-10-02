@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   NuqsTestingAdapter,
@@ -393,6 +393,138 @@ const stubNarrowViewport = () => {
     dispatchEvent: vi.fn(() => false),
   }));
 };
+
+describe("TransactionLog column picker", () => {
+  const headers = () =>
+    screen.getAllByRole("columnheader").map((header) => header.textContent);
+
+  const openPicker = async () => {
+    await userEvent.click(
+      screen.getByRole("button", { name: "Select columns" }),
+    );
+    return screen.findByRole("dialog", { name: "Visible columns" });
+  };
+
+  const toggleColumn = async (name: string) => {
+    const dialog = await openPicker();
+    await userEvent.click(within(dialog).getByRole("checkbox", { name }));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Visible columns" }),
+      ).not.toBeInTheDocument(),
+    );
+  };
+
+  it("shows the four default columns", async () => {
+    mockFetch(response());
+    renderLog("");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        "Last updated",
+        "Fee",
+        "Amount",
+        "Payment status",
+      ]),
+    );
+  });
+
+  it("shows a column when it is checked and hides it when unchecked", async () => {
+    mockFetch(response());
+    renderLog("");
+
+    await toggleColumn("Created");
+    expect(headers()).toEqual([
+      "Created",
+      "Last updated",
+      "Fee",
+      "Amount",
+      "Payment status",
+    ]);
+
+    await toggleColumn("Amount");
+    expect(headers()).toEqual([
+      "Created",
+      "Last updated",
+      "Fee",
+      "Payment status",
+    ]);
+  });
+
+  it("restores the defaults on Reset to defaults", async () => {
+    mockFetch(response());
+    renderLog("");
+
+    await toggleColumn("Client");
+    const dialog = await openPicker();
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    );
+
+    expect(headers()).toEqual([
+      "Last updated",
+      "Fee",
+      "Amount",
+      "Payment status",
+    ]);
+  });
+
+  it("keeps the chosen columns when a filter changes", async () => {
+    const fetchMock = mockFetch(response());
+    renderLog("");
+
+    await toggleColumn("Client");
+    await userEvent.click(screen.getByText("Failed (0)"));
+
+    await waitFor(() =>
+      expect(fetchMock.mock.calls.at(-1)?.[0]).toContain("status=failed"),
+    );
+    expect(headers()).toContain("Client");
+  });
+
+  it("no longer adds metadata columns when a fee is selected", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toHaveLength(4));
+    expect(headers()).not.toContain("Docket Number");
+  });
+
+  it("still sorts by a hidden column carried in the url", async () => {
+    const fetchMock = mockFetch(response({ sort: "createdAt", order: "desc" }));
+    renderLog("?sort=createdAt&order=desc");
+
+    expect(
+      await screen.findByText("Sorted by Created, descending"),
+    ).toBeInTheDocument();
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("sort=createdAt");
+    expect(headers()).not.toContain("Created");
+  });
+
+  it("keeps the chosen columns through an error and retry", async () => {
+    const ok = {
+      ok: true,
+      status: 200,
+      json: async () => response(),
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(ok)
+      .mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
+      .mockResolvedValue(ok);
+    vi.stubGlobal("fetch", fetchMock);
+    renderLog("");
+
+    await toggleColumn("Client");
+    await userEvent.click(screen.getByText("Failed (0)"));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Try again" }),
+    );
+
+    await waitFor(() => expect(headers()).toContain("Client"));
+  });
+});
 
 describe("TransactionLog narrow layout", () => {
   // Returns a `navigate` helper (not RTL's own rerender) that changes the
