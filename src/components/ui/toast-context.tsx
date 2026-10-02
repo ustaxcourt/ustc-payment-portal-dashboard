@@ -1,5 +1,3 @@
-// src/components/ui/toast-context.tsx
-
 "use client";
 
 import {
@@ -8,6 +6,7 @@ import {
   useContext,
   useState,
 } from "react";
+import dayjs from "dayjs";
 
 type Toast = {
   id: number;
@@ -30,7 +29,7 @@ export function ToastProvider({
   const showToast = useCallback((message: string) => {
     console.log("showToast called", message);
 
-    const id = Date.now();
+    const id = dayjs().valueOf();
 
     setToasts((current) => [...current, { id, message }]);
 
