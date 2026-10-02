@@ -402,7 +402,7 @@ describe("TransactionLog column picker", () => {
     await userEvent.click(
       screen.getByRole("button", { name: "Select columns" }),
     );
-    return screen.findByRole("dialog", { name: "Visible columns" });
+    return screen.findByRole("dialog", { name: "Select columns" });
   };
 
   const toggleColumn = async (name: string) => {
@@ -411,7 +411,7 @@ describe("TransactionLog column picker", () => {
     await userEvent.keyboard("{Escape}");
     await waitFor(() =>
       expect(
-        screen.queryByRole("dialog", { name: "Visible columns" }),
+        screen.queryByRole("dialog", { name: "Select columns" }),
       ).not.toBeInTheDocument(),
     );
   };
@@ -481,6 +481,47 @@ describe("TransactionLog column picker", () => {
       expect(fetchMock.mock.calls.at(-1)?.[0]).toContain("status=failed"),
     );
     expect(headers()).toContain("Client");
+  });
+
+  it("shows the column a filter searches by", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        "Last updated",
+        "Fee",
+        "Amount",
+        "Payment status",
+        "Transaction status",
+      ]),
+    );
+  });
+
+  it("shows the metadata column of a metadata search", async () => {
+    mockFetch(response());
+    renderLog(
+      "?feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=a%40example.com",
+    );
+
+    await waitFor(() => expect(headers()).toContain("Email"));
+  });
+
+  it("goes back to the chosen columns once the filter is cleared", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        "Last updated",
+        "Fee",
+        "Amount",
+        "Payment status",
+      ]),
+    );
   });
 
   it("no longer adds metadata columns when a fee is selected", async () => {

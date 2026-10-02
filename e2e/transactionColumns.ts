@@ -23,7 +23,7 @@ export const HIDDEN_BY_DEFAULT_COLUMNS = [
 ];
 
 export const columnPicker = (page: Page) =>
-  page.getByRole("dialog", { name: "Visible columns" });
+  page.getByRole("dialog", { name: "Select columns" });
 
 export const openColumnPicker = async (page: Page) => {
   await page.getByRole("button", { name: "Select columns" }).click();

@@ -110,3 +110,21 @@ test("with every column shown the log scrolls sideways instead of squeezing", as
     .evaluate((el) => el.scrollWidth > el.clientWidth);
   expect(overflows).toBe(true);
 });
+
+test("a filter shows the column it searches by and locks it in the picker", async ({
+  page,
+}) => {
+  await page.goto("/?transactionStatus=cancelled");
+
+  await expect
+    .poll(() => transactionLogHeaders(page))
+    .toEqual([...DEFAULT_COLUMNS, "Transaction status"]);
+
+  await openColumnPicker(page);
+  const transactionStatus = columnPicker(page).getByRole("checkbox", {
+    name: "Transaction status",
+    exact: true,
+  });
+  await expect(transactionStatus).toBeChecked();
+  await expect(transactionStatus).toBeDisabled();
+});

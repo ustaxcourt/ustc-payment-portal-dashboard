@@ -20,7 +20,9 @@ import ColumnPicker from "./ColumnPicker";
 import {
   COLUMN_LABEL,
   DEFAULT_COLUMN_VISIBILITY,
+  searchedColumnIds,
   TRANSACTION_COLUMNS,
+  withSearchedColumns,
 } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
@@ -131,6 +133,9 @@ export default function TransactionLog() {
     previousMetadataValueRef.current = searchFilters.metadataValue;
     metadataDraftRef.current = undefined;
   }
+
+  const searchedIds = searchedColumnIds(searchFilters);
+  const tableVisibility = withSearchedColumns(columnVisibility, searchedIds);
 
   const onFilterChange = (
     key: keyof TransactionSearchFilters,
@@ -250,6 +255,7 @@ export default function TransactionLog() {
               />
               <ColumnPicker
                 visibility={columnVisibility}
+                searchedIds={searchedIds}
                 onToggle={(id, visible) =>
                   setColumnVisibility((previous) => ({
                     ...previous,
@@ -286,7 +292,7 @@ export default function TransactionLog() {
                 headerTone="bg-status-neutral-subtle"
                 sorting={activeSorting}
                 onSortingChange={setParams}
-                columnVisibility={columnVisibility}
+                columnVisibility={tableVisibility}
                 wrapperClassName="flex-1 overflow-auto rounded-br-[calc(var(--radius-md)-2px)] border lg:min-h-0"
                 isRefreshing={isPlaceholderData}
                 emptyMessage={

@@ -4,10 +4,12 @@ import {
   COLUMN_IDS,
   COLUMN_LABEL,
   DEFAULT_COLUMN_VISIBILITY,
+  searchedColumnIds,
   TRANSACTION_COLUMNS,
   type TransactionColumnId,
+  withSearchedColumns,
 } from "./columns";
-import type { TransactionLogEntry } from "./types";
+import type { TransactionLogEntry, TransactionSearchFilters } from "./types";
 import { TRANSACTION_SORT_FIELDS } from "./types";
 
 const columnById = (id: TransactionColumnId) => {
@@ -136,5 +138,67 @@ describe("metadata columns", () => {
 
     expect(renderCell(column, { metadata: {} })).toBe("—");
     expect(renderCell(column, { metadata: null })).toBe("—");
+  });
+});
+
+describe("searchedColumnIds", () => {
+  const noFilters: TransactionSearchFilters = {
+    feeType: null,
+    payType: null,
+    paymentStatus: null,
+    transactionStatus: null,
+    metadataKey: null,
+    metadataValue: null,
+  };
+
+  it("is empty with no filters", () => {
+    expect(searchedColumnIds(noFilters)).toEqual([]);
+  });
+
+  it("maps each active filter to the column it searches", () => {
+    expect(
+      searchedColumnIds({
+        feeType: "PETITION_FILING_FEE",
+        payType: "ACH",
+        paymentStatus: "failed",
+        transactionStatus: "cancelled",
+        metadataKey: "docketNumber",
+        metadataValue: "123-26",
+      }),
+    ).toEqual([
+      "feeName",
+      "paymentMethod",
+      "paymentStatus",
+      "transactionStatus",
+      "metadata.docketNumber",
+    ]);
+  });
+
+  it("ignores a metadata key until it has a value to search", () => {
+    expect(
+      searchedColumnIds({ ...noFilters, metadataKey: "email" }),
+    ).toEqual([]);
+  });
+});
+
+describe("withSearchedColumns", () => {
+  it("returns the same visibility when every searched column is already shown", () => {
+    expect(
+      withSearchedColumns(DEFAULT_COLUMN_VISIBILITY, ["feeName"]),
+    ).toBe(DEFAULT_COLUMN_VISIBILITY);
+  });
+
+  it("shows searched columns without changing the visibility passed in", () => {
+    const shown = withSearchedColumns(DEFAULT_COLUMN_VISIBILITY, [
+      "transactionStatus",
+      "metadata.email",
+    ]);
+
+    expect(shown).toEqual({
+      ...DEFAULT_COLUMN_VISIBILITY,
+      transactionStatus: true,
+      "metadata.email": true,
+    });
+    expect(DEFAULT_COLUMN_VISIBILITY.transactionStatus).toBe(false);
   });
 });

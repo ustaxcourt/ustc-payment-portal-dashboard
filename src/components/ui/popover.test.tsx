@@ -11,7 +11,7 @@ const renderPopover = () =>
         render={<IconButton icon="columns" label="Select columns" />}
       />
       <PopoverContent>
-        <PopoverTitle>Visible columns</PopoverTitle>
+        <PopoverTitle>Select columns</PopoverTitle>
       </PopoverContent>
     </Popover>,
   );
@@ -26,7 +26,7 @@ describe("Popover", () => {
     await userEvent.click(trigger);
 
     expect(
-      await screen.findByRole("dialog", { name: "Visible columns" }),
+      await screen.findByRole("dialog", { name: "Select columns" }),
     ).toBeInTheDocument();
     expect(trigger).toHaveAttribute("aria-expanded", "true");
   });
@@ -36,13 +36,13 @@ describe("Popover", () => {
 
     const trigger = screen.getByRole("button", { name: "Select columns" });
     await userEvent.click(trigger);
-    await screen.findByRole("dialog", { name: "Visible columns" });
+    await screen.findByRole("dialog", { name: "Select columns" });
 
     await userEvent.keyboard("{Escape}");
 
     await waitFor(() =>
       expect(
-        screen.queryByRole("dialog", { name: "Visible columns" }),
+        screen.queryByRole("dialog", { name: "Select columns" }),
       ).not.toBeInTheDocument(),
     );
     expect(trigger).toHaveFocus();

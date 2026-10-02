@@ -14,6 +14,7 @@ const renderPicker = (
 ) => {
   const props = {
     visibility: DEFAULT_COLUMN_VISIBILITY,
+    searchedIds: [],
     onToggle: vi.fn(),
     onReset: vi.fn(),
     ...overrides,
@@ -24,7 +25,7 @@ const renderPicker = (
 
 const openPicker = async () => {
   await userEvent.click(screen.getByRole("button", { name: "Select columns" }));
-  return screen.findByRole("dialog", { name: "Visible columns" });
+  return screen.findByRole("dialog", { name: "Select columns" });
 };
 
 const onlyVisible = (id: keyof ColumnVisibility): ColumnVisibility =>
@@ -96,6 +97,39 @@ describe("ColumnPicker", () => {
     expect(amount).not.toHaveAccessibleDescription();
   });
 
+  it("keeps a searched column checked and locked, and says why", async () => {
+    const { onToggle } = renderPicker({ searchedIds: ["transactionStatus"] });
+    const dialog = await openPicker();
+
+    const transactionStatus = within(dialog).getByRole("checkbox", {
+      name: "Transaction status",
+    });
+    expect(transactionStatus).toBeChecked();
+    expect(transactionStatus).toHaveAttribute("aria-disabled", "true");
+    expect(transactionStatus).toHaveAccessibleDescription(
+      "Shown while you're searching by this column",
+    );
+
+    await userEvent.click(transactionStatus);
+
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    ).toBeDisabled();
+  });
+
+  it("counts searched columns when guarding the last visible column", async () => {
+    renderPicker({
+      visibility: onlyVisible("feeName"),
+      searchedIds: ["transactionStatus"],
+    });
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Fee" }),
+    ).not.toHaveAttribute("aria-disabled", "true");
+  });
+
   it("disables Reset to defaults while showing the defaults", async () => {
     renderPicker();
     const dialog = await openPicker();
@@ -125,7 +159,7 @@ describe("ColumnPicker", () => {
     trigger.focus();
     await userEvent.keyboard("{Enter}");
     const dialog = await screen.findByRole("dialog", {
-      name: "Visible columns",
+      name: "Select columns",
     });
 
     const created = within(dialog).getByRole("checkbox", { name: "Created" });
@@ -138,7 +172,7 @@ describe("ColumnPicker", () => {
 
     await waitFor(() =>
       expect(
-        screen.queryByRole("dialog", { name: "Visible columns" }),
+        screen.queryByRole("dialog", { name: "Select columns" }),
       ).not.toBeInTheDocument(),
     );
     expect(trigger).toHaveFocus();

@@ -14,6 +14,7 @@ import {
   METADATA_KEYS,
   type MetadataKey,
   type TransactionLogEntry,
+  type TransactionSearchFilters,
   type TransactionSortField,
 } from "./types";
 
@@ -71,6 +72,31 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
 
 export const isMetadataColumnId = (id: TransactionColumnId) =>
   id.startsWith("metadata.");
+
+export const searchedColumnIds = (
+  filters: TransactionSearchFilters,
+): TransactionColumnId[] => {
+  const ids: TransactionColumnId[] = [];
+  if (filters.feeType) ids.push("feeName");
+  if (filters.payType) ids.push("paymentMethod");
+  if (filters.paymentStatus) ids.push("paymentStatus");
+  if (filters.transactionStatus) ids.push("transactionStatus");
+  if (filters.metadataKey && filters.metadataValue) {
+    ids.push(metadataColumnId(filters.metadataKey));
+  }
+  return ids;
+};
+
+export const withSearchedColumns = (
+  visibility: ColumnVisibility,
+  searchedIds: readonly TransactionColumnId[],
+): ColumnVisibility => {
+  const hiddenIds = searchedIds.filter((id) => !visibility[id]);
+  if (hiddenIds.length === 0) return visibility;
+  const next = { ...visibility };
+  for (const id of hiddenIds) next[id] = true;
+  return next;
+};
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
