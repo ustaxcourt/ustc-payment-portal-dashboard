@@ -24,7 +24,7 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.2.4 — deferred (2026-08-04, re-confirmed 2026-09-23)
+### @tanstack/react-table 8.21.3 → 9.2.4 — deferred (2026-08-04, re-confirmed 2026-10-02)
 
 - **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.2.4`.
 - **Reason:** v9 is not backward compatible with the v8 API used throughout the
@@ -65,9 +65,9 @@ enough context that the next person doesn't have to re-derive the decision.
   Pinned exactly in the meantime so `terraform init -upgrade` cannot silently
   reintroduce it.
 
-### next 15.5.26 → 16.3.6 — deferred (2026-07-27, re-confirmed 2026-09-23)
+### next 15.5.26 → 16.3.8 — deferred (2026-07-27, re-confirmed 2026-10-02)
 
-- **Current:** `15.5.26` (pinned exactly, not a range). **Available latest:** `16.3.6`.
+- **Current:** `15.5.26` (pinned exactly, not a range). **Available latest:** `16.3.8`.
 - **Reason:** AWS Amplify Hosting — the hosting target chosen for this app — documents
   Next.js support through version 15. Next 16 is not officially supported, and the
   Amplify Hosting issue tracker carries a concrete failure for it: _"Next.js 16.1 build
@@ -86,7 +86,7 @@ enough context that the next person doesn't have to re-derive the decision.
   15.5.25 → 15.5.26 within the pin. Patch releases on the 15.5 line should continue
   to be taken promptly while Next 16 remains deferred.
 
-### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17)
+### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17, re-confirmed 2026-10-02)
 
 - **Current:** `^5.9.3`. **Available latest:** `7.0.2`.
 - **Reason:** TypeScript 7 is the native port, and it breaks `next build` on
@@ -108,9 +108,9 @@ enough context that the next person doesn't have to re-derive the decision.
   and re-test with `npm run build`, not just `npm run tsc` — a passing typecheck
   hides this failure entirely.
 
-### @types/node 24.13.5 → 26.6.1 — deferred (2026-09-17)
+### @types/node 24.19.1 → 26.6.4 — deferred (2026-09-17, re-confirmed 2026-10-02)
 
-- **Current:** `^24.13.3`. **Available latest:** `26.6.1`.
+- **Current:** `^24.13.3`. **Available latest:** `26.6.4`.
 - **Reason:** `@types/node` majors track Node.js majors. This app runs Node 24 —
   `.nvmrc` pins 24.20.0, `package.json` `engines` requires `>=24.20.0 <25.0.0`,
   and CI resolves its Node from `.nvmrc`. Installing types for Node 26 against a
@@ -138,7 +138,7 @@ enough context that the next person doesn't have to re-derive the decision.
   `@tailwindcss/postcss` resolves a patched PostCSS version. The flagged copy
   remains vendored inside `next@15.5.26` at
   `node_modules/next/node_modules/postcss`. We do not control that pin. The
-  only remediation offered by `npm audit` is upgrading to `next@16.3.6`, which
+  only remediation offered by `npm audit` is upgrading to `next@16.3.8`, which
   is currently deferred (see Deferred upgrades).
 - **Mitigation:** All four advisories require attacker-controlled CSS reaching
   the compiler. This application compiles only first-party CSS during CI/build
