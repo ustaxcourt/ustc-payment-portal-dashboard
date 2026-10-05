@@ -11,11 +11,15 @@ import {
 type Toast = {
   id: string;
   message: string;
+  variant: "success" | "error";
   isClosing: boolean;
 };
 
 type ToastContextType = {
-  showToast: (message: string) => void;
+  showToast: (
+    message: string,
+    variant?: "success" | "error",
+  ) => void;
 };
 
 const ToastContext = createContext<ToastContextType | null>(null);
@@ -30,17 +34,22 @@ const baseClasses =
 }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string) => {
-    const id = crypto.randomUUID();
+  const showToast = useCallback(
+    (
+      message: string,
+      variant: "success" | "error" = "success",
+    ) => {
+      const id = crypto.randomUUID();
 
-    setToasts((current) => [
-      ...current,
-      {
-        id,
-        message,
-        isClosing: false,
-      },
-    ]);
+      setToasts((current) => [
+        ...current,
+        {
+          id,
+          message,
+          variant,
+          isClosing: false,
+        },
+      ]);
 
     // Wait for toast display duration
     window.setTimeout(() => {
@@ -61,6 +70,7 @@ const baseClasses =
       }, 100);
     }, 3000);
   }, []);
+
 
   const contextValue = useMemo(
     () => ({ showToast }),
