@@ -118,16 +118,22 @@ describe("ColumnPicker", () => {
     ).toBeDisabled();
   });
 
-  it("counts searched columns when guarding the last visible column", async () => {
-    renderPicker({
+  it("guards the last chosen column even while a filter shows another", async () => {
+    const { onToggle } = renderPicker({
       visibility: onlyVisible("feeName"),
       searchedIds: ["transactionStatus"],
     });
     const dialog = await openPicker();
 
-    expect(
-      within(dialog).getByRole("checkbox", { name: "Fee" }),
-    ).not.toHaveAttribute("aria-disabled", "true");
+    const fee = within(dialog).getByRole("checkbox", { name: "Fee" });
+    expect(fee).toHaveAttribute("aria-disabled", "true");
+    expect(fee).toHaveAccessibleDescription(
+      "At least one column must stay visible",
+    );
+
+    await userEvent.click(fee);
+
+    expect(onToggle).not.toHaveBeenCalled();
   });
 
   it("disables Reset to defaults while showing the defaults", async () => {

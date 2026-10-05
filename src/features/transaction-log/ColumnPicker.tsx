@@ -46,7 +46,7 @@ export default function ColumnPicker({
   const lastColumnHintId = useId();
   const searchedColumnHintId = useId();
   const shownVisibility = withSearchedColumns(visibility, searchedIds);
-  const visibleCount = COLUMN_IDS.filter((id) => shownVisibility[id]).length;
+  const chosenCount = COLUMN_IDS.filter((id) => visibility[id]).length;
   const isDefault = COLUMN_IDS.every(
     (id) => visibility[id] === DEFAULT_COLUMN_VISIBILITY[id],
   );
@@ -84,7 +84,7 @@ export default function ColumnPicker({
             {group.ids.map((id) => {
               const isChecked = shownVisibility[id];
               const isSearched = searchedIds.includes(id);
-              const isLastVisible = isChecked && visibleCount === 1;
+              const isLastVisible = visibility[id] && chosenCount === 1;
               const hint = isSearched
                 ? { id: searchedColumnHintId, text: SEARCHED_COLUMN_HINT }
                 : isLastVisible

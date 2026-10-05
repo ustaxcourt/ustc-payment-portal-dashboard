@@ -524,6 +524,26 @@ describe("TransactionLog column picker", () => {
     );
   });
 
+  it("keeps a chosen column when a filter is cleared after unticking the rest", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Last updated");
+    await toggleColumn("Fee");
+    await toggleColumn("Amount");
+
+    const dialog = await openPicker();
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Payment status" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    await userEvent.keyboard("{Escape}");
+
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() => expect(headers()).toEqual(["Payment status"]));
+  });
+
   it("no longer adds metadata columns when a fee is selected", async () => {
     mockFetch(response());
     renderLog("?feeType=PETITION_FILING_FEE");
