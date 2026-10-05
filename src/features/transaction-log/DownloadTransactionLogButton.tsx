@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { AppTooltip } from "@/components/ui/AppTooltip";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AppliedDateRange } from "./dateRange";
 import { exportFilename } from "./exportFilename";
 import {
@@ -119,19 +119,15 @@ export default function DownloadTransactionLogButton({
           {phase.message}
         </p>
       ) : null}
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <IconButton
-              icon="download"
-              label={LABEL}
-              disabled={disabled || busy}
-              onClick={startDownload}
-            />
-          }
+      <AppTooltip content={LABEL}>
+        <IconButton
+          icon="download"
+          label={LABEL}
+          className="text-muted-foreground hover:text-primary"
+          disabled={disabled || busy}
+          onClick={startDownload}
         />
-        <TooltipPopup>{LABEL}</TooltipPopup>
-      </Tooltip>
+      </AppTooltip>
     </>
   );
 }

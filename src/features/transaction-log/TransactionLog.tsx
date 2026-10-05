@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { AppTooltip } from "@/components/ui/AppTooltip";
 import {
   Drawer,
   DrawerBackdrop,
@@ -239,11 +240,13 @@ export default function TransactionLog() {
                   />
                 ) : null}
               </span>
-              <IconButton
-                icon="link"
-                label="Copy share link"
-                onClick={copyShareLink}
-              />
+              <AppTooltip content="Copy share link">
+                <IconButton
+                  icon="link"
+                  label="Copy share link"
+                  onClick={copyShareLink}
+                />
+              </AppTooltip>
               <DownloadTransactionLogButton
                 tab={searchFilters.paymentStatus ?? "all"}
                 range={appliedRange}

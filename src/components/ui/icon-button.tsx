@@ -1,10 +1,8 @@
-import type { Button as ButtonPrimitive } from "@base-ui/react/button"
-import type { VariantProps } from "class-variance-authority"
-import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react"
-import { useId } from "react"
+import type { ComponentProps } from "react";
+import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react";
 
-import { Button, type buttonVariants } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Button, type buttonVariants } from "@/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
 
 const ICONS = {
   link: Link2,
@@ -12,48 +10,39 @@ const ICONS = {
   columns: Columns3,
   filter: Filter,
   close: X,
-} satisfies Record<string, LucideIcon>
+} satisfies Record<string, LucideIcon>;
 
-export type IconButtonIcon = keyof typeof ICONS
+export type IconButtonIcon = keyof typeof ICONS;
 
-type IconButtonProps = Omit<ButtonPrimitive.Props, "children" | "className"> & {
-  icon: IconButtonIcon
-  label: string
-  className?: string
-  variant?: VariantProps<typeof buttonVariants>["variant"]
-  description?: string
-}
+type IconButtonProps = Omit<
+  ComponentProps<typeof Button>,
+  "children"
+> & {
+  icon: IconButtonIcon;
+  label: string;
+  variant?: VariantProps<typeof buttonVariants>["variant"];
+  description?: string;
+};
 
-function IconButton({
+export function IconButton({
   icon,
   label,
-  className,
-  variant = "outline",
   description,
+  variant = "outline",
   ...props
 }: IconButtonProps) {
-  const Icon = ICONS[icon]
-  const descriptionId = useId()
-  return (
-    <>
-      <Button
-        type="button"
-        variant={variant}
-        size="icon-sm"
-        aria-label={label}
-        aria-describedby={description ? descriptionId : undefined}
-        className={cn("text-muted-foreground hover:text-primary", className)}
-        {...props}
-      >
-        <Icon />
-      </Button>
-      {description ? (
-        <span id={descriptionId} className="sr-only">
-          {description}
-        </span>
-      ) : null}
-    </>
-  )
-}
+  const IconComponent = ICONS[icon];
 
-export { IconButton }
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      size="icon-sm"
+      aria-label={label}
+      aria-description={description}
+      {...props}
+    >
+      <IconComponent />
+    </Button>
+  );
+}
