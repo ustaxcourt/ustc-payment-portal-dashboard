@@ -2,7 +2,7 @@
 
 import {
   createContext,
-  useCallback,
+  useMemo,
   useContext,
   useState,
 } from "react";
@@ -26,9 +26,7 @@ export function ToastProvider({
 }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string) => {
-    console.log("showToast called", message);
-
+  const showToast = (message: string) => {
     const id = dayjs().valueOf();
 
     setToasts((current) => [...current, { id, message }]);
@@ -38,10 +36,15 @@ export function ToastProvider({
         current.filter((toast) => toast.id !== id),
       );
     }, 3000);
-  }, []);
+  };
+
+  const contextValue = useMemo(
+    () => ({ showToast }),
+    [showToast],
+  );
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
 
       <div
