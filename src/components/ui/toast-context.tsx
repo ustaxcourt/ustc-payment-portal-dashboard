@@ -7,10 +7,9 @@ import {
   useState,
   useCallback,
 } from "react";
-import dayjs from "dayjs";
 
 type Toast = {
-  id: number;
+  id: string;
   message: string;
   isClosing: boolean;
 };
@@ -32,7 +31,7 @@ const baseClasses =
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string) => {
-    const id = dayjs().valueOf();
+    const id = crypto.randomUUID();
 
     setToasts((current) => [
       ...current,
