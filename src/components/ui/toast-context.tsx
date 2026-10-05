@@ -5,12 +5,14 @@ import {
   useMemo,
   useContext,
   useState,
+  useCallback,
 } from "react";
 import dayjs from "dayjs";
 
 type Toast = {
   id: number;
   message: string;
+  isClosing: boolean;
 };
 
 type ToastContextType = {
@@ -19,24 +21,47 @@ type ToastContextType = {
 
 const ToastContext = createContext<ToastContextType | null>(null);
 
-export function ToastProvider({
+const baseClasses =
+  "rounded-md border bg-green-100 px-4 py-3 text-black shadow-2xl";
+
+  export function ToastProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = (message: string) => {
+  const showToast = useCallback((message: string) => {
     const id = dayjs().valueOf();
 
-    setToasts((current) => [...current, { id, message }]);
+    setToasts((current) => [
+      ...current,
+      {
+        id,
+        message,
+        isClosing: false,
+      },
+    ]);
 
+    // Wait for toast display duration
     window.setTimeout(() => {
+      // Start closing animation
       setToasts((current) =>
-        current.filter((toast) => toast.id !== id),
+        current.map((toast) =>
+          toast.id === id
+            ? { ...toast, isClosing: true }
+            : toast,
+        ),
       );
+
+      // Remove after animation completes
+      window.setTimeout(() => {
+        setToasts((current) =>
+          current.filter((toast) => toast.id !== id),
+        );
+      }, 100);
     }, 3000);
-  };
+  }, []);
 
   const contextValue = useMemo(
     () => ({ showToast }),
@@ -56,7 +81,11 @@ export function ToastProvider({
           return (
             <div
               key={toast.id}
-              className="rounded-md bg-green-100 px-4 py-3 text-black border-1 shadow-2xl"
+              className={`${baseClasses} ${
+                toast.isClosing
+                  ? "animate-out fade-out slide-out-to-bottom-2 duration-300"
+                  : "animate-in fade-in slide-in-from-bottom-2 duration-300"
+              }`}
             >
               {toast.message}
             </div>
