@@ -252,10 +252,10 @@ export default function TransactionLog() {
                   />
                 ) : null}
               </span>
-              <AppTooltip content="Copy share link">
+              <AppTooltip content="Share View">
                 <IconButton
                   icon="link"
-                  label="Copy share link"
+                  label="Share View"
                   onClick={copyShareLink}
                 />
               </AppTooltip>
