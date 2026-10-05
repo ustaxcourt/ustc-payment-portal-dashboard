@@ -387,6 +387,37 @@ describe("TransactionLog", () => {
       );
     });
   });
+
+  it("copies the current URL and shows a success toast", async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: writeTextMock,
+      },
+      configurable: true,
+    });
+
+    mockFetch(response());
+
+    renderLog("?status=failed");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /share/i }),
+    );
+
+    await waitFor(() =>
+      expect(writeTextMock).toHaveBeenCalled(),
+    );
+
+    expect(writeTextMock).toHaveBeenCalledWith(
+      expect.stringContaining("status=failed"),
+    );
+
+    expect(
+      await screen.findByText("Link copied!"),
+    ).toBeInTheDocument();
+  });
 });
 
 // Below `lg` (1023px) the filters move into a Drawer — forcing the media
