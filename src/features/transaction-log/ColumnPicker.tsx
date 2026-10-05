@@ -11,13 +11,12 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { COLUMN_LABEL, type TransactionColumnId } from "./columnLabels";
 import {
   COLUMN_IDS,
-  COLUMN_LABEL,
   type ColumnVisibility,
   DEFAULT_COLUMN_VISIBILITY,
   isMetadataColumnId,
-  type TransactionColumnId,
   withSearchedColumns,
 } from "./columns";
 
@@ -51,6 +50,16 @@ export default function ColumnPicker({
     (id) => visibility[id] === DEFAULT_COLUMN_VISIBILITY[id],
   );
 
+  const hintFor = (id: TransactionColumnId) => {
+    if (searchedIds.includes(id)) {
+      return { id: searchedColumnHintId, text: SEARCHED_COLUMN_HINT };
+    }
+    if (visibility[id] && chosenCount === 1) {
+      return { id: lastColumnHintId, text: LAST_COLUMN_HINT };
+    }
+    return null;
+  };
+
   return (
     <Popover>
       <PopoverTrigger
@@ -82,14 +91,7 @@ export default function ColumnPicker({
               {group.legend}
             </legend>
             {group.ids.map((id) => {
-              const isChecked = shownVisibility[id];
-              const isSearched = searchedIds.includes(id);
-              const isLastVisible = visibility[id] && chosenCount === 1;
-              const hint = isSearched
-                ? { id: searchedColumnHintId, text: SEARCHED_COLUMN_HINT }
-                : isLastVisible
-                  ? { id: lastColumnHintId, text: LAST_COLUMN_HINT }
-                  : null;
+              const hint = hintFor(id);
               return (
                 <Label
                   key={id}
@@ -97,7 +99,7 @@ export default function ColumnPicker({
                   className="cursor-pointer font-normal leading-normal has-data-disabled:cursor-not-allowed has-data-disabled:opacity-60"
                 >
                   <Checkbox
-                    checked={isChecked}
+                    checked={shownVisibility[id]}
                     disabled={hint !== null}
                     aria-describedby={hint?.id}
                     onCheckedChange={(checked) => onToggle(id, checked)}

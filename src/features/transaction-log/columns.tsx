@@ -7,47 +7,20 @@ import type {
 } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
+import {
+  COLUMN_LABEL,
+  metadataColumnId,
+  type TransactionColumnId,
+} from "./columnLabels";
 import SortableHeader from "./SortableHeader";
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
 import {
-  METADATA_COLUMN_LABEL,
   METADATA_KEYS,
   type MetadataKey,
-  TRACKING_ID_COLUMN_LABEL,
   type TransactionLogEntry,
   type TransactionSearchFilters,
   type TransactionSortField,
 } from "./types";
-
-type TrackingIdField = "paygovTrackingId" | "agencyTrackingId";
-
-type MetadataColumnId = `metadata.${MetadataKey}`;
-
-export type TransactionColumnId =
-  | TransactionSortField
-  | TrackingIdField
-  | MetadataColumnId;
-
-const metadataColumnId = (key: MetadataKey): MetadataColumnId =>
-  `metadata.${key}`;
-
-export const COLUMN_LABEL: Record<TransactionColumnId, string> = {
-  createdAt: "Created",
-  lastUpdatedAt: "Last updated",
-  feeName: "Fee",
-  transactionAmount: "Amount",
-  paymentMethod: "Payment method",
-  paymentStatus: "Payment status",
-  returnDetail: "Failure reason",
-  transactionStatus: "Transaction status",
-  clientName: "Client",
-  transactionReferenceId: "Reference ID",
-  ...TRACKING_ID_COLUMN_LABEL,
-  "metadata.docketNumber": METADATA_COLUMN_LABEL.docketNumber,
-  "metadata.email": METADATA_COLUMN_LABEL.email,
-  "metadata.fullName": METADATA_COLUMN_LABEL.fullName,
-  "metadata.accessCode": METADATA_COLUMN_LABEL.accessCode,
-};
 
 export type ColumnVisibility = Record<TransactionColumnId, boolean>;
 
@@ -262,7 +235,9 @@ const SORTABLE_COLUMNS: TransactionColumnDef[] = [
   },
 ];
 
-const trackingIdColumn = (field: TrackingIdField): TransactionColumnDef => ({
+const trackingIdColumn = (
+  field: "paygovTrackingId" | "agencyTrackingId",
+): TransactionColumnDef => ({
   id: field,
   accessorKey: field,
   header: COLUMN_LABEL[field],

@@ -17,8 +17,8 @@ import ErrorPanel from "@/components/ui/ErrorPanel";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 import ColumnPicker from "./ColumnPicker";
+import { COLUMN_LABEL } from "./columnLabels";
 import {
-  COLUMN_LABEL,
   DEFAULT_COLUMN_VISIBILITY,
   searchedColumnIds,
   TRANSACTION_COLUMNS,

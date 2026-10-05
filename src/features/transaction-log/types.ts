@@ -49,18 +49,6 @@ export const METADATA_KEY_LABEL: Record<MetadataKey, string> = {
   accessCode: "Access Code",
 };
 
-export const METADATA_COLUMN_LABEL: Record<MetadataKey, string> = {
-  docketNumber: "Docket number",
-  email: "Email",
-  fullName: "Full name",
-  accessCode: "Access code",
-};
-
-export const TRACKING_ID_COLUMN_LABEL = {
-  paygovTrackingId: "Pay.gov tracking ID",
-  agencyTrackingId: "Agency tracking ID",
-} as const;
-
 /** Which metadata keys each fee collects; the lookup picker is scoped to the selected fee. */
 export const FEE_METADATA_KEYS: Record<FeeType, readonly MetadataKey[]> = {
   PETITION_FILING_FEE: ["docketNumber"],

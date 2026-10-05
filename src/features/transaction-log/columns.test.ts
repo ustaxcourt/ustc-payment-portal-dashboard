@@ -1,12 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { describe, expect, it } from "vitest";
+import { COLUMN_LABEL, type TransactionColumnId } from "./columnLabels";
 import {
   COLUMN_IDS,
-  COLUMN_LABEL,
   DEFAULT_COLUMN_VISIBILITY,
   searchedColumnIds,
   TRANSACTION_COLUMNS,
-  type TransactionColumnId,
   withSearchedColumns,
 } from "./columns";
 import type { TransactionLogEntry, TransactionSearchFilters } from "./types";

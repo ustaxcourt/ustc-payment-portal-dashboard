@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { COLUMN_IDS, COLUMN_LABEL } from "./columns";
+import { COLUMN_LABEL } from "./columnLabels";
+import { COLUMN_IDS } from "./columns";
 import { exportColumns } from "./exportColumns";
 import type { TransactionLogEntry } from "./types";
 
@@ -35,39 +36,14 @@ describe("exportColumns", () => {
     expect(headers()).toHaveLength(COLUMN_IDS.length + 2);
   });
 
-  it("matches the table's column order, with timestamps split in place", () => {
-
-    // Collapse the split date/time pairs back to the display column name.
-    const collapsed = headers()
-      .map((h) =>
-        h
-          .replace(/ (date|time) \(ET\)$/, "")
-          .replace(/^Created$/, "createdAt")
-          .replace(/^Last updated$/, "lastUpdatedAt"),
-      )
-      .filter((h, i, all) => all.indexOf(h) === i);
-
-    const exportOrder = collapsed.map(
-      (h) =>
-        ({
-          Fee: "feeName",
-          Amount: "transactionAmount",
-          "Payment method": "paymentMethod",
-          "Payment status": "paymentStatus",
-          "Failure reason": "returnDetail",
-          "Transaction status": "transactionStatus",
-          Client: "clientName",
-          "Reference ID": "transactionReferenceId",
-          [COLUMN_LABEL.paygovTrackingId]: "paygovTrackingId",
-          [COLUMN_LABEL.agencyTrackingId]: "agencyTrackingId",
-          [COLUMN_LABEL["metadata.docketNumber"]]: "metadata.docketNumber",
-          [COLUMN_LABEL["metadata.email"]]: "metadata.email",
-          [COLUMN_LABEL["metadata.fullName"]]: "metadata.fullName",
-          [COLUMN_LABEL["metadata.accessCode"]]: "metadata.accessCode",
-        })[h] ?? h,
+  it("uses the table's labels in the table's order, with timestamps split in place", () => {
+    const expected = COLUMN_IDS.flatMap((id) =>
+      id === "createdAt" || id === "lastUpdatedAt"
+        ? [`${COLUMN_LABEL[id]} date (ET)`, `${COLUMN_LABEL[id]} time (ET)`]
+        : [COLUMN_LABEL[id]],
     );
 
-    expect(exportOrder).toEqual(COLUMN_IDS);
+    expect(headers()).toEqual(expected);
   });
 
   it("converts timestamps to Court-time date and time cells", () => {

@@ -83,18 +83,20 @@ export default function TransactionTable({
   const activeCellRef = useRef({ row: 0, col: 0 });
   const visibleColumnKey = leafColumns.map((col) => col.id).join(",");
   const previousVisibleColumnKeyRef = useRef(visibleColumnKey);
-  if (previousVisibleColumnKeyRef.current !== visibleColumnKey) {
-    previousVisibleColumnKeyRef.current = visibleColumnKey;
-    activeCellRef.current = { row: 0, col: 0 };
-  }
-  activeCellRef.current = {
-    row: Math.min(activeCellRef.current.row,
-      Math.max(tableRows.length - 1, 0)),
-    col: Math.min(activeCellRef.current.col,
-      Math.max(leafColumns.length - 1, 0)),
-  };
 
   useLayoutEffect(() => {
+    if (previousVisibleColumnKeyRef.current !== visibleColumnKey) {
+      previousVisibleColumnKeyRef.current = visibleColumnKey;
+      activeCellRef.current = { row: 0, col: 0 };
+    }
+    activeCellRef.current = {
+      row: Math.min(activeCellRef.current.row, Math.max(tableRows.length - 1, 0)),
+      col: Math.min(
+        activeCellRef.current.col,
+        Math.max(leafColumns.length - 1, 0),
+      ),
+    };
+
     const container = scrollRef.current;
     if (!container) return;
     const { row, col } = activeCellRef.current;
