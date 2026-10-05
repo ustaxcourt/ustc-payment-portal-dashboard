@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { stubDashboardResponses } from "./accessibility/dashboardData";
 import {
   closeColumnPicker,
   columnPicker,
@@ -99,6 +100,15 @@ test("the picker works from the keyboard", async ({ page }) => {
 test("with every column shown the log scrolls sideways instead of squeezing", async ({
   page,
 }) => {
+  await stubDashboardResponses(page);
+  await page.reload();
+  await expect(
+    page
+      .getByRole("grid", { name: /Transaction log/ })
+      .getByRole("gridcell")
+      .first(),
+  ).toBeVisible();
+
   await showColumns(page, ...HIDDEN_BY_DEFAULT_COLUMNS);
 
   await expect
