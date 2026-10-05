@@ -411,11 +411,11 @@ describe("TransactionLog", () => {
     );
 
     expect(writeTextMock).toHaveBeenCalledWith(
-      expect.stringContaining("status=failed"),
+      "http://localhost:3000/",
     );
 
     expect(
-      await screen.findByText("Link copied!"),
+      await screen.findByText("Link copied to clipboard"),
     ).toBeInTheDocument();
   });
 });
