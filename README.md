@@ -117,9 +117,9 @@ How it works, and where the pieces live (all under
   amounts are real numbers with a currency format, timestamps split into
   Eastern-time date and time cells. exceljs stays out of the page bundle; it
   loads only inside the worker chunk.
-- `exportColumns.ts` derives the columns from the same source of truth as the
-  table, so the file always matches the on-screen column set (including the
-  tab-dependent Failure reason column).
+- `exportColumns.ts` writes every Transaction Log column in table order,
+  whichever columns are visible on screen. Created and Last updated are each
+  split into an Eastern-time date cell and time cell.
 
 ## Entra redirect URIs
 

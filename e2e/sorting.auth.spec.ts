@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { showColumns } from "./transactionColumns";
 
 test("the dashboard opens for a signed-in user", async ({ page }) => {
   await page.goto("/");
@@ -14,17 +15,18 @@ test("the column headers stay pinned while the log scrolls", async ({
 }) => {
   await page.goto("/?range=last7");
 
-  const created = page.getByRole("columnheader", { name: /Created/ });
-  await expect(created).toBeVisible();
+  const lastUpdated = page.getByRole("columnheader", { name: /Last updated/ });
+  await expect(lastUpdated).toBeVisible();
 
   const scrolled = await page
     .getByTestId("transaction-table-scroll")
+    .filter({ visible: true })
     .evaluate((el) => {
       el.scrollTop = el.scrollHeight;
       return el.scrollTop;
     });
 
-  await expect(created).toBeInViewport();
+  await expect(lastUpdated).toBeInViewport();
   test.info().annotations.push({
     type: scrolled > 0 ? "scrolled" : "warning",
     description:
@@ -34,11 +36,11 @@ test("the column headers stay pinned while the log scrolls", async ({
   });
 });
 
-test("the log opens sorted by Created, descending", async ({ page }) => {
+test("the log opens sorted by Last updated, descending", async ({ page }) => {
   await page.goto("/");
 
-  const created = page.getByRole("columnheader", { name: /Created/ });
-  await expect(created).toHaveAttribute("aria-sort", "descending");
+  const lastUpdated = page.getByRole("columnheader", { name: /Last updated/ });
+  await expect(lastUpdated).toHaveAttribute("aria-sort", "descending");
 
   const amount = page.getByRole("columnheader", { name: /Amount/ });
   await expect(amount).toHaveAttribute("aria-sort", "none");
@@ -75,17 +77,17 @@ test("the headers are reachable and operable from the keyboard", async ({
 }) => {
   await page.goto("/");
 
-  const created = page
-    .getByRole("columnheader", { name: /Created/ })
-    .getByRole("button", { name: "Created" });
+  const lastUpdated = page
+    .getByRole("columnheader", { name: /Last updated/ })
+    .getByRole("button", { name: "Last updated" });
 
-  await created.focus();
-  await expect(created).toBeFocused();
+  await lastUpdated.focus();
+  await expect(lastUpdated).toBeFocused();
 
   await page.keyboard.press("Enter");
 
   await expect(
-    page.getByRole("columnheader", { name: /Created/ }),
+    page.getByRole("columnheader", { name: /Last updated/ }),
   ).toHaveAttribute("aria-sort", "ascending");
 
   await expect(page).toHaveURL(/order=asc/);
@@ -96,6 +98,7 @@ test("changing the payment status filter keeps the current sort", async ({
   page,
 }) => {
   await page.goto("/?status=failed&sort=returnDetail&order=asc");
+  await showColumns(page, "Failure reason");
 
   await expect(
     page.getByRole("columnheader", { name: /Failure reason/ }),
@@ -111,6 +114,7 @@ test("changing the payment status filter keeps the current sort", async ({
 
 test("a shared sorted link reproduces the same view", async ({ page }) => {
   await page.goto("/?status=failed&sort=clientName&order=asc");
+  await showColumns(page, "Client");
 
   await expect(
     page.getByRole("columnheader", { name: /Client/ }),

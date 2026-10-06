@@ -1,6 +1,7 @@
 import { formatCourtStamp, formatLabel } from "@/lib/format";
+import { COLUMN_LABEL, metadataColumnId } from "./columnLabels";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
-import type { TransactionLogEntry } from "./types";
+import { METADATA_KEYS, type TransactionLogEntry } from "./types";
 
 export type ExportCell = string | number | Date;
 
@@ -30,77 +31,98 @@ const courtTimeCell = (iso: string): ExportCell => {
 
 const BASE_COLUMNS: ExportColumn[] = [
   {
-    header: "Created date (ET)",
+    header: `${COLUMN_LABEL.createdAt} date (ET)`,
     width: 12,
     numFmt: "yyyy-mm-dd",
     value: (row) => courtDateCell(row.createdAt),
   },
   {
-    header: "Created time (ET)",
+    header: `${COLUMN_LABEL.createdAt} time (ET)`,
     width: 10,
     numFmt: "hh:mm:ss",
     value: (row) => courtTimeCell(row.createdAt),
   },
   {
-    header: "Last updated date (ET)",
+    header: `${COLUMN_LABEL.lastUpdatedAt} date (ET)`,
     width: 12,
     numFmt: "yyyy-mm-dd",
     value: (row) => courtDateCell(row.lastUpdatedAt),
   },
   {
-    header: "Last updated time (ET)",
+    header: `${COLUMN_LABEL.lastUpdatedAt} time (ET)`,
     width: 10,
     numFmt: "hh:mm:ss",
     value: (row) => courtTimeCell(row.lastUpdatedAt),
   },
   {
-    header: "Fee type",
+    header: COLUMN_LABEL.feeName,
     width: 28,
     value: (row) => row.feeName,
   },
   {
-    header: "Amount",
+    header: COLUMN_LABEL.transactionAmount,
     width: 12,
     numFmt: '"$"#,##0.00',
     value: (row) => row.transactionAmount,
   },
   {
-    header: "Payment method",
+    header: COLUMN_LABEL.paymentMethod,
     width: 16,
     value: (row) => (row.paymentMethod ? formatLabel(row.paymentMethod) : ""),
   },
   {
-    header: "Payment status",
+    header: COLUMN_LABEL.paymentStatus,
     width: 14,
     value: (row) => PAYMENT_STATUS_LABEL[row.paymentStatus],
   },
   {
-    header: "Transaction status",
+    header: COLUMN_LABEL.transactionStatus,
     width: 18,
     value: (row) =>
       row.transactionStatus ? formatLabel(row.transactionStatus) : "",
   },
   {
-    header: "Client",
+    header: COLUMN_LABEL.clientName,
     width: 24,
     value: (row) => row.clientName,
   },
   {
-    header: "Reference ID",
+    header: COLUMN_LABEL.transactionReferenceId,
     width: 38,
     value: (row) => row.transactionReferenceId,
   },
 ];
 
 const FAILURE_REASON: ExportColumn = {
-  header: "Failure reason",
+  header: COLUMN_LABEL.returnDetail,
   width: 40,
   value: (row) => row.returnDetail ?? "",
 };
+
+const TRACKING_ID_COLUMNS: ExportColumn[] = [
+  {
+    header: COLUMN_LABEL.paygovTrackingId,
+    width: 24,
+    value: (row) => row.paygovTrackingId ?? "",
+  },
+  {
+    header: COLUMN_LABEL.agencyTrackingId,
+    width: 24,
+    value: (row) => row.agencyTrackingId,
+  },
+];
+
+const METADATA_COLUMNS: ExportColumn[] = METADATA_KEYS.map((key) => ({
+  header: COLUMN_LABEL[metadataColumnId(key)],
+  width: 20,
+  value: (row) => row.metadata?.[key] ?? "",
+}));
 
 /** Matches the table: Failure reason always appears right after Payment status. */
 export const exportColumns = (): ExportColumn[] => [
   ...BASE_COLUMNS.slice(0, 8),
   FAILURE_REASON,
   ...BASE_COLUMNS.slice(8),
+  ...TRACKING_ID_COLUMNS,
+  ...METADATA_COLUMNS,
 ];
