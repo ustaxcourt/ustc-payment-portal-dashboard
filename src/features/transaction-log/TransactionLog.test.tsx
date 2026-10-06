@@ -585,6 +585,49 @@ describe("TransactionLog column picker", () => {
 
     await waitFor(() => expect(headers()).toContain("Client"));
   });
+
+  it("shows Transaction Status and Failure Reason when payment status is failed", async () => {
+    mockFetch(response());
+
+    renderLog("?status=failed");
+
+    await waitFor(() => {
+      expect(headers()).toContain("Transaction status");
+      expect(headers()).toContain("Failure reason");
+    });
+  });
+
+  it("checks Transaction Status and Failure Reason in the column picker when failed is selected", async () => {
+    mockFetch(response());
+
+    renderLog("?status=failed");
+
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Transaction status" }),
+    ).toBeChecked();
+
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Failure reason" }),
+    ).toBeChecked();
+  });
+
+  it("unchecks Transaction Status and Failure Reason in the column picker when failed is not selected", async () => {
+    mockFetch(response());
+
+    renderLog("?status=success");
+
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Transaction status" }),
+    ).not.toBeChecked();
+
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Failure reason" }),
+    ).not.toBeChecked();
+  });
 });
 
 describe("TransactionLog narrow layout", () => {

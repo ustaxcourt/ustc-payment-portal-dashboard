@@ -134,8 +134,20 @@ export default function TransactionLog() {
     metadataDraftRef.current = undefined;
   }
 
+  const showFailureColumns =
+    searchFilters.paymentStatus === "failed";
+
+  const effectiveVisibility = {
+    ...columnVisibility,
+    transactionStatus: showFailureColumns,
+    returnDetail: showFailureColumns,
+  };
+
   const searchedIds = searchedColumnIds(searchFilters);
-  const tableVisibility = withSearchedColumns(columnVisibility, searchedIds);
+  const tableVisibility = withSearchedColumns(
+    effectiveVisibility,
+    searchedIds,
+  );
 
   const onFilterChange = (
     key: keyof TransactionSearchFilters,
@@ -254,7 +266,7 @@ export default function TransactionLog() {
                 onClick={downloadReport}
               />
               <ColumnPicker
-                visibility={columnVisibility}
+                visibility={effectiveVisibility}
                 searchedIds={searchedIds}
                 onToggle={(id, visible) =>
                   setColumnVisibility((previous) => ({
