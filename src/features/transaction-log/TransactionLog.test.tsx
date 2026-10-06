@@ -400,6 +400,12 @@ describe("TransactionLog", () => {
 
     mockFetch(response());
 
+    window.history.replaceState(
+      {},
+      "",
+      "http://localhost:3000/?status=failed",
+    );
+
     renderLog("?status=failed");
 
     await userEvent.click(
@@ -411,7 +417,7 @@ describe("TransactionLog", () => {
     );
 
     expect(writeTextMock).toHaveBeenCalledWith(
-      "http://localhost:3000/",
+      expect.stringContaining("status=failed"),
     );
 
     expect(
