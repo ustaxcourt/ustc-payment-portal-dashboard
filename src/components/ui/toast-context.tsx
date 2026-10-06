@@ -24,7 +24,7 @@ type ToastContextType = {
 
 const ToastContext = createContext<ToastContextType | null>(null);
 const TOAST_DISPLAY_DURATION = 3000; // 3 seconds
-const TOAST_ANIMATION_DURATION = 100; // 0.1 seconds
+const TOAST_ANIMATION_DURATION = 300; // 0.3 seconds
 
 const baseClasses =
   "rounded-md border bg-green-100 px-4 py-3 text-black shadow-2xl";
