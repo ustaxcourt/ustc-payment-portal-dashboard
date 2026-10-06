@@ -413,7 +413,7 @@ describe("TransactionLog", () => {
     renderLog("?status=failed");
 
     await userEvent.click(
-      screen.getByRole("button", { name: /share/i }),
+      screen.getByRole("button", { name: "Share View" }),
     );
 
     await waitFor(() =>
@@ -446,7 +446,7 @@ describe("TransactionLog", () => {
     renderLog("?status=failed");
 
     await userEvent.click(
-      screen.getByRole("button", { name: /share/i }),
+      screen.getByRole("button", { name: "Share View" }),
     );
 
     await waitFor(() =>
