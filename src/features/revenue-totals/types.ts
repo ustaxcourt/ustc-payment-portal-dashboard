@@ -60,7 +60,7 @@ export const periodSubtitle = (
     case "day":
       return formatCourtDate(from);
     case "week":
-      return `${formatCourtDate(from)} – ${formatCourtDate(to)}`;
+      return formatWeekRange(from, to);
     case "month":
       return monthName.format(new Date(from));
     case "quarter": {
@@ -86,6 +86,18 @@ const courtParts = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
   month: "numeric",
 });
+
+const shortDate = new Intl.DateTimeFormat("en-US", {
+  timeZone: COURT_TIME_ZONE,
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+
+const formatWeekRange = (from: string, to: string): string =>
+  shortDate
+    .formatRange(new Date(from), new Date(to))
+    .replace(/\s*–\s*/, "–");
 
 const monthName = new Intl.DateTimeFormat("en-US", {
   timeZone: COURT_TIME_ZONE,
