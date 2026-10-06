@@ -84,9 +84,9 @@ enough context that the next person doesn't have to re-derive the decision.
   and re-test with `npm run build`, not just `npm run tsc` — a passing typecheck
   hides this failure entirely.
 
-### @types/node 24.20.1 → 26.6.4 — deferred (2026-09-17, re-confirmed 2026-10-02)
+### @types/node 24.19.1 → 26.6.4 — deferred (2026-09-17, re-confirmed 2026-10-02)
 
-- **Current:** `^24.20.1`. **Available latest:** `26.6.4`.
+- **Current:** `^24.19.1`. **Available latest:** `26.6.4`.
 - **Reason:** `@types/node` majors track Node.js majors. This app runs Node 24 —
   `.nvmrc` pins 24.20.0, `package.json` `engines` requires `>=24.20.0 <25.0.0`,
   and CI resolves its Node from `.nvmrc`. Installing types for Node 26 against a
