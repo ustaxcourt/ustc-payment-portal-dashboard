@@ -211,7 +211,11 @@ export default function TransactionLog() {
 
   return (
     <section className="flex w-full flex-1 flex-col lg:min-h-0">
-      <p aria-live="polite" className="sr-only">
+      <p
+        aria-live="polite"
+        className="sr-only"
+        suppressHydrationWarning
+      >
         {data?.sort && COLUMN_LABEL[data.sort]
           ? `Sorted by ${COLUMN_LABEL[data.sort]}, ${
               data.order === "desc" ? "descending" : "ascending"
@@ -244,11 +248,6 @@ export default function TransactionLog() {
                   label="Show filters"
                   description={
                     hasSearchCriteria ? "Filters active" : undefined
-                  }
-                  descriptionId={
-                    hasSearchCriteria
-                      ? "transaction-log-filters-active"
-                      : undefined
                   }
                   onClick={() => setFiltersOpen(true)}
                 />

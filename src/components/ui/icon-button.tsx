@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import { useId, type ComponentProps } from "react";
 import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react";
 
 import { Button, type buttonVariants } from "@/components/ui/button";
@@ -22,31 +22,30 @@ type IconButtonProps = Omit<
   label: string;
   variant?: VariantProps<typeof buttonVariants>["variant"];
   description?: string;
-  descriptionId?: string;
 };
 
 export function IconButton({
   icon,
   label,
   description,
-  descriptionId,
   variant = "outline",
   ...props
 }: IconButtonProps) {
+  const descriptionId = useId();
   const IconComponent = ICONS[icon];
 
   return (
     <Button
-      type="button"
-      variant={variant}
-      size="icon-sm"
       aria-label={label}
-      aria-describedby={descriptionId}
+      aria-describedby={
+        description ? descriptionId : undefined
+      }
+      variant={variant}
       {...props}
     >
       <IconComponent />
 
-      {description && descriptionId && (
+      {description && (
         <span
           id={descriptionId}
           className="sr-only"
