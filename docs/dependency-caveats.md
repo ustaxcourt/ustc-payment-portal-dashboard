@@ -41,29 +41,25 @@ enough context that the next person doesn't have to re-derive the decision.
   of all table-related components, sorting behavior, and tests. Pin the package
   exactly to prevent automated dependency-update workflows from introducing v9.
 
-### hashicorp/aws provider 6.56.0 → 6.66.0 — deferred (2026-07-29, re-confirmed 2026-09-17)
+### hashicorp/aws provider 6.56.0 → 6.67.0 — partially resolved (2026-07-29, updated 2026-10-06)
 
-- **Current:** `6.56.0` (pinned exactly, not `~> 6.0`). **Available latest:** `6.65.0`.
-- **Reason:** 6.57.0 fails reading the GitHub OIDC provider. Every `terraform plan`
-  errors on the `aws_iam_openid_connect_provider` data source with
-  `ListOpenIDConnectProviders ... StatusCode: 302, api error UnknownError`. The AWS
-  CLI makes the identical call successfully against the same credentials and account,
-  and every apply on 6.56.0 worked, so this is a provider regression rather than a
-  network, permissions, or configuration problem. It blocks all four Terraform roots,
-  since each reads that data source through `modules/iam`.
-- **Status as of 2026-09-17:** The original revisit condition — "revisit when 6.58.0
-  ships" — is now met on the calendar: 6.58.0 through 6.65.0 have all shipped.
-  It is **not** met on the evidence. Every shipped release from 6.57.0 through
-  6.65.0 was checked, and none mentions the `ListOpenIDConnectProviders`
-  regression or any other OIDC fix. So there is no published reason to believe the
-  bug is fixed — only that nobody has said otherwise.
-- **Plan:** Kept pinned. Clearing this entry requires a real `terraform plan` in
-  `environments/dev` against AWS — `terraform validate` cannot exercise the data
-  source, because the failure only appears when the provider actually calls IAM.
-  That needs credentials, so it is a task for someone with dev access:
-  relax to `~> 6.0`, run `terraform plan`, and confirm the data source reads.
-  Pinned exactly in the meantime so `terraform init -upgrade` cannot silently
-  reintroduce it.
+- **Current:** `6.67.0` (pinned exactly) in `terraform/bootstrap` and
+  `terraform/environments/dev`. `terraform/environments/{stg,prod}` are still pinned
+  to `6.56.0` pending a manual bump. **Available latest:** `6.67.0`.
+- **Original reason:** 6.57.0 failed reading the GitHub OIDC provider. Every
+  `terraform plan` errored on the `aws_iam_openid_connect_provider` data source with
+  `ListOpenIDConnectProviders ... StatusCode: 302, api error UnknownError`. This was a
+  provider regression, tracked upstream as
+  [hashicorp/terraform-provider-aws#49170](https://github.com/hashicorp/terraform-provider-aws/issues/49170)
+  (also affected IAM `GetPolicy` and SSM `GetParameter`).
+- **Resolution:** The upstream issue is closed with milestone v6.57.1. On 2026-10-06
+  a `terraform plan` in `environments/dev` on 6.67.0 read the data source cleanly and
+  reported no changes, confirming the regression is gone. `bootstrap` was bumped
+  alongside it.
+- **Remaining:** Bump `stg` and `prod` to `6.67.0` (edit `versions.tf`, run
+  `terraform init -upgrade`, commit the lock file) and confirm a clean
+  `terraform plan` in each. Delete this entry once both are done. Keep the exact pin
+  rather than `~> 6.0` so `init -upgrade` cannot move versions silently.
 
 ### next 15.5.26 → 16.3.8 — deferred (2026-07-27, re-confirmed 2026-10-02)
 
