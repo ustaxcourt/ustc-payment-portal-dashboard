@@ -24,9 +24,9 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.2.4 — deferred (2026-08-04, re-confirmed 2026-10-02)
+### @tanstack/react-table 8.21.3 → 9.2.6 — deferred (2026-08-04, re-confirmed 2026-10-06)
 
-- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.2.4`.
+- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.2.6`.
 - **Reason:** v9 is not backward compatible with the v8 API used throughout the
   transaction log. The application currently imports and relies on v8-specific
   APIs including `useReactTable` and `getCoreRowModel`. Attempting to resolve the
@@ -122,6 +122,23 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Revisit:** Re-test whenever a new 15.5.x patch is released or when the
   deferred Next 16 upgrade is revisited. Remove this entry once Next ships a
   patched bundled PostCSS version.
+
+### GHSA-vfj7-8cjw-p6xm — braces@3.0.3 (high)
+
+- **Reason it can't be fixed now:** `braces` through 3.0.3 has recursive AST walkers
+  with no depth guard, so deeply nested brace patterns exhaust the call stack. The
+  advisory (published 2026-09-18) has **no patched version**. It reaches us only
+  through the `shadcn` CLI (devDependency): `shadcn` → `fast-glob` → `micromatch` →
+  `braces` (and `@ts-morph/common` → `fast-glob`). `npm audit` flags `shadcn`,
+  `@shadcn/registry`, `@ts-morph/common`, `fast-glob`, `micromatch` and `braces` for
+  this one advisory; its suggested "fix" (downgrading `shadcn` to 1.0.0) is not real
+  remediation.
+- **Mitigation:** Exploiting it needs attacker-controlled brace patterns reaching
+  `braces`. It is a dev-time CLI used to add components, not shipped in the app
+  bundle or run at request time, and it only globs our own repository.
+- **Revisit:** When `braces` publishes a patched release, or `shadcn`/`fast-glob`
+  moves off it. Re-run `npm audit` on each dependency update and remove this entry
+  once a fix lands.
 
 <!-- Format:
 ### <advisory-id> — <package>@<version> (<severity>)
