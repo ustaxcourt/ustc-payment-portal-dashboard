@@ -29,7 +29,7 @@ const TOAST_ANIMATION_DURATION = 100; // 0.1 seconds
 const baseClasses =
   "rounded-md border bg-green-100 px-4 py-3 text-black shadow-2xl";
 
-  export function ToastProvider({
+export function ToastProvider({
   children,
 }: {
   children: React.ReactNode;
