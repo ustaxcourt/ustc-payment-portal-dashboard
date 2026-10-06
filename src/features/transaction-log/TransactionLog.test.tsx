@@ -435,6 +435,35 @@ describe("TransactionLog", () => {
       await screen.findByText("Link copied to clipboard"),
     ).toBeInTheDocument();
   });
+
+  it("shows an error toast when copying the URL fails", async () => {
+    const writeTextMock = vi
+      .fn()
+      .mockRejectedValue(new Error("Clipboard unavailable"));
+
+    vi.stubGlobal("navigator", {
+      ...navigator,
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    mockFetch(response());
+
+    renderLog("?status=failed");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /share/i }),
+    );
+
+    await waitFor(() =>
+      expect(writeTextMock).toHaveBeenCalled(),
+    );
+
+    expect(
+      await screen.findByText("Unable to copy link to clipboard."),
+    ).toBeInTheDocument();
+  });
 });
 
 // Below `lg` (1023px) the filters move into a Drawer — forcing the media
