@@ -3,13 +3,28 @@ import { describe, expect, it } from "vitest";
 import { COLUMN_LABEL, type TransactionColumnId } from "./columnLabels";
 import {
   COLUMN_IDS,
+  type ColumnVisibility,
   DEFAULT_COLUMN_VISIBILITY,
+  defaultColumnVisibility,
   searchedColumnIds,
   TRANSACTION_COLUMNS,
+  withFeeDefaults,
   withSearchedColumns,
 } from "./columns";
 import type { TransactionLogEntry, TransactionSearchFilters } from "./types";
 import { TRANSACTION_SORT_FIELDS } from "./types";
+
+const visibleIds = (visibility: ColumnVisibility) =>
+  COLUMN_IDS.filter((id) => visibility[id]);
+
+const onlyVisible = (id: TransactionColumnId): ColumnVisibility =>
+  Object.fromEntries(
+    COLUMN_IDS.map((columnId) => [columnId, columnId === id]),
+  ) as ColumnVisibility;
+
+const METADATA_COLUMN_IDS = COLUMN_IDS.filter((id) =>
+  id.startsWith("metadata."),
+);
 
 const columnById = (id: TransactionColumnId) => {
   const column = TRANSACTION_COLUMNS.find((c) => c.id === id);
@@ -199,5 +214,93 @@ describe("withSearchedColumns", () => {
       "metadata.email": true,
     });
     expect(DEFAULT_COLUMN_VISIBILITY.transactionStatus).toBe(false);
+  });
+});
+
+describe("defaultColumnVisibility", () => {
+  it("matches DEFAULT_COLUMN_VISIBILITY when no fee is selected", () => {
+    expect(defaultColumnVisibility(null)).toEqual(DEFAULT_COLUMN_VISIBILITY);
+  });
+
+  it.each([
+    ["PETITION_FILING_FEE", ["metadata.docketNumber"]],
+    [
+      "NONATTORNEY_EXAM_REGISTRATION_FEE",
+      ["metadata.email", "metadata.fullName", "metadata.accessCode"],
+    ],
+  ] as const)("adds only the %s metadata columns to the defaults", (feeType, metadataIds) => {
+    expect(visibleIds(defaultColumnVisibility(feeType))).toEqual([
+      "lastUpdatedAt",
+      "feeName",
+      "transactionAmount",
+      "paymentStatus",
+      ...metadataIds,
+    ]);
+  });
+
+  it("does not change DEFAULT_COLUMN_VISIBILITY", () => {
+    defaultColumnVisibility("PETITION_FILING_FEE");
+
+    expect(DEFAULT_COLUMN_VISIBILITY["metadata.docketNumber"]).toBe(false);
+  });
+});
+
+describe("withFeeDefaults", () => {
+  it("keeps the admin's non-metadata choices", () => {
+    const chosen = {
+      ...DEFAULT_COLUMN_VISIBILITY,
+      clientName: true,
+      transactionAmount: false,
+    };
+
+    expect(withFeeDefaults(chosen, "PETITION_FILING_FEE")).toEqual({
+      ...chosen,
+      "metadata.docketNumber": true,
+    });
+  });
+
+  it("swaps the metadata columns when the fee changes", () => {
+    const petition = defaultColumnVisibility("PETITION_FILING_FEE");
+
+    expect(
+      withFeeDefaults(petition, "NONATTORNEY_EXAM_REGISTRATION_FEE"),
+    ).toEqual(defaultColumnVisibility("NONATTORNEY_EXAM_REGISTRATION_FEE"));
+  });
+
+  it("hides every metadata column when no fee is selected", () => {
+    const allMetadata = {
+      ...DEFAULT_COLUMN_VISIBILITY,
+      ...Object.fromEntries(METADATA_COLUMN_IDS.map((id) => [id, true])),
+    };
+
+    expect(withFeeDefaults(allMetadata, null)).toEqual(
+      DEFAULT_COLUMN_VISIBILITY,
+    );
+  });
+
+  it("replaces metadata choices the admin made by hand", () => {
+    const handPicked = {
+      ...defaultColumnVisibility("NONATTORNEY_EXAM_REGISTRATION_FEE"),
+      "metadata.email": false,
+      "metadata.docketNumber": true,
+    };
+
+    expect(withFeeDefaults(handPicked, "PETITION_FILING_FEE")).toEqual(
+      defaultColumnVisibility("PETITION_FILING_FEE"),
+    );
+  });
+
+  it("does not change the visibility passed in", () => {
+    const petition = defaultColumnVisibility("PETITION_FILING_FEE");
+
+    withFeeDefaults(petition, null);
+
+    expect(petition["metadata.docketNumber"]).toBe(true);
+  });
+
+  it("falls back to the defaults rather than leave no column visible", () => {
+    expect(withFeeDefaults(onlyVisible("metadata.docketNumber"), null)).toEqual(
+      DEFAULT_COLUMN_VISIBILITY,
+    );
   });
 });
