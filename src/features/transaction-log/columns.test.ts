@@ -83,7 +83,7 @@ describe("TRANSACTION_COLUMNS", () => {
     }
   });
 
-  it("no longer scopes metadata columns to the selected fee", () => {
+  it("defines a column for every metadata key, whatever the selected fee", () => {
     expect(COLUMN_IDS).toContain("metadata.docketNumber");
     expect(COLUMN_IDS).toContain("metadata.accessCode");
   });

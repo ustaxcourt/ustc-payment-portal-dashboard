@@ -7,7 +7,10 @@ import {
   COLUMN_IDS,
   type ColumnVisibility,
   DEFAULT_COLUMN_VISIBILITY,
+  defaultColumnVisibility,
 } from "./columns";
+
+const PETITION_DEFAULTS = defaultColumnVisibility("PETITION_FILING_FEE");
 
 const renderPicker = (
   overrides: Partial<Parameters<typeof ColumnPicker>[0]> = {},
@@ -157,6 +160,48 @@ describe("ColumnPicker", () => {
     );
 
     expect(onReset).toHaveBeenCalledOnce();
+  });
+
+  it("disables Reset to defaults while showing the selected fee's defaults", async () => {
+    renderPicker({
+      visibility: PETITION_DEFAULTS,
+      defaults: PETITION_DEFAULTS,
+    });
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    ).toBeDisabled();
+  });
+
+  it("enables Reset to defaults when the columns differ from the selected fee's defaults", async () => {
+    renderPicker({
+      visibility: DEFAULT_COLUMN_VISIBILITY,
+      defaults: PETITION_DEFAULTS,
+    });
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    ).toBeEnabled();
+  });
+
+  it("checks a fee's metadata column without locking it", async () => {
+    const { onToggle } = renderPicker({
+      visibility: PETITION_DEFAULTS,
+      defaults: PETITION_DEFAULTS,
+    });
+    const dialog = await openPicker();
+    const docketNumber = within(dialog).getByRole("checkbox", {
+      name: "Docket number",
+    });
+
+    expect(docketNumber).toBeChecked();
+    expect(docketNumber).not.toHaveAttribute("aria-disabled", "true");
+
+    await userEvent.click(docketNumber);
+
+    expect(onToggle).toHaveBeenCalledWith("metadata.docketNumber", false);
   });
 
   it("works from the keyboard and returns focus to the trigger on Escape", async () => {
