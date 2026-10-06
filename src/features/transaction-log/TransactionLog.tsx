@@ -142,6 +142,7 @@ export default function TransactionLog() {
     metadataDraftRef.current = undefined;
   }
 
+  const feeDefaults = defaultColumnVisibility(searchFilters.feeType);
   const searchedIds = searchedColumnIds(searchFilters);
   const tableVisibility = withSearchedColumns(columnVisibility, searchedIds);
 
@@ -263,6 +264,7 @@ export default function TransactionLog() {
               />
               <ColumnPicker
                 visibility={columnVisibility}
+                defaults={feeDefaults}
                 searchedIds={searchedIds}
                 onToggle={(id, visible) =>
                   setColumnVisibility((previous) => ({
@@ -270,11 +272,7 @@ export default function TransactionLog() {
                     [id]: visible,
                   }))
                 }
-                onReset={() =>
-                  setColumnVisibility(
-                    defaultColumnVisibility(searchFilters.feeType),
-                  )
-                }
+                onReset={() => setColumnVisibility(feeDefaults)}
               />
             </div>
           </div>

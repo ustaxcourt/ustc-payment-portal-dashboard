@@ -14,6 +14,7 @@ const renderPicker = (
 ) => {
   const props = {
     visibility: DEFAULT_COLUMN_VISIBILITY,
+    defaults: DEFAULT_COLUMN_VISIBILITY,
     searchedIds: [],
     onToggle: vi.fn(),
     onReset: vi.fn(),

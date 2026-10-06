@@ -15,7 +15,6 @@ import { COLUMN_LABEL, type TransactionColumnId } from "./columnLabels";
 import {
   COLUMN_IDS,
   type ColumnVisibility,
-  DEFAULT_COLUMN_VISIBILITY,
   isMetadataColumnId,
   withSearchedColumns,
 } from "./columns";
@@ -33,11 +32,13 @@ const SEARCHED_COLUMN_HINT = "Shown while you're searching by this column";
 
 export default function ColumnPicker({
   visibility,
+  defaults,
   searchedIds,
   onToggle,
   onReset,
 }: {
   visibility: ColumnVisibility;
+  defaults: ColumnVisibility;
   searchedIds: readonly TransactionColumnId[];
   onToggle: (id: TransactionColumnId, visible: boolean) => void;
   onReset: () => void;
@@ -47,7 +48,7 @@ export default function ColumnPicker({
   const shownVisibility = withSearchedColumns(visibility, searchedIds);
   const chosenCount = COLUMN_IDS.filter((id) => visibility[id]).length;
   const isDefault = COLUMN_IDS.every(
-    (id) => visibility[id] === DEFAULT_COLUMN_VISIBILITY[id],
+    (id) => visibility[id] === defaults[id],
   );
 
   const hintFor = (id: TransactionColumnId) => {
