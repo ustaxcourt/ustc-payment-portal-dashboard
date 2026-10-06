@@ -15,6 +15,8 @@ import {
 import SortableHeader from "./SortableHeader";
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
 import {
+  FEE_METADATA_KEYS,
+  type FeeType,
   METADATA_KEYS,
   type MetadataKey,
   type TransactionLogEntry,
@@ -45,6 +47,33 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
 
 export const isMetadataColumnId = (id: TransactionColumnId) =>
   id.startsWith("metadata.");
+
+const withFeeMetadataColumns = (
+  visibility: ColumnVisibility,
+  feeType: FeeType | null,
+): ColumnVisibility => {
+  const feeKeys = feeType ? FEE_METADATA_KEYS[feeType] : [];
+  const next = { ...visibility };
+  for (const key of METADATA_KEYS) {
+    next[metadataColumnId(key)] = feeKeys.includes(key);
+  }
+  return next;
+};
+
+export const defaultColumnVisibility = (
+  feeType: FeeType | null,
+): ColumnVisibility =>
+  withFeeMetadataColumns(DEFAULT_COLUMN_VISIBILITY, feeType);
+
+export const withFeeDefaults = (
+  visibility: ColumnVisibility,
+  feeType: FeeType | null,
+): ColumnVisibility => {
+  const next = withFeeMetadataColumns(visibility, feeType);
+  return Object.values(next).some(Boolean)
+    ? next
+    : defaultColumnVisibility(feeType);
+};
 
 export const searchedColumnIds = (
   filters: TransactionSearchFilters,

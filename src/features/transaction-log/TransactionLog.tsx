@@ -19,9 +19,10 @@ import { cn } from "@/lib/utils";
 import ColumnPicker from "./ColumnPicker";
 import { COLUMN_LABEL } from "./columnLabels";
 import {
-  DEFAULT_COLUMN_VISIBILITY,
+  defaultColumnVisibility,
   searchedColumnIds,
   TRANSACTION_COLUMNS,
+  withFeeDefaults,
   withSearchedColumns,
 } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
@@ -53,9 +54,16 @@ export default function TransactionLog() {
   // Below `lg` the filters live in a Drawer overlay instead of the static
   // sidebar, so they never compete with the table for vertical space.
   const [isNarrow, setIsNarrow] = useState(false);
-  const [columnVisibility, setColumnVisibility] = useState(
-    DEFAULT_COLUMN_VISIBILITY,
+  const [columnVisibility, setColumnVisibility] = useState(() =>
+    defaultColumnVisibility(searchFilters.feeType),
   );
+  const [columnsFeeType, setColumnsFeeType] = useState(searchFilters.feeType);
+  if (columnsFeeType !== searchFilters.feeType) {
+    setColumnsFeeType(searchFilters.feeType);
+    setColumnVisibility((previous) =>
+      withFeeDefaults(previous, searchFilters.feeType),
+    );
+  }
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
 
@@ -262,7 +270,11 @@ export default function TransactionLog() {
                     [id]: visible,
                   }))
                 }
-                onReset={() => setColumnVisibility(DEFAULT_COLUMN_VISIBILITY)}
+                onReset={() =>
+                  setColumnVisibility(
+                    defaultColumnVisibility(searchFilters.feeType),
+                  )
+                }
               />
             </div>
           </div>
