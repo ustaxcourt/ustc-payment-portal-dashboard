@@ -391,6 +391,13 @@ describe("TransactionLog", () => {
   it("copies the current URL and shows a success toast", async () => {
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
 
+    vi.stubGlobal("navigator", {
+      ...navigator,
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
     Object.defineProperty(navigator, "clipboard", {
       value: {
         writeText: writeTextMock,
@@ -409,7 +416,7 @@ describe("TransactionLog", () => {
     renderLog("?status=failed");
 
     await userEvent.click(
-      screen.getByRole("button", { name: /share/i }),
+      screen.getByRole("button", { name: "Share View" }),
     );
 
     await waitFor(() =>
