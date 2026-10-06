@@ -24,7 +24,7 @@ function IconButton({
   ...props
 }: Omit<
   React.ComponentProps<typeof Button>,
-  "children" | "aria-label" | "size" | "variant"
+  "children" | "aria-label" | "size" | "type" | "variant"
 > & {
   icon: IconButtonIcon
   label: string
@@ -37,8 +37,8 @@ function IconButton({
   return (
     <>
       <Button
-        type="button"
         {...props}
+        type="button"
         variant={variant}
         size="icon-sm"
         aria-label={label}

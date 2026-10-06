@@ -56,6 +56,22 @@ describe("IconButton", () => {
     expect(button).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("stays a plain button even if the caller passes another type", () => {
+    render(
+      <form>
+        <IconButton
+          icon="columns"
+          label="Select columns"
+          {...({ type: "submit" } as object)}
+        />
+      </form>,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Select columns" }),
+    ).toHaveAttribute("type", "button");
+  });
+
   it("keeps its own label even if the caller passes one", () => {
     render(
       <IconButton
