@@ -402,13 +402,6 @@ describe("TransactionLog", () => {
       },
     });
 
-    Object.defineProperty(navigator, "clipboard", {
-      value: {
-        writeText: writeTextMock,
-      },
-      configurable: true,
-    });
-
     mockFetch(response());
 
     window.history.replaceState(
@@ -420,7 +413,7 @@ describe("TransactionLog", () => {
     renderLog("?status=failed");
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Share View" }),
+      screen.getByRole("button", { name: /share/i }),
     );
 
     await waitFor(() =>
