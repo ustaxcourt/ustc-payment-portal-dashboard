@@ -97,7 +97,7 @@ export const SORT_ORDERS = ["asc", "desc"] as const;
 
 export type SortOrder = (typeof SORT_ORDERS)[number];
 
-export const DEFAULT_SORT: TransactionSortField = "createdAt";
+export const DEFAULT_SORT: TransactionSortField = "lastUpdatedAt";
 export const DEFAULT_ORDER: SortOrder = "desc";
 
 export type TransactionSorting = {

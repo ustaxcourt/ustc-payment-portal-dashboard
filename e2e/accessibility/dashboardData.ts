@@ -180,7 +180,7 @@ const response = (
   to: NOW,
   page: 1,
   pageSize: 200,
-  sort: "createdAt",
+  sort: "lastUpdatedAt",
   order: "desc",
   total: 3,
   ...overrides,
@@ -188,7 +188,7 @@ const response = (
 
 const asSortField = (value: string | null): TransactionSortField => {
   switch (value) {
-    case "lastUpdatedAt":
+    case "createdAt":
     case "feeName":
     case "transactionAmount":
     case "paymentMethod":
@@ -199,7 +199,7 @@ const asSortField = (value: string | null): TransactionSortField => {
     case "transactionReferenceId":
       return value;
     default:
-      return "createdAt";
+      return "lastUpdatedAt";
   }
 };
 
@@ -255,6 +255,34 @@ export async function stubDashboardResponses(page: Page): Promise<void> {
           total: rows.length,
         }),
       ),
+    });
+  });
+}
+
+export async function stubMixedTrendTotals(page: Page): Promise<void> {
+  const base = totals();
+  const trend = (current: number, previous: number) => ({
+    current,
+    previous,
+    difference: current - previous,
+    percentChange:
+      previous === 0 ? null : ((current - previous) / previous) * 100,
+  });
+
+  await page.route(/\/api\/totals$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        ...base,
+        yoyTrends: {
+          day: trend(4500, 4100),
+          week: trend(20000, 22000),
+          month: trend(98125, 98125),
+          quarter: trend(150000, 158500),
+          fiscalYear: trend(458500, 430000),
+        },
+      }),
     });
   });
 }

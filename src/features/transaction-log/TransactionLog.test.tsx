@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   NuqsTestingAdapter,
@@ -344,13 +344,15 @@ describe("TransactionLog", () => {
       vi.stubGlobal("fetch", fetchMock);
 
       renderLog("");
-      await screen.findByText("payment-portal");
+      await screen.findByText("Petition Filing Fee", { selector: "button" });
 
       await userEvent.click(screen.getByText("Failed (0)"));
 
       // The old row stays visible (avoids a blank flash) but is explicitly
       // marked stale rather than silently passed off as the "Failed" results.
-      expect(screen.getByText("payment-portal")).toBeInTheDocument();
+      expect(
+        screen.getByText("Petition Filing Fee", { selector: "button" }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("status")).toHaveTextContent("Updating");
 
       resolveSecond(response({ data: [], counts: { all: 0, success: 0, failed: 0, pending: 0 } }));
@@ -363,7 +365,9 @@ describe("TransactionLog", () => {
           "No transactions match your filters.",
         ),
       );
-      expect(screen.queryByText("payment-portal")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Petition Filing Fee", { selector: "button" }),
+      ).not.toBeInTheDocument();
     });
 
     it("disables Clear All until a filter is active, then resets on click", async () => {
@@ -448,6 +452,199 @@ const stubNarrowViewport = () => {
     dispatchEvent: vi.fn(() => false),
   }));
 };
+
+describe("TransactionLog column picker", () => {
+  const headers = () =>
+    screen.getAllByRole("columnheader").map((header) => header.textContent);
+
+  const openPicker = async () => {
+    await userEvent.click(
+      screen.getByRole("button", { name: "Select columns" }),
+    );
+    return screen.findByRole("dialog", { name: "Select columns" });
+  };
+
+  const toggleColumn = async (name: string) => {
+    const dialog = await openPicker();
+    await userEvent.click(within(dialog).getByRole("checkbox", { name }));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Select columns" }),
+      ).not.toBeInTheDocument(),
+    );
+  };
+
+  it("shows the four default columns", async () => {
+    mockFetch(response());
+    renderLog("");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        "Last updated",
+        "Fee",
+        "Amount",
+        "Payment status",
+      ]),
+    );
+  });
+
+  it("shows a column when it is checked and hides it when unchecked", async () => {
+    mockFetch(response());
+    renderLog("");
+
+    await toggleColumn("Created");
+    expect(headers()).toEqual([
+      "Created",
+      "Last updated",
+      "Fee",
+      "Amount",
+      "Payment status",
+    ]);
+
+    await toggleColumn("Amount");
+    expect(headers()).toEqual([
+      "Created",
+      "Last updated",
+      "Fee",
+      "Payment status",
+    ]);
+  });
+
+  it("restores the defaults on Reset to defaults", async () => {
+    mockFetch(response());
+    renderLog("");
+
+    await toggleColumn("Client");
+    const dialog = await openPicker();
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    );
+
+    expect(headers()).toEqual([
+      "Last updated",
+      "Fee",
+      "Amount",
+      "Payment status",
+    ]);
+  });
+
+  it("keeps the chosen columns when a filter changes", async () => {
+    const fetchMock = mockFetch(response());
+    renderLog("");
+
+    await toggleColumn("Client");
+    await userEvent.click(screen.getByText("Failed (0)"));
+
+    await waitFor(() =>
+      expect(fetchMock.mock.calls.at(-1)?.[0]).toContain("status=failed"),
+    );
+    expect(headers()).toContain("Client");
+  });
+
+  it("shows the column a filter searches by", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        "Last updated",
+        "Fee",
+        "Amount",
+        "Payment status",
+        "Transaction status",
+      ]),
+    );
+  });
+
+  it("shows the metadata column of a metadata search", async () => {
+    mockFetch(response());
+    renderLog(
+      "?feeType=NONATTORNEY_EXAM_REGISTRATION_FEE&metadataKey=email&metadataValue=a%40example.com",
+    );
+
+    await waitFor(() => expect(headers()).toContain("Email"));
+  });
+
+  it("goes back to the chosen columns once the filter is cleared", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        "Last updated",
+        "Fee",
+        "Amount",
+        "Payment status",
+      ]),
+    );
+  });
+
+  it("keeps a chosen column when a filter is cleared after unticking the rest", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Last updated");
+    await toggleColumn("Fee");
+    await toggleColumn("Amount");
+
+    const dialog = await openPicker();
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Payment status" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    await userEvent.keyboard("{Escape}");
+
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() => expect(headers()).toEqual(["Payment status"]));
+  });
+
+  it("no longer adds metadata columns when a fee is selected", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toHaveLength(4));
+    expect(headers()).not.toContain("Docket number");
+  });
+
+  it("still sorts by a hidden column carried in the url", async () => {
+    const fetchMock = mockFetch(response({ sort: "createdAt", order: "desc" }));
+    renderLog("?sort=createdAt&order=desc");
+
+    expect(
+      await screen.findByText("Sorted by Created, descending"),
+    ).toBeInTheDocument();
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("sort=createdAt");
+    expect(headers()).not.toContain("Created");
+  });
+
+  it("keeps the chosen columns through an error and retry", async () => {
+    const ok = {
+      ok: true,
+      status: 200,
+      json: async () => response(),
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(ok)
+      .mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
+      .mockResolvedValue(ok);
+    vi.stubGlobal("fetch", fetchMock);
+    renderLog("");
+
+    await toggleColumn("Client");
+    await userEvent.click(screen.getByText("Failed (0)"));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Try again" }),
+    );
+
+    await waitFor(() => expect(headers()).toContain("Client"));
+  });
+});
 
 describe("TransactionLog narrow layout", () => {
   // Returns a `navigate` helper (not RTL's own rerender) that changes the

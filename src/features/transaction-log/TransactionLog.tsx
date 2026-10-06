@@ -3,7 +3,6 @@
 import {
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -19,7 +18,14 @@ import ErrorPanel from "@/components/ui/ErrorPanel";
 import { IconButton } from "@/components/ui/icon-button";
 import { useToast } from "@/components/ui/toast-context";
 import { cn } from "@/lib/utils";
-import { COLUMN_LABEL, getColumns, metadataColumns } from "./columns";
+import ColumnPicker from "./ColumnPicker";
+import { COLUMN_LABEL } from "./columnLabels";
+import {
+  DEFAULT_COLUMN_VISIBILITY,
+  searchedColumnIds,
+  TRANSACTION_COLUMNS,
+  withSearchedColumns,
+} from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
 import TransactionTable from "./TransactionTable";
@@ -49,6 +55,9 @@ export default function TransactionLog() {
   // Below `lg` the filters live in a Drawer overlay instead of the static
   // sidebar, so they never compete with the table for vertical space.
   const [isNarrow, setIsNarrow] = useState(false);
+  const [columnVisibility, setColumnVisibility] = useState(
+    DEFAULT_COLUMN_VISIBILITY,
+  );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
 
@@ -129,12 +138,8 @@ export default function TransactionLog() {
     metadataDraftRef.current = undefined;
   }
 
-  // Metadata columns follow the selected fee; memoized so react-table keeps
-  // seeing a stable columns reference between renders.
-  const columns = useMemo(
-    () => [...getColumns(), ...metadataColumns(searchFilters.feeType)],
-    [searchFilters.feeType],
-  );
+  const searchedIds = searchedColumnIds(searchFilters);
+  const tableVisibility = withSearchedColumns(columnVisibility, searchedIds);
 
   const onFilterChange = (
     key: keyof TransactionSearchFilters,
@@ -205,10 +210,6 @@ export default function TransactionLog() {
     // TODO: download the transaction log as a report.
   };
 
-  const selectColumns = () => {
-    // TODO: let the user choose which columns are visible.
-  };
-
   return (
     <section className="flex w-full flex-1 flex-col lg:min-h-0">
       <p
@@ -270,10 +271,16 @@ export default function TransactionLog() {
                 label="Download report"
                 onClick={downloadReport}
               />
-              <IconButton
-                icon="columns"
-                label="Select columns"
-                onClick={selectColumns}
+              <ColumnPicker
+                visibility={columnVisibility}
+                searchedIds={searchedIds}
+                onToggle={(id, visible) =>
+                  setColumnVisibility((previous) => ({
+                    ...previous,
+                    [id]: visible,
+                  }))
+                }
+                onReset={() => setColumnVisibility(DEFAULT_COLUMN_VISIBILITY)}
               />
             </div>
           </div>
@@ -298,11 +305,12 @@ export default function TransactionLog() {
             <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
               <TransactionTable
                 rows={data?.data ?? []}
-                columns={columns}
+                columns={TRANSACTION_COLUMNS}
                 caption={`Transaction log, ${statusLabel}`}
                 headerTone="bg-status-neutral-subtle"
                 sorting={activeSorting}
                 onSortingChange={setParams}
+                columnVisibility={tableVisibility}
                 wrapperClassName="flex-1 overflow-auto rounded-br-[calc(var(--radius-md)-2px)] border lg:min-h-0"
                 isRefreshing={isPlaceholderData}
                 emptyMessage={

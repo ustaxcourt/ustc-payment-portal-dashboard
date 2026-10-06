@@ -20,10 +20,13 @@ describe("periodSubtitle", () => {
     );
   });
 
-  it("shows opened-to-now for the week", () => {
-    expect(periodSubtitle(period("2026-02-15T05:00:00.000Z"), "week")).toBe(
-      "Feb 15, 2026 – Feb 18, 2026",
-    );
+  it.each([
+    ["within a month", "2026-02-15T05:00:00.000Z", "2026-02-18T20:00:00.000Z", "Feb 15–18, 2026"],
+    ["across months", "2026-08-30T04:00:00.000Z", "2026-09-03T20:00:00.000Z", "Aug 30–Sep 3, 2026"],
+    ["across years", "2025-12-28T05:00:00.000Z", "2026-01-01T20:00:00.000Z", "Dec 28, 2025–Jan 1, 2026"],
+    ["on its first day", "2026-02-15T05:00:00.000Z", "2026-02-15T20:00:00.000Z", "Feb 15, 2026"],
+  ])("shows opened-to-now for the week %s", (_, from, to, expected) => {
+    expect(periodSubtitle(period(from, to), "week")).toBe(expected);
   });
 
   it("names the month", () => {

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { showColumns } from "./transactionColumns";
 
 // Stubbed rather than seeded: a real cancelled row needs database access the dashboard has
 // no business holding — it reaches the portal only over signed HTTP.
@@ -47,6 +48,7 @@ test("a cancelled transaction reads Cancelled under the Failed tab", async ({
   page,
 }) => {
   await page.goto("/?status=failed");
+  await showColumns(page, "Transaction status", "Reference ID");
 
   await expect(
     page.getByRole("gridcell", { name: "Copy Cancelled", exact: true }),
