@@ -628,6 +628,27 @@ describe("TransactionLog column picker", () => {
       within(dialog).getByRole("checkbox", { name: "Failure reason" }),
     ).not.toBeChecked();
   });
+
+  it("hides Transaction Status and Failure Reason when payment status is pending", async () => {
+    mockFetch(response());
+
+    renderLog("?status=pending");
+
+    await waitFor(() => {
+      expect(headers()).not.toContain("Transaction status");
+      expect(headers()).not.toContain("Failure reason");
+    });
+
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Transaction status" }),
+    ).not.toBeChecked();
+
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Failure reason" }),
+    ).not.toBeChecked();
+  });
 });
 
 describe("TransactionLog narrow layout", () => {
