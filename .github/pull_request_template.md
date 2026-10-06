@@ -76,11 +76,11 @@
 ## Out of Scope / Follow-up Tickets
 <!--
   Anything intentionally deferred or triggered in another repo.
-  Format: "[ ] - Short description — PAY-### (This looks wrong in VS Code markdown, but will format correctly to a checkbox in GitHub PR Summary)"
+  Format: "- [ ] Short description — PAY-###"
   Delete this section if there is nothing to note.
 
   IMPORTANT: Follow-up tickets need to exist in JIRA before they're listed here.
   Confirm with the team if a follow-up ticket should exist.
 -->
 
-- Short description - **PAY-###**
+- [ ] Short description — **PAY-###**
