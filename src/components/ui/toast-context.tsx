@@ -27,7 +27,7 @@ const TOAST_DISPLAY_DURATION = 3000; // 3 seconds
 const TOAST_ANIMATION_DURATION = 300; // 0.3 seconds
 
 const baseClasses =
-  "rounded-md border bg-green-100 px-4 py-3 text-black shadow-2xl";
+  "rounded-md border px-4 py-3 shadow-2xl";
 
 export function ToastProvider({
   children,
@@ -89,10 +89,15 @@ export function ToastProvider({
         className="fixed top-24 right-4 z-[99999] flex flex-col gap-2"
       >
         {toasts.map((toast) => {
+          const variantClasses =
+            toast.variant === "error"
+              ? "border-red-300 bg-red-100 text-red-900"
+              : "border-green-300 bg-green-100 text-green-900";
+
           return (
             <div
               key={toast.id}
-              className={`${baseClasses} ${
+              className={`${baseClasses} ${variantClasses} ${
                 toast.isClosing
                   ? "animate-out fade-out slide-out-to-bottom-2 duration-300"
                   : "animate-in fade-in slide-in-from-bottom-2 duration-300"
