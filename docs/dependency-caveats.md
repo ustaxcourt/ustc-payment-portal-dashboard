@@ -41,28 +41,6 @@ enough context that the next person doesn't have to re-derive the decision.
   of all table-related components, sorting behavior, and tests. Pin the package
   exactly to prevent automated dependency-update workflows from introducing v9.
 
-### hashicorp/aws provider 6.56.0 → 6.67.0 — partially resolved (2026-07-29, updated 2026-10-06)
-
-- **Current:** `6.67.0` (pinned exactly) in `terraform/bootstrap` and
-  `terraform/environments/{dev,stg}`. `terraform/environments/prod` is still pinned
-  to `6.56.0` pending a manual bump. **Available latest:** `6.67.0`.
-- **Original reason:** 6.57.0 failed reading the GitHub OIDC provider. Every
-  `terraform plan` errored on the `aws_iam_openid_connect_provider` data source with
-  `ListOpenIDConnectProviders ... StatusCode: 302, api error UnknownError`. This was a
-  provider regression, tracked upstream as
-  [hashicorp/terraform-provider-aws#49170](https://github.com/hashicorp/terraform-provider-aws/issues/49170)
-  (also affected IAM `GetPolicy` and SSM `GetParameter`).
-- **Resolution:** The upstream issue is closed with milestone v6.57.1. On 2026-10-06
-  a `terraform plan` in `environments/dev` on 6.67.0 read the data source cleanly and
-  reported no changes, confirming the regression is gone. `bootstrap` was bumped
-  alongside it, and `stg` was bumped afterwards (its plan read the data source
-  cleanly; the pending changes there are from the dashboard infrastructure not yet
-  being fully applied to stg).
-- **Remaining:** Bump `prod` to `6.67.0` (edit `versions.tf`, run
-  `terraform init -upgrade`, commit the lock file) and confirm the data source
-  reads in `terraform plan`. Delete this entry once that is done. Keep the exact pin
-  rather than `~> 6.0` so `init -upgrade` cannot move versions silently.
-
 ### next 15.5.26 → 16.3.8 — deferred (2026-07-27, re-confirmed 2026-10-02)
 
 - **Current:** `15.5.26` (pinned exactly, not a range). **Available latest:** `16.3.8`.
