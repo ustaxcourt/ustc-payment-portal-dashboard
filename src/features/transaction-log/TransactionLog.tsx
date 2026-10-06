@@ -215,7 +215,6 @@ export default function TransactionLog() {
       <p
         aria-live="polite"
         className="sr-only"
-        suppressHydrationWarning
       >
         {data?.sort && COLUMN_LABEL[data.sort]
           ? `Sorted by ${COLUMN_LABEL[data.sort]}, ${
