@@ -142,11 +142,8 @@ describe("ColumnPicker", () => {
     ).toBeDisabled();
   });
 
-  it("resets once the visibility differs from the defaults", async () => {
-    const { onReset } = renderPicker({
-      visibility: { ...DEFAULT_COLUMN_VISIBILITY, createdAt: true },
-      isDefault: false,
-    });
+  it("enables Reset to defaults when not at the defaults", async () => {
+    const { onReset } = renderPicker({ isDefault: false });
     const dialog = await openPicker();
 
     await userEvent.click(

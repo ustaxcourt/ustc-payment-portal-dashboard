@@ -771,6 +771,32 @@ describe("TransactionLog column picker", () => {
     expect(headers()).toEqual([...DEFAULT_HEADERS, "Docket number"]);
   });
 
+  it("treats a fee carried in the url as already showing the defaults", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    ).toBeDisabled();
+  });
+
+  it("treats the new fee's columns as the defaults after the fee changes", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await selectFee("Non-Attorney Exam Registration Fee");
+    await waitFor(() => expect(headers()).toContain("Email"));
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    ).toBeDisabled();
+  });
+
   it("lets the admin hide the column a filter searches by", async () => {
     mockFetch(response());
     renderLog("?transactionStatus=cancelled");
@@ -793,6 +819,38 @@ describe("TransactionLog column picker", () => {
       expect(fetchMock.mock.calls.at(-1)?.[0]).toContain("status=pending"),
     );
     expect(headers()).toEqual(["Last updated", "Fee", "Amount"]);
+  });
+
+  it("keeps a hidden Fee column hidden while the fee's metadata columns swap", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await toggleColumn("Fee");
+    await selectFee("Non-Attorney Exam Registration Fee");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        "Last updated",
+        "Amount",
+        "Payment status",
+        "Email",
+        "Full name",
+        "Access code",
+      ]),
+    );
+    const dialog = await openPicker();
+    expect(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    ).toBeEnabled();
+    await userEvent.click(within(dialog).getByRole("checkbox", { name: "Fee" }));
+
+    expect(headers()).toEqual([
+      ...DEFAULT_HEADERS,
+      "Email",
+      "Full name",
+      "Access code",
+    ]);
   });
 
   it("shows a hidden searched column again once its filter is reapplied", async () => {

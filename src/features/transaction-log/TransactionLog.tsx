@@ -19,8 +19,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { useToast } from "@/components/ui/toast-context";
 import { cn } from "@/lib/utils";
 import ColumnPicker from "./ColumnPicker";
-import { COLUMN_LABEL } from "./columnLabels";
-import type { TransactionColumnId } from "./columnLabels";
+import { COLUMN_LABEL, type TransactionColumnId } from "./columnLabels";
 import {
   type ColumnVisibility,
   defaultColumnVisibility,
