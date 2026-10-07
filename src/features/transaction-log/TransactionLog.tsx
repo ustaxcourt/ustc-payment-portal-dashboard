@@ -262,9 +262,9 @@ export default function TransactionLog() {
                 onClick={downloadReport}
               />
               <ColumnPicker
-                visibility={columns.chosen}
+                visibility={columns.visibility}
+                lockedId={columns.lockedId}
                 isDefault={columns.isDefault}
-                searchedIds={columns.shownSearchedIds}
                 onToggle={columns.toggle}
                 onReset={columns.reset}
               />
@@ -296,7 +296,7 @@ export default function TransactionLog() {
                 headerTone="bg-status-neutral-subtle"
                 sorting={activeSorting}
                 onSortingChange={setParams}
-                columnVisibility={columns.tableVisibility}
+                columnVisibility={columns.visibility}
                 wrapperClassName="flex-1 overflow-auto rounded-br-[calc(var(--radius-md)-2px)] border lg:min-h-0"
                 isRefreshing={isPlaceholderData}
                 emptyMessage={

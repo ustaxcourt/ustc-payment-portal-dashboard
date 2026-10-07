@@ -16,7 +16,6 @@ import {
   COLUMN_IDS,
   type ColumnVisibility,
   isMetadataColumnId,
-  withSearchedColumns,
 } from "./columns";
 
 const COLUMN_GROUPS: { legend: string; ids: TransactionColumnId[] }[] = [
@@ -31,22 +30,18 @@ const LAST_COLUMN_HINT = "At least one column must stay visible";
 
 export default function ColumnPicker({
   visibility,
+  lockedId,
   isDefault,
-  searchedIds,
   onToggle,
   onReset,
 }: {
   visibility: ColumnVisibility;
+  lockedId: TransactionColumnId | null;
   isDefault: boolean;
-  searchedIds: readonly TransactionColumnId[];
   onToggle: (id: TransactionColumnId, visible: boolean) => void;
   onReset: () => void;
 }) {
   const lastColumnHintId = useId();
-  const shownVisibility = withSearchedColumns(visibility, searchedIds);
-  const chosenCount = COLUMN_IDS.filter((id) => visibility[id]).length;
-  const isLastChosen = (id: TransactionColumnId) =>
-    visibility[id] && chosenCount === 1;
 
   return (
     <Popover>
@@ -79,7 +74,7 @@ export default function ColumnPicker({
               {group.legend}
             </legend>
             {group.ids.map((id) => {
-              const isLocked = isLastChosen(id);
+              const isLocked = id === lockedId;
               return (
                 <Label
                   key={id}
@@ -87,7 +82,7 @@ export default function ColumnPicker({
                   className="cursor-pointer font-normal leading-normal has-data-disabled:cursor-not-allowed has-data-disabled:opacity-60"
                 >
                   <Checkbox
-                    checked={shownVisibility[id]}
+                    checked={visibility[id]}
                     disabled={isLocked}
                     aria-describedby={isLocked ? lastColumnHintId : undefined}
                     onCheckedChange={(checked) => onToggle(id, checked)}

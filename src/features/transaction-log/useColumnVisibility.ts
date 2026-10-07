@@ -3,6 +3,7 @@
 import { useReducer } from "react";
 import type { TransactionColumnId } from "./columnLabels";
 import {
+  COLUMN_IDS,
   type ColumnVisibility,
   defaultColumnVisibility,
   isSameVisibility,
@@ -124,11 +125,11 @@ export const useColumnVisibility = (filters: TransactionSearchFilters) => {
   const shownSearchedIds = state.searchedIds.filter(
     (id) => !(id in state.hiddenSearched),
   );
+  const chosenIds = COLUMN_IDS.filter((id) => state.chosen[id]);
 
   return {
-    chosen: state.chosen,
-    shownSearchedIds,
-    tableVisibility: withSearchedColumns(state.chosen, shownSearchedIds),
+    visibility: withSearchedColumns(state.chosen, shownSearchedIds),
+    lockedId: chosenIds.length === 1 ? chosenIds[0] : null,
     isDefault:
       Object.keys(state.hiddenSearched).length === 0 &&
       isSameVisibility(state.chosen, defaultColumnVisibility(state.feeType)),
