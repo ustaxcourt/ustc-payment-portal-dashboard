@@ -1,34 +1,28 @@
 import { expect, test } from "@playwright/test";
 
-const TOTAL = /^Total: \$[\d,]+\.\d{2}$/;
+const AMOUNT = /\$[\d,]+\.\d{2}/;
 
-test.describe("payment breakdown pane", () => {
-  test("the breakdown shows a row per fee and a grand total", async ({
+test.describe("payment breakdown cards", () => {
+  test("the breakdown leads with a total card, then a card per fee", async ({
     page,
   }) => {
     await page.goto("/?range=last7");
 
     const pane = page.getByTestId("payment-breakdown-pane");
-    await expect(
-      pane.getByRole("heading", { name: "Payment Breakdown" }),
-    ).toBeVisible();
+    const cards = pane.getByRole("listitem");
+
+    await expect(cards.first()).toContainText("Successful Payments");
+    await expect(cards.first()).toContainText(AMOUNT);
+    await expect(cards.first()).toContainText("Total");
 
     await expect(
-      pane.getByRole("columnheader", { name: "Fee", exact: true }),
-    ).toBeVisible();
-    await expect(pane.getByRole("columnheader", { name: "Qty" })).toBeVisible();
+      pane.getByRole("listitem").filter({ hasText: "Petition Filing Fee" }),
+    ).toContainText(/\d+ transactions?/);
     await expect(
-      pane.getByRole("columnheader", { name: "Subtotal" }),
+      pane
+        .getByRole("listitem")
+        .filter({ hasText: "Non-Attorney Exam Registration Fee" }),
     ).toBeVisible();
-
-    await expect(
-      pane.getByRole("cell", { name: "Petition Filing Fee" }),
-    ).toBeVisible();
-    await expect(
-      pane.getByRole("cell", { name: "Non-Attorney Exam Registration Fee" }),
-    ).toBeVisible();
-
-    await expect(page.getByTestId("payment-breakdown-total")).toHaveText(TOTAL);
   });
 
   test("the breakdown holds steady while the log is filtered by status", async ({
@@ -36,8 +30,8 @@ test.describe("payment breakdown pane", () => {
   }) => {
     await page.goto("/?range=last7");
 
-    const total = page.getByTestId("payment-breakdown-total");
-    await expect(total).toHaveText(TOTAL);
+    const total = page.getByTestId("payment-breakdown-card-total");
+    await expect(total).toContainText(AMOUNT);
     const before = await total.textContent();
 
     const failedRadio = page.getByRole("radio", { name: /Failed/ });
