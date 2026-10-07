@@ -6,7 +6,12 @@ This is the USTC Payment Portal Dashboard. A Next.js App using TanStack Table to
 
 ## Project Information
 
-Stack: Next.js 15 (App Router) + React 19 + TypeScript, Tailwind CSS v4 with shadcn-style components (Base UI), TanStack Table and React Query, `nuqs` for URL state, `next-auth` with Microsoft Entra ID, and `exceljs` for export. Biome handles linting, Vitest and Testing Library handle unit tests, and Playwright with axe handles e2e and accessibility. Node is pinned by `.nvmrc` (see `engines` in `package.json`). Stack rationale is in [ADR 0001](docs/architecture/decisions/0001-dashboard-technology-stack.md).
+Stack: Next.js 15 (App Router) + React 19 + TypeScript, Tailwind CSS v4 with shadcn-style components (Base UI), TanStack Table and React Query, `nuqs` for URL state, `next-auth` with Microsoft Entra ID, and `exceljs` for export. Biome handles linting, Vitest and Testing Library handle unit tests, and Playwright with axe handles e2e and accessibility. Node is pinned by `.nvmrc` (see `engines` in `package.json`).
+
+Core constraints:
+
+- The transaction table's timeframe, filtering, sorting, pagination and export must work together and stay coherent on every interaction. Treat any change to the transaction log as a risk to this property.
+- Unauthenticated users must not be able to view any dashboard page. Access may later be restricted to a subset of the Court's users, not the whole tenant.
 
 ### Repo Structure
 
