@@ -1,9 +1,9 @@
-import type { VariantProps } from "class-variance-authority"
-import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react"
-import type * as React from "react"
-import { useId } from "react"
+import type { VariantProps } from "class-variance-authority";
+import { Columns3, Download, Filter, Link2, type LucideIcon, X } from "lucide-react";
+import type * as React from "react";
+import { useId } from "react";
 
-import { Button, type buttonVariants } from "@/components/ui/button"
+import { Button, type buttonVariants } from "@/components/ui/button";
 
 const ICONS = {
   link: Link2,
@@ -11,36 +11,39 @@ const ICONS = {
   columns: Columns3,
   filter: Filter,
   close: X,
-} satisfies Record<string, LucideIcon>
+} satisfies Record<string, LucideIcon>;
 
-export type IconButtonIcon = keyof typeof ICONS
+export type IconButtonIcon = keyof typeof ICONS;
 
-function IconButton({
+type IconButtonProps = Omit<
+  React.ComponentProps<typeof Button>,
+  "children" | "aria-label" | "size" | "type" | "variant"
+> & {
+  icon: IconButtonIcon;
+  label: string;
+  variant?: VariantProps<typeof buttonVariants>["variant"];
+  /** Extra screen-reader-only context announced alongside `label`. */
+  description?: string;
+};
+
+export function IconButton({
   icon,
   label,
   variant = "outline",
   description,
   "aria-describedby": ariaDescribedBy,
   ...props
-}: Omit<
-  React.ComponentProps<typeof Button>,
-  "children" | "aria-label" | "size" | "type" | "variant"
-> & {
-  icon: IconButtonIcon
-  label: string
-  variant?: VariantProps<typeof buttonVariants>["variant"]
-  /** Extra screen-reader-only context (e.g. a visual-only badge's state) announced alongside `label`, via `aria-describedby`. */
-  description?: string
-}) {
-  const Icon = ICONS[icon]
-  const descriptionId = useId()
+}: IconButtonProps) {
+  const Icon = ICONS[icon];
+  const descriptionId = useId();
+
   return (
     <>
       <Button
         {...props}
         type="button"
-        variant={variant}
         size="icon-sm"
+        variant={variant}
         aria-label={label}
         aria-describedby={
           [ariaDescribedBy, description ? descriptionId : undefined]
@@ -50,13 +53,12 @@ function IconButton({
       >
         <Icon />
       </Button>
+
       {description ? (
         <span id={descriptionId} className="sr-only">
           {description}
         </span>
       ) : null}
     </>
-  )
+  );
 }
-
-export { IconButton }
