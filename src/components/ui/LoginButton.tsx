@@ -3,13 +3,17 @@
 import { signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
-export default function LoginButton() {
+export default function LoginButton({
+  callbackUrl = "/",
+}: {
+  callbackUrl?: string;
+}) {
   const { status } = useSession();
 
   return (
     <Button
       disabled={status === "loading"}
-      onClick={() => signIn("azure-ad", { callbackUrl: "/" })}
+      onClick={() => signIn("azure-ad", { callbackUrl })}
     >
       {status === "loading" ? "Checking session..." : "Login"}
     </Button>

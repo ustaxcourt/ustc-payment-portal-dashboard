@@ -1,15 +1,102 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type {
+  ColumnDef,
+  HeaderContext,
+  RowData,
+} from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
-import { TAB_LABEL, TAB_TONE } from "./statusStyles";
-import type { TransactionLogEntry, TransactionTab } from "./types";
+import {
+  COLUMN_LABEL,
+  metadataColumnId,
+  type TransactionColumnId,
+} from "./columnLabels";
+import SortableHeader from "./SortableHeader";
+import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
+import {
+  METADATA_KEYS,
+  type MetadataKey,
+  type TransactionLogEntry,
+  type TransactionSearchFilters,
+  type TransactionSortField,
+} from "./types";
 
-const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
+export type ColumnVisibility = Record<TransactionColumnId, boolean>;
+
+export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
+  createdAt: false,
+  lastUpdatedAt: true,
+  feeName: true,
+  transactionAmount: true,
+  paymentMethod: false,
+  paymentStatus: true,
+  returnDetail: false,
+  transactionStatus: false,
+  clientName: false,
+  transactionReferenceId: false,
+  paygovTrackingId: false,
+  agencyTrackingId: false,
+  "metadata.docketNumber": false,
+  "metadata.email": false,
+  "metadata.fullName": false,
+  "metadata.accessCode": false,
+};
+
+export const isMetadataColumnId = (id: TransactionColumnId) =>
+  id.startsWith("metadata.");
+
+export const searchedColumnIds = (
+  filters: TransactionSearchFilters,
+): TransactionColumnId[] => {
+  const ids: TransactionColumnId[] = [];
+  if (filters.feeType) ids.push("feeName");
+  if (filters.payType) ids.push("paymentMethod");
+  if (filters.paymentStatus) ids.push("paymentStatus");
+  if (filters.transactionStatus) ids.push("transactionStatus");
+  if (filters.metadataKey && filters.metadataValue) {
+    ids.push(metadataColumnId(filters.metadataKey));
+  }
+  return ids;
+};
+
+export const withSearchedColumns = (
+  visibility: ColumnVisibility,
+  searchedIds: readonly TransactionColumnId[],
+): ColumnVisibility => {
+  const hiddenIds = searchedIds.filter((id) => !visibility[id]);
+  if (hiddenIds.length === 0) return visibility;
+  const next = { ...visibility };
+  for (const id of hiddenIds) next[id] = true;
+  return next;
+};
+
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    copyText?: (row: TData) => string;
+    headerLabel?: string;
+  }
+}
+
+const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
+  <SortableHeader
+    label={COLUMN_LABEL[column.id as TransactionSortField]}
+    sorted={column.getIsSorted()}
+    onToggle={() => column.toggleSorting()}
+  />
+);
+
+type TransactionColumnDef = ColumnDef<TransactionLogEntry> & {
+  id: TransactionColumnId;
+};
+
+const SORTABLE_COLUMNS: TransactionColumnDef[] = [
   {
+    id: "createdAt",
     accessorKey: "createdAt",
-    header: "Created",
+    header: sortable,
+    sortDescFirst: true,
+    size: 115,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.createdAt);
       return (
@@ -19,10 +106,20 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
         </div>
       );
     },
+    meta: {
+      copyText: (row) => {
+        const stamp = formatCourtStamp(row.createdAt);
+        return `${stamp.date} ${stamp.time}`;
+      },
+      headerLabel: COLUMN_LABEL.createdAt,
+    },
   },
   {
+    id: "lastUpdatedAt",
     accessorKey: "lastUpdatedAt",
-    header: "Last updated",
+    header: sortable,
+    sortDescFirst: true,
+    size: 115,
     cell: ({ row }) => {
       const stamp = formatCourtStamp(row.original.lastUpdatedAt);
       return (
@@ -32,66 +129,148 @@ const BASE_COLUMNS: ColumnDef<TransactionLogEntry>[] = [
         </div>
       );
     },
+    meta: {
+      copyText: (row) => {
+        const stamp = formatCourtStamp(row.lastUpdatedAt);
+        return `${stamp.date} ${stamp.time}`;
+      },
+      headerLabel: COLUMN_LABEL.lastUpdatedAt,
+    },
   },
   {
+    id: "feeName",
     accessorKey: "feeName",
-    header: "Fee type",
+    header: sortable,
+    size: 130,
+    meta: { copyText: (row) => row.feeName, headerLabel: COLUMN_LABEL.feeName },
   },
   {
+    id: "transactionAmount",
     accessorKey: "transactionAmount",
-    header: "Amount",
+    header: sortable,
+    size: 80,
     cell: ({ row }) => (
       <span className="tabular-nums">
         {formatCurrency(row.original.transactionAmount)}
       </span>
     ),
-  },
-  {
-    accessorKey: "paymentMethod",
-    header: "Payment method",
-    cell: ({ row }) => formatLabel(row.original.paymentMethod),
-  },
-  {
-    accessorKey: "paymentStatus",
-    header: "Payment status",
-    cell: ({ row }) => {
-      const status = row.original.paymentStatus;
-      return (
-        <Badge variant="secondary" className={TAB_TONE[status]}>
-          {TAB_LABEL[status]}
-        </Badge>
-      );
+    meta: {
+      copyText: (row) => formatCurrency(row.transactionAmount),
+      headerLabel: COLUMN_LABEL.transactionAmount,
     },
   },
   {
+    id: "paymentMethod",
+    accessorKey: "paymentMethod",
+    header: sortable,
+    size: 100,
+    cell: ({ row }) => formatLabel(row.original.paymentMethod),
+    meta: {
+      copyText: (row) => formatLabel(row.paymentMethod),
+      headerLabel: COLUMN_LABEL.paymentMethod,
+    },
+  },
+  {
+    id: "paymentStatus",
+    accessorKey: "paymentStatus",
+    header: sortable,
+    size: 85,
+    cell: ({ row }) => {
+      const status = row.original.paymentStatus;
+      return (
+        <Badge variant="secondary" className={PAYMENT_STATUS_TONE[status]}>
+          {PAYMENT_STATUS_LABEL[status]}
+        </Badge>
+      );
+    },
+    meta: {
+      copyText: (row) => PAYMENT_STATUS_LABEL[row.paymentStatus],
+      headerLabel: COLUMN_LABEL.paymentStatus,
+    },
+  },
+  {
+    id: "returnDetail",
+    accessorKey: "returnDetail",
+    header: sortable,
+    size: 150,
+    cell: ({ row }) => row.original.returnDetail ?? "—",
+    meta: {
+      copyText: (row) => row.returnDetail ?? "—",
+      headerLabel: COLUMN_LABEL.returnDetail,
+    },
+  },
+  {
+    id: "transactionStatus",
     accessorKey: "transactionStatus",
-    header: "Transaction status",
+    header: sortable,
+    size: 100,
     cell: ({ row }) => formatLabel(row.original.transactionStatus),
+    meta: {
+      copyText: (row) => formatLabel(row.transactionStatus),
+      headerLabel: COLUMN_LABEL.transactionStatus,
+    },
   },
   {
+    id: "clientName",
     accessorKey: "clientName",
-    header: "Client",
+    header: sortable,
+    size: 120,
+    meta: {
+      copyText: (row) => row.clientName,
+      headerLabel: COLUMN_LABEL.clientName,
+    },
   },
   {
+    id: "transactionReferenceId",
     accessorKey: "transactionReferenceId",
-    header: "Reference ID",
+    header: sortable,
+    size: 130,
     cell: ({ row }) => (
-      <span className="font-mono text-xs">
-        {row.original.transactionReferenceId}
-      </span>
+      <span className="font-mono">{row.original.transactionReferenceId}</span>
     ),
+    meta: {
+      copyText: (row) => row.transactionReferenceId,
+      headerLabel: COLUMN_LABEL.transactionReferenceId,
+    },
   },
 ];
 
-const FAILURE_REASON: ColumnDef<TransactionLogEntry> = {
-  accessorKey: "returnDetail",
-  header: "Failure reason",
-  cell: ({ row }) => row.original.returnDetail ?? "—",
-};
+const trackingIdColumn = (
+  field: "paygovTrackingId" | "agencyTrackingId",
+): TransactionColumnDef => ({
+  id: field,
+  accessorKey: field,
+  header: COLUMN_LABEL[field],
+  enableSorting: false,
+  size: 130,
+  cell: ({ row }) => (
+    <span className="font-mono">{row.original[field] ?? "—"}</span>
+  ),
+  meta: {
+    copyText: (row) => row[field] ?? "—",
+    headerLabel: COLUMN_LABEL[field],
+  },
+});
 
-export const getColumns = (
-  tab: TransactionTab,
-): ColumnDef<TransactionLogEntry>[] =>
-  tab === "failed" || tab === "all"
-    ? [...BASE_COLUMNS.slice(0, 6), FAILURE_REASON, ...BASE_COLUMNS.slice(6)]
-    : BASE_COLUMNS;
+const metadataColumn = (key: MetadataKey): TransactionColumnDef => ({
+  id: metadataColumnId(key),
+  header: COLUMN_LABEL[metadataColumnId(key)],
+  enableSorting: false,
+  size: 110,
+  meta: {
+    copyText: (row) => row.metadata?.[key] ?? "—",
+    headerLabel: COLUMN_LABEL[metadataColumnId(key)],
+  },
+  cell: ({ row }) => row.original.metadata?.[key] ?? "—",
+});
+
+export const TRANSACTION_COLUMNS: TransactionColumnDef[] = [
+  ...SORTABLE_COLUMNS,
+  trackingIdColumn("paygovTrackingId"),
+  trackingIdColumn("agencyTrackingId"),
+  ...METADATA_KEYS.map(metadataColumn),
+];
+
+export const COLUMN_IDS: TransactionColumnId[] = TRANSACTION_COLUMNS.map(
+  (column) => column.id,
+);

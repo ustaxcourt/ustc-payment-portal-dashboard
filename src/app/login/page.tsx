@@ -1,17 +1,24 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import LoginButton from "@/components/ui/LoginButton";
-import { getSessionAuthOptions } from "@/lib/auth";
+import { getSessionAuthOptions, hasValidDashboardSession } from "@/lib/auth";
+import { safeCallbackUrl } from "@/lib/callbackUrl";
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string | string[] }>;
+}) {
+  const { callbackUrl } = await searchParams;
+  const destination = safeCallbackUrl(callbackUrl);
   const session = await getServerSession(getSessionAuthOptions());
 
-  if (session) {
-    redirect("/");
+  if (hasValidDashboardSession(session)) {
+    redirect(destination);
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center p-8">
+     <main id="main-content" tabIndex={-1} className="flex flex-1 items-center justify-center p-8">
       <div className="max-w-md text-center">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           Sign in to the dashboard
@@ -21,7 +28,7 @@ export default async function LoginPage() {
           Services &amp; Finance Dashboard.
         </p>
         <div className="mt-8">
-          <LoginButton />
+          <LoginButton callbackUrl={destination} />
         </div>
       </div>
     </main>

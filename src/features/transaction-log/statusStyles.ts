@@ -1,15 +1,20 @@
-import type { TransactionTab } from "./types";
+import type { PaymentStatus } from "./types";
 
-export const TAB_LABEL: Record<TransactionTab, string> = {
-  all: "All",
+export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
   success: "Successful",
   failed: "Failed",
   pending: "Pending",
 };
 
-export const TAB_TONE: Record<TransactionTab, string> = {
-  all: "bg-slate-200 text-slate-900",
-  success: "bg-green-200 text-green-900",
-  failed: "bg-red-200 text-red-900",
-  pending: "bg-amber-200 text-amber-900",
+export const PAYMENT_STATUS_TONE: Record<PaymentStatus, string> = {
+  success: "bg-status-success text-status-success-foreground",
+  failed: "bg-status-failed text-status-failed-foreground",
+  pending: "bg-status-pending text-status-pending-foreground",
+};
+
+/** Text-only variant for the Payment Status filter labels (radio group). */
+export const PAYMENT_STATUS_TEXT_TONE: Record<PaymentStatus, string> = {
+  success: "text-status-success-foreground",
+  failed: "text-status-failed-foreground",
+  pending: "text-status-pending-foreground",
 };

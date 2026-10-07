@@ -54,3 +54,8 @@ override.tf.json
 
 # written during the Amplify build to carry the resolved NEXTAUTH_URL
 .nextauth-url
+
+# Playwright
+/e2e/.auth
+/e2e/report
+/e2e/results
