@@ -122,6 +122,39 @@ test("with every column shown the log scrolls sideways instead of squeezing", as
   expect(overflows).toBe(true);
 });
 
+test("picking a fee shows its metadata columns and Any hides them again", async ({
+  page,
+}) => {
+  const feeMetadataColumns = ["Email", "Full name", "Access code"];
+  const selectFee = async (name: string) => {
+    await page.getByLabel("Fee Type").click();
+    await page.getByRole("option", { name, exact: true }).click();
+  };
+
+  await selectFee("Non-Attorney Exam Registration Fee");
+
+  await expect
+    .poll(() => transactionLogHeaders(page))
+    .toEqual([...DEFAULT_COLUMNS, ...feeMetadataColumns]);
+  await openColumnPicker(page);
+  for (const name of feeMetadataColumns) {
+    await expect(
+      columnPicker(page).getByRole("checkbox", { name, exact: true }),
+    ).toBeChecked();
+  }
+  await closeColumnPicker(page);
+
+  await selectFee("Any");
+
+  await expect.poll(() => transactionLogHeaders(page)).toEqual(DEFAULT_COLUMNS);
+  await openColumnPicker(page);
+  for (const name of feeMetadataColumns) {
+    await expect(
+      columnPicker(page).getByRole("checkbox", { name, exact: true }),
+    ).not.toBeChecked();
+  }
+});
+
 test("a filter shows the column it searches by and the admin can still hide it", async ({
   page,
 }) => {

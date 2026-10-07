@@ -744,6 +744,45 @@ describe("TransactionLog column picker", () => {
     expect(headers()).toEqual([...DEFAULT_HEADERS, "Transaction status"]);
   });
 
+  it("keeps a default column after its searched column is hidden and re-checked", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await toggleColumn("Fee");
+    expect(headers()).not.toContain("Fee");
+    await toggleColumn("Fee");
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() => expect(headers()).toEqual(DEFAULT_HEADERS));
+  });
+
+  it("drops a re-checked searched column that is hidden by default once its filter is cleared", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Transaction status");
+    await toggleColumn("Transaction status");
+    expect(headers()).toContain("Transaction status");
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() => expect(headers()).toEqual(DEFAULT_HEADERS));
+  });
+
+  it("keeps a hidden default column hidden once its filter is cleared", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await toggleColumn("Fee");
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() =>
+      expect(headers()).toEqual(["Last updated", "Amount", "Payment status"]),
+    );
+  });
+
   it("still sorts by a hidden column carried in the url", async () => {
     const fetchMock = mockFetch(response({ sort: "createdAt", order: "desc" }));
     renderLog("?sort=createdAt&order=desc");
