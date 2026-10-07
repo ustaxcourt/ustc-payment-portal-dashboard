@@ -4,6 +4,36 @@
 
 This is the USTC Payment Portal Dashboard. A Next.js App using TanStack Table to deliver auditable transaction records from USTC-Payment-Portal to the US Tax Court's Finance Team.
 
+## Project Information
+
+Stack: Next.js 15 (App Router) + React 19 + TypeScript, Tailwind CSS v4 with shadcn-style components (Base UI), TanStack Table and React Query, `nuqs` for URL state, `next-auth` with Microsoft Entra ID, and `exceljs` for export. Biome handles linting, Vitest and Testing Library handle unit tests, and Playwright with axe handles e2e and accessibility. Node is pinned by `.nvmrc` (see `engines` in `package.json`). Stack rationale is in [ADR 0001](docs/architecture/decisions/0001-dashboard-technology-stack.md).
+
+### Repo Structure
+
+- [`src/app/`](src/app/): App Router routes, layout and global styles. Route handlers live in `api/` (`auth/[...nextauth]`, `totals`, `transactions`) and proxy the payment-portal backend.
+- [`src/features/`](src/features/): one folder per dashboard feature, with components, hooks, pure logic and tests colocated.
+  - `transaction-log/`: the table, filters, timeframe controls, column picker and Excel export (including the export web worker).
+  - `revenue-totals/`: totals shown for the selected timeframe.
+  - `payment-breakdown/`: per-payment breakdown pane.
+- [`src/components/ui/`](src/components/ui/): shared, feature-agnostic UI primitives.
+- [`src/lib/`](src/lib/): shared non-UI code: auth config, the payment-portal API client (SigV4-signed), session helpers, formatting and the court calendar.
+- [`src/providers/`](src/providers/): client-side providers and the idle-logout hook.
+- [`src/middleware.ts`](src/middleware.ts): auth gate. Its `matcher` defines which routes are private, and API routes are excluded so they can return a JSON 401.
+- [`e2e/`](e2e/): Playwright specs. File suffixes encode the project: `.anon.` and `.auth.` for anonymous and authenticated runs, and `.a11y.` for axe accessibility checks. `e2e/.auth`, `e2e/report` and `e2e/results` are gitignored output.
+- [`biome-plugins/`](biome-plugins/): custom Biome (GritQL) lint rules. `no-hardcoded-colors.grit` forces Tailwind color tokens from `globals.css`.
+- [`docs/`](docs/): ADRs in `architecture/decisions/`, accessibility baseline and testing guides, and `dependency-caveats.md` (deferred upgrades and accepted vulnerabilities, which must be updated when you defer one).
+- [`scripts/entra-redirect-uris/`](scripts/entra-redirect-uris/): syncs per-branch Amplify preview URLs into the Entra app's redirect URIs (see ADR 0002). It is its own package with Vitest tests picked up by the root config.
+- [`terraform/`](terraform/): `bootstrap/` (state bucket, applied once per account by a human), `modules/{amplify,iam}`, and one root per account in `environments/{dev,stg,prod}`. See [terraform/README.md](terraform/README.md).
+- [`amplify.yml`](amplify.yml): AWS Amplify build spec. It derives `NEXTAUTH_URL` per branch and reads Entra secrets from SSM.
+- [`.github/workflows/`](.github/workflows/): `ci.yml` (lint, typecheck, unit tests, build, then accessibility), `terraform-plan.yml` (fmt, validate, plan) and `entra-redirect-uris.yml` (redirect URI sync).
+
+### Conventions
+
+- Tests are colocated as `*.test.ts(x)` next to the source. The Vitest `@` alias maps to `src/`.
+- Run `npm run lint`, `npm run tsc` and `npm test` before considering work done. CI runs the same checks, plus build and accessibility.
+- Configuration for local development is in `.env.local` (copy from `.env.local.example`). Never commit secrets or edit `.env.local`.
+- `AGENTS.md` is the source of truth for instructions. `CLAUDE.md` and `.github/copilot-instructions.md` are symlinks to it.
+
 ## Agent Expectations
 
 - Campsite rule: you may notice that existing code violates some of the guidelines listed in these instructions. Limit incidental fixes to files you are already editing for the current task — do not open new files or start separate workstreams to address unrelated issues. Always leave those files better than you found them by applying established best practices and meeting test coverage objectives.
