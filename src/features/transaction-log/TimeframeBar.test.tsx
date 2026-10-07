@@ -90,7 +90,6 @@ describe("TimeframeBar", () => {
     mockFetch(response({ data: [entry()], total: 1 }));
     renderBar();
 
-    // Wait for the query to settle, so a late-rendering control can't slip past.
     await screen.findByText(
       `Today – ${formatCourtDate("2026-08-03T04:00:00.000Z")}`,
     );

@@ -221,8 +221,6 @@ describe("DownloadTransactionLogButton", () => {
 
     await userEvent.hover(downloadButton());
 
-    // The button's name is an aria-label, so the only text node matching
-    // LABEL is the tooltip popup itself.
     expect(await screen.findByText(LABEL)).toBeInTheDocument();
   });
 

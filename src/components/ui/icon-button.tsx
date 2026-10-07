@@ -46,8 +46,6 @@ export function IconButton({
         type="button"
         size="icon-sm"
         variant={variant}
-        // Icon buttons carry no label, so hover has to do the work of
-        // signalling they are interactive.
         className={cn("text-muted-foreground hover:text-primary", className)}
         aria-label={label}
         aria-describedby={
