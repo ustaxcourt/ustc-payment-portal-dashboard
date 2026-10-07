@@ -6,6 +6,7 @@ import {
   type ColumnVisibility,
   DEFAULT_COLUMN_VISIBILITY,
   defaultColumnVisibility,
+  isSameVisibility,
   searchedColumnIds,
   TRANSACTION_COLUMNS,
   withFeeDefaults,
@@ -302,5 +303,22 @@ describe("withFeeDefaults", () => {
     expect(withFeeDefaults(onlyVisible("metadata.docketNumber"), null)).toEqual(
       DEFAULT_COLUMN_VISIBILITY,
     );
+  });
+});
+
+describe("isSameVisibility", () => {
+  it("is true when every column matches", () => {
+    expect(
+      isSameVisibility(DEFAULT_COLUMN_VISIBILITY, { ...DEFAULT_COLUMN_VISIBILITY }),
+    ).toBe(true);
+  });
+
+  it("is false when any column differs", () => {
+    expect(
+      isSameVisibility(
+        DEFAULT_COLUMN_VISIBILITY,
+        defaultColumnVisibility("PETITION_FILING_FEE"),
+      ),
+    ).toBe(false);
   });
 });

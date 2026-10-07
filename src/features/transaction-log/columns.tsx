@@ -89,6 +89,11 @@ export const searchedColumnIds = (
   return ids;
 };
 
+export const isSameVisibility = (
+  a: ColumnVisibility,
+  b: ColumnVisibility,
+): boolean => COLUMN_IDS.every((id) => a[id] === b[id]);
+
 export const withSearchedColumns = (
   visibility: ColumnVisibility,
   searchedIds: readonly TransactionColumnId[],

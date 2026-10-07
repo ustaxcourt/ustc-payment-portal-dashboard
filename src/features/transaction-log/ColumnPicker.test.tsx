@@ -10,14 +10,12 @@ import {
   defaultColumnVisibility,
 } from "./columns";
 
-const PETITION_DEFAULTS = defaultColumnVisibility("PETITION_FILING_FEE");
-
 const renderPicker = (
   overrides: Partial<Parameters<typeof ColumnPicker>[0]> = {},
 ) => {
   const props = {
     visibility: DEFAULT_COLUMN_VISIBILITY,
-    defaults: DEFAULT_COLUMN_VISIBILITY,
+    isDefault: true,
     searchedIds: [],
     onToggle: vi.fn(),
     onReset: vi.fn(),
@@ -101,7 +99,7 @@ describe("ColumnPicker", () => {
     expect(amount).not.toHaveAccessibleDescription();
   });
 
-  it("keeps a searched column checked and locked, and says why", async () => {
+  it("checks a searched column and lets the admin uncheck it", async () => {
     const { onToggle } = renderPicker({ searchedIds: ["transactionStatus"] });
     const dialog = await openPicker();
 
@@ -109,17 +107,12 @@ describe("ColumnPicker", () => {
       name: "Transaction status",
     });
     expect(transactionStatus).toBeChecked();
-    expect(transactionStatus).toHaveAttribute("aria-disabled", "true");
-    expect(transactionStatus).toHaveAccessibleDescription(
-      "Shown while you're searching by this column",
-    );
+    expect(transactionStatus).not.toHaveAttribute("aria-disabled", "true");
+    expect(transactionStatus).not.toHaveAccessibleDescription();
 
     await userEvent.click(transactionStatus);
 
-    expect(onToggle).not.toHaveBeenCalled();
-    expect(
-      within(dialog).getByRole("button", { name: "Reset to defaults" }),
-    ).toBeDisabled();
+    expect(onToggle).toHaveBeenCalledWith("transactionStatus", false);
   });
 
   it("guards the last chosen column even while a filter shows another", async () => {
@@ -152,6 +145,7 @@ describe("ColumnPicker", () => {
   it("resets once the visibility differs from the defaults", async () => {
     const { onReset } = renderPicker({
       visibility: { ...DEFAULT_COLUMN_VISIBILITY, createdAt: true },
+      isDefault: false,
     });
     const dialog = await openPicker();
 
@@ -162,34 +156,9 @@ describe("ColumnPicker", () => {
     expect(onReset).toHaveBeenCalledOnce();
   });
 
-  it("disables Reset to defaults while showing the selected fee's defaults", async () => {
-    renderPicker({
-      visibility: PETITION_DEFAULTS,
-      defaults: PETITION_DEFAULTS,
-    });
-    const dialog = await openPicker();
-
-    expect(
-      within(dialog).getByRole("button", { name: "Reset to defaults" }),
-    ).toBeDisabled();
-  });
-
-  it("enables Reset to defaults when the columns differ from the selected fee's defaults", async () => {
-    renderPicker({
-      visibility: DEFAULT_COLUMN_VISIBILITY,
-      defaults: PETITION_DEFAULTS,
-    });
-    const dialog = await openPicker();
-
-    expect(
-      within(dialog).getByRole("button", { name: "Reset to defaults" }),
-    ).toBeEnabled();
-  });
-
   it("checks a fee's metadata column without locking it", async () => {
     const { onToggle } = renderPicker({
-      visibility: PETITION_DEFAULTS,
-      defaults: PETITION_DEFAULTS,
+      visibility: defaultColumnVisibility("PETITION_FILING_FEE"),
     });
     const dialog = await openPicker();
     const docketNumber = within(dialog).getByRole("checkbox", {

@@ -18,8 +18,10 @@ import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 import ColumnPicker from "./ColumnPicker";
 import { COLUMN_LABEL } from "./columnLabels";
+import type { TransactionColumnId } from "./columnLabels";
 import {
   defaultColumnVisibility,
+  isSameVisibility,
   searchedColumnIds,
   TRANSACTION_COLUMNS,
   withFeeDefaults,
@@ -62,6 +64,19 @@ export default function TransactionLog() {
     setColumnsFeeType(searchFilters.feeType);
     setColumnVisibility((previous) =>
       withFeeDefaults(previous, searchFilters.feeType),
+    );
+  }
+
+  const searchedIds = searchedColumnIds(searchFilters);
+  const searchedKey = searchedIds.join(",");
+  const [hiddenSearchedIds, setHiddenSearchedIds] = useState<
+    TransactionColumnId[]
+  >([]);
+  const [columnsSearchedKey, setColumnsSearchedKey] = useState(searchedKey);
+  if (columnsSearchedKey !== searchedKey) {
+    setColumnsSearchedKey(searchedKey);
+    setHiddenSearchedIds((previous) =>
+      previous.filter((id) => searchedIds.includes(id)),
     );
   }
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -143,8 +158,36 @@ export default function TransactionLog() {
   }
 
   const feeDefaults = defaultColumnVisibility(searchFilters.feeType);
-  const searchedIds = searchedColumnIds(searchFilters);
-  const tableVisibility = withSearchedColumns(columnVisibility, searchedIds);
+  const shownSearchedIds = searchedIds.filter(
+    (id) => !hiddenSearchedIds.includes(id),
+  );
+  const tableVisibility = withSearchedColumns(
+    columnVisibility,
+    shownSearchedIds,
+  );
+  const isDefaultColumns =
+    hiddenSearchedIds.length === 0 &&
+    isSameVisibility(columnVisibility, feeDefaults);
+
+  const toggleColumn = (id: TransactionColumnId, visible: boolean) => {
+    if (!searchedIds.includes(id)) {
+      setColumnVisibility((previous) => ({ ...previous, [id]: visible }));
+      return;
+    }
+    if (visible) {
+      setHiddenSearchedIds((previous) =>
+        previous.filter((hiddenId) => hiddenId !== id),
+      );
+      return;
+    }
+    setHiddenSearchedIds((previous) => [...previous, id]);
+    setColumnVisibility((previous) => ({ ...previous, [id]: false }));
+  };
+
+  const resetColumns = () => {
+    setColumnVisibility(feeDefaults);
+    setHiddenSearchedIds([]);
+  };
 
   const onFilterChange = (
     key: keyof TransactionSearchFilters,
@@ -264,15 +307,10 @@ export default function TransactionLog() {
               />
               <ColumnPicker
                 visibility={columnVisibility}
-                defaults={feeDefaults}
-                searchedIds={searchedIds}
-                onToggle={(id, visible) =>
-                  setColumnVisibility((previous) => ({
-                    ...previous,
-                    [id]: visible,
-                  }))
-                }
-                onReset={() => setColumnVisibility(feeDefaults)}
+                isDefault={isDefaultColumns}
+                searchedIds={shownSearchedIds}
+                onToggle={toggleColumn}
+                onReset={resetColumns}
               />
             </div>
           </div>

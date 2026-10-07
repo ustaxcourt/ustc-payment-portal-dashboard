@@ -122,7 +122,7 @@ test("with every column shown the log scrolls sideways instead of squeezing", as
   expect(overflows).toBe(true);
 });
 
-test("a filter shows the column it searches by and locks it in the picker", async ({
+test("a filter shows the column it searches by and the admin can still hide it", async ({
   page,
 }) => {
   await page.goto("/?transactionStatus=cancelled");
@@ -137,7 +137,14 @@ test("a filter shows the column it searches by and locks it in the picker", asyn
     exact: true,
   });
   await expect(transactionStatus).toBeChecked();
-  await expect(transactionStatus).toBeDisabled();
+  await expect(transactionStatus).toBeEnabled();
+  await closeColumnPicker(page);
+
+  await hideColumns(page, "Transaction status");
+
+  await expect
+    .poll(() => transactionLogHeaders(page))
+    .toEqual(DEFAULT_COLUMNS);
 });
 
 test("on a short window the picker stays clear of the neighboring header buttons", async ({

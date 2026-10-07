@@ -690,6 +690,60 @@ describe("TransactionLog column picker", () => {
     expect(headers()).toEqual([...DEFAULT_HEADERS, "Docket number"]);
   });
 
+  it("lets the admin hide the column a filter searches by", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Transaction status");
+
+    expect(headers()).toEqual(DEFAULT_HEADERS);
+  });
+
+  it("keeps a hidden searched column hidden while its filter value changes", async () => {
+    const fetchMock = mockFetch(response());
+    renderLog("?status=failed");
+
+    await waitFor(() => expect(headers()).toContain("Payment status"));
+    await toggleColumn("Payment status");
+    await userEvent.click(screen.getByText("Pending (0)"));
+
+    await waitFor(() =>
+      expect(fetchMock.mock.calls.at(-1)?.[0]).toContain("status=pending"),
+    );
+    expect(headers()).toEqual(["Last updated", "Fee", "Amount"]);
+  });
+
+  it("shows a hidden searched column again once its filter is reapplied", async () => {
+    mockFetch(response());
+    const { navigate } = renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Transaction status");
+    navigate("");
+    await waitFor(() => expect(headers()).toEqual(DEFAULT_HEADERS));
+
+    navigate("?transactionStatus=cancelled");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([...DEFAULT_HEADERS, "Transaction status"]),
+    );
+  });
+
+  it("brings a hidden searched column back on Reset to defaults", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Transaction status");
+    const dialog = await openPicker();
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    );
+
+    expect(headers()).toEqual([...DEFAULT_HEADERS, "Transaction status"]);
+  });
+
   it("still sorts by a hidden column carried in the url", async () => {
     const fetchMock = mockFetch(response({ sort: "createdAt", order: "desc" }));
     renderLog("?sort=createdAt&order=desc");
