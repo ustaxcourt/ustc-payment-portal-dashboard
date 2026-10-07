@@ -143,6 +143,17 @@ export default function TransactionLog() {
     returnDetail: showFailureColumns,
   };
 
+  useEffect(() => {
+    const showFailureColumns =
+      searchFilters.paymentStatus === "failed";
+
+    setColumnVisibility((previous) => ({
+      ...previous,
+      transactionStatus: showFailureColumns,
+      returnDetail: showFailureColumns,
+    }));
+  }, [searchFilters.paymentStatus]);
+
   const searchedIds = searchedColumnIds(searchFilters);
   const tableVisibility = withSearchedColumns(
     effectiveVisibility,
