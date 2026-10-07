@@ -597,36 +597,56 @@ describe("TransactionLog column picker", () => {
     });
   });
 
-  it("checks Transaction Status and Failure Reason in the column picker when failed is selected", async () => {
+  it("allows Transaction Status to be unchecked after failed status makes it visible", async () => {
     mockFetch(response());
 
     renderLog("?status=failed");
 
-    const dialog = await openPicker();
+    await waitFor(() =>
+      expect(headers()).toContain("Transaction status"),
+    );
 
-    expect(
-      within(dialog).getByRole("checkbox", { name: "Transaction status" }),
-    ).toBeChecked();
+    await toggleColumn("Transaction status");
 
-    expect(
-      within(dialog).getByRole("checkbox", { name: "Failure reason" }),
-    ).toBeChecked();
+    expect(headers()).not.toContain("Transaction status");
   });
 
-  it("unchecks Transaction Status and Failure Reason in the column picker when failed is not selected", async () => {
+  it("allows Failure Reason to be unchecked after failed status makes it visible", async () => {
+    mockFetch(response());
+
+    renderLog("?status=failed");
+
+    await waitFor(() =>
+      expect(headers()).toContain("Failure reason"),
+    );
+
+    await toggleColumn("Failure reason");
+
+    expect(headers()).not.toContain("Failure reason");
+  });
+
+  it("allows Transaction Status to be enabled when viewing successful transactions", async () => {
     mockFetch(response());
 
     renderLog("?status=success");
 
-    const dialog = await openPicker();
+    expect(headers()).not.toContain("Transaction status");
 
-    expect(
-      within(dialog).getByRole("checkbox", { name: "Transaction status" }),
-    ).not.toBeChecked();
+    await toggleColumn("Transaction status");
 
-    expect(
-      within(dialog).getByRole("checkbox", { name: "Failure reason" }),
-    ).not.toBeChecked();
+    expect(headers()).toContain("Transaction status");
+  });
+
+  it("allows Failure Reason to be enabled when viewing successful transactions", async () => {
+    mockFetch(response());
+
+    renderLog("?status=success");
+
+    expect(headers()).not.toContain("Failure reason");
+
+    await toggleColumn("Failure reason");
+
+    expect(headers()).toContain("Failure reason");
   });
 
   it("hides Transaction Status and Failure Reason when payment status is pending", async () => {
