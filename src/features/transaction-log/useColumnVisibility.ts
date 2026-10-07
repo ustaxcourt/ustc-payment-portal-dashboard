@@ -44,13 +44,16 @@ const isSameIds = (
   b: readonly TransactionColumnId[],
 ) => a.length === b.length && a.every((id, index) => id === b[index]);
 
-const keepStillSearched = (
+const keepStillHidden = (
   chosenBeforeHiding: Partial<ColumnVisibility>,
   searchedIds: readonly TransactionColumnId[],
+  chosen: ColumnVisibility,
 ): Partial<ColumnVisibility> => {
   const kept: Partial<ColumnVisibility> = {};
   for (const id of searchedIds) {
-    if (id in chosenBeforeHiding) kept[id] = chosenBeforeHiding[id];
+    if (id in chosenBeforeHiding && !chosen[id]) {
+      kept[id] = chosenBeforeHiding[id];
+    }
   }
   return kept;
 };
@@ -90,19 +93,22 @@ const columnsReducer = (
   action: ColumnAction,
 ): ColumnState => {
   switch (action.type) {
-    case "filtersChanged":
+    case "filtersChanged": {
+      const chosen =
+        action.feeType === state.feeType
+          ? state.chosen
+          : withFeeDefaults(state.chosen, action.feeType);
       return {
         feeType: action.feeType,
         searchedIds: action.searchedIds,
-        chosen:
-          action.feeType === state.feeType
-            ? state.chosen
-            : withFeeDefaults(state.chosen, action.feeType),
-        chosenBeforeHiding: keepStillSearched(
+        chosen,
+        chosenBeforeHiding: keepStillHidden(
           state.chosenBeforeHiding,
           action.searchedIds,
+          chosen,
         ),
       };
+    }
     case "toggled":
       return toggle(state, action.id, action.visible);
     case "reset":

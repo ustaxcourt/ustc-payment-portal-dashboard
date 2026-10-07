@@ -158,6 +158,21 @@ describe("useColumnVisibility", () => {
     expect(result.current.visibility["metadata.docketNumber"]).toBe(false);
   });
 
+  it("forgets a hidden searched column that the fee's defaults show again", () => {
+    const { result, rerender } = renderColumns(
+      filtered({ feeType: "PETITION_FILING_FEE", paymentStatus: "failed" }),
+    );
+
+    act(() => result.current.toggle("paymentStatus", false));
+    act(() => result.current.toggle("lastUpdatedAt", false));
+    act(() => result.current.toggle("transactionAmount", false));
+    act(() => result.current.toggle("feeName", false));
+    rerender({ filters: filtered({ paymentStatus: "failed" }) });
+
+    expect(result.current.visibility).toEqual(DEFAULT_COLUMN_VISIBILITY);
+    expect(result.current.isDefault).toBe(true);
+  });
+
   it("resets to the selected fee's defaults and shows hidden searched columns", () => {
     const { result } = renderColumns(
       filtered({ feeType: "PETITION_FILING_FEE", transactionStatus: "failed" }),
