@@ -1,7 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ToastProvider } from "@/components/ui/toast-context";
 import type { AppliedDateRange } from "./dateRange";
 import DownloadTransactionLogButton from "./DownloadTransactionLogButton";
 import { ExportTooLargeError } from "./exportTransactions";
@@ -38,17 +37,18 @@ const LABEL = "Download Transaction Log";
 
 const renderButton = (disabled = false) =>
   render(
-    <ToastProvider>
-      <DownloadTransactionLogButton
-        tab="all"
-        range={range}
-        sorting={sorting}
-        disabled={disabled}
-      />
-    </ToastProvider>,
+    <DownloadTransactionLogButton
+      tab="all"
+      range={range}
+      sorting={sorting}
+      disabled={disabled}
+    />,
   );
 
 const downloadButton = () => screen.getByRole("button", { name: LABEL });
+
+const expectDownloadDisabled = (yes: boolean) =>
+  expect(downloadButton()).toHaveAttribute("aria-disabled", String(yes));
 
 describe("DownloadTransactionLogButton", () => {
   beforeEach(() => {
@@ -95,10 +95,10 @@ describe("DownloadTransactionLogButton", () => {
     await userEvent.click(downloadButton());
 
     await waitFor(() =>
-      expect(downloadButton()).toBeEnabled(),
+      expectDownloadDisabled(false),
     );
     expect(fetchAllTransactions).not.toHaveBeenCalled();
-    expect(screen.queryByText(/failed/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows the too-large guidance instead of downloading", async () => {
@@ -109,9 +109,9 @@ describe("DownloadTransactionLogButton", () => {
     renderButton();
     await userEvent.click(downloadButton());
 
-    expect(
-      await screen.findByText(/60,000.*Narrow the timeframe/),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /60,000.*Narrow the timeframe/,
+    );
     expect(saveWorkbook).not.toHaveBeenCalled();
   });
 
@@ -121,10 +121,10 @@ describe("DownloadTransactionLogButton", () => {
     renderButton();
     await userEvent.click(downloadButton());
 
-    expect(
-      await screen.findByText("The download failed. Try again."),
-    ).toBeInTheDocument();
-    expect(downloadButton()).not.toBeDisabled();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The download failed. Try again.",
+    );
+    expectDownloadDisabled(false);
   });
 
   it("returns quietly to idle when the user cancels", async () => {
@@ -136,9 +136,9 @@ describe("DownloadTransactionLogButton", () => {
     await userEvent.click(downloadButton());
 
     await waitFor(() =>
-      expect(downloadButton()).toBeEnabled(),
+      expectDownloadDisabled(false),
     );
-    expect(screen.queryByText(/failed/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("deletes the picked file when the download is cancelled", async () => {
@@ -193,7 +193,7 @@ describe("DownloadTransactionLogButton", () => {
   });
 
   it("offers Cancel while a download is running", async () => {
-    let release: (value: { rows: never[]; total: number }) => void = () => {};
+    let release: (value: { rows: never[]; total: number }) => void = () => { };
     vi.mocked(fetchAllTransactions).mockImplementation(
       (_tab, _range, _sorting, options) =>
         new Promise((resolve, reject) => {
@@ -211,7 +211,7 @@ describe("DownloadTransactionLogButton", () => {
     await userEvent.click(cancel);
 
     await waitFor(() =>
-      expect(downloadButton()).toBeEnabled(),
+      expectDownloadDisabled(false),
     );
     release({ rows: [], total: 0 });
   });
@@ -226,35 +226,57 @@ describe("DownloadTransactionLogButton", () => {
 
   it("disables itself while the log is compiled and downloaded", async () => {
     vi.mocked(fetchAllTransactions).mockImplementation(
-      () => new Promise(() => {}),
+      () => new Promise(() => { }),
     );
 
     renderButton();
     await userEvent.click(downloadButton());
 
-    await waitFor(() => expect(downloadButton()).toBeDisabled());
-    expect(await screen.findByText("Preparing download…")).toBeInTheDocument();
+    await waitFor(() => expectDownloadDisabled(true));
+    expect(
+      (await screen.findAllByText("Preparing download…")).length,
+    ).toBeGreaterThan(0);
   });
 
   it("announces fetch progress politely", async () => {
     vi.mocked(fetchAllTransactions).mockImplementation(
       (_tab, _range, _sorting, options) => {
         options?.onProgress?.({ fetched: 5_000, total: 12_000 });
-        return new Promise(() => {});
+        return new Promise(() => { });
       },
     );
 
     renderButton();
     await userEvent.click(downloadButton());
 
-    const progress = await screen.findByText(
+    const [liveRegion] = await screen.findAllByText(
       "Preparing download… 5,000 of 12,000",
     );
-    expect(progress).toHaveAttribute("aria-live", "polite");
+    expect(liveRegion).toHaveAttribute("aria-live", "polite");
+    expect(liveRegion).toHaveClass("sr-only");
+  });
+
+  it("aborts an in-flight download when the toolbar unmounts", async () => {
+    let signal: AbortSignal | undefined;
+    vi.mocked(fetchAllTransactions).mockImplementation(
+      (_tab, _range, _sorting, options) => {
+        signal = options?.signal;
+        return new Promise(() => { });
+      },
+    );
+
+    const { unmount } = renderButton();
+    await userEvent.click(downloadButton());
+    await waitFor(() => expect(signal).toBeDefined());
+    expect(signal?.aborted).toBe(false);
+
+    unmount();
+
+    expect(signal?.aborted).toBe(true);
   });
 
   it("is disabled when the view has no rows", () => {
     renderButton(true);
-    expect(downloadButton()).toBeDisabled();
+    expectDownloadDisabled(true);
   });
 });

@@ -99,7 +99,7 @@ describe("TransactionLog", () => {
       await waitFor(() =>
         expect(
           screen.getByRole("button", { name: "Download Transaction Log" }),
-        ).toBeEnabled(),
+        ).toHaveAttribute("aria-disabled", "false"),
       );
       expect(
         screen.getByRole("button", { name: "Share View" }),
@@ -117,7 +117,7 @@ describe("TransactionLog", () => {
       await waitFor(() =>
         expect(
           screen.getByRole("button", { name: "Download Transaction Log" }),
-        ).toBeDisabled(),
+        ).toHaveAttribute("aria-disabled", "true"),
       );
     });
   });
@@ -358,7 +358,7 @@ describe("TransactionLog", () => {
         lastUpdatedAt: "2026-08-03T13:00:00.000Z",
       };
 
-      let resolveSecond: (value: TransactionLogResponse) => void = () => {};
+      let resolveSecond: (value: TransactionLogResponse) => void = () => { };
       const fetchMock = vi
         .fn()
         .mockResolvedValueOnce({

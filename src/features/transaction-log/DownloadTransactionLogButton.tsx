@@ -1,10 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppTooltip } from "@/components/ui/AppTooltip";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import { useToast } from "@/components/ui/toast-context";
 import type { AppliedDateRange } from "./dateRange";
 import { exportFilename } from "./exportFilename";
 import {
@@ -25,7 +24,8 @@ const LABEL = "Download Transaction Log";
 type DownloadPhase =
   | { step: "idle" }
   | { step: "fetching"; fetched: number; total: number }
-  | { step: "building" };
+  | { step: "building" }
+  | { step: "error"; message: string };
 
 const isAbort = (err: unknown) =>
   err instanceof DOMException && err.name === "AbortError";
@@ -43,9 +43,11 @@ export default function DownloadTransactionLogButton({
 }) {
   const [phase, setPhase] = useState<DownloadPhase>({ step: "idle" });
   const abortRef = useRef<AbortController | null>(null);
-  const { showToast } = useToast();
 
   const busy = phase.step === "fetching" || phase.step === "building";
+
+  // The toolbar unmounts when the log query errors.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const startDownload = async () => {
     const controller = new AbortController();
@@ -71,15 +73,17 @@ export default function DownloadTransactionLogButton({
       setPhase({ step: "idle" });
     } catch (err) {
       if (destination) void discardSaveDestination(destination);
-      setPhase({ step: "idle" });
-      if (!isAbort(err)) {
+      if (isAbort(err)) {
+        setPhase({ step: "idle" });
+      } else {
         console.error("Transaction log download failed:", err);
-        showToast(
-          err instanceof ExportTooLargeError
-            ? `${err.message} Narrow the timeframe and try again.`
-            : "The download failed. Try again.",
-          "error",
-        );
+        setPhase({
+          step: "error",
+          message:
+            err instanceof ExportTooLargeError
+              ? `${err.message} Narrow the timeframe and try again.`
+              : "The download failed. Try again.",
+        });
       }
     } finally {
       abortRef.current = null;
@@ -97,12 +101,14 @@ export default function DownloadTransactionLogButton({
 
   return (
     <>
-      <p
-        aria-live="polite"
-        className="text-xs text-muted-foreground empty:hidden"
-      >
+      <span aria-live="polite" className="sr-only">
         {progressText}
-      </p>
+      </span>
+      {progressText ? (
+        <p aria-hidden className="text-xs text-muted-foreground">
+          {progressText}
+        </p>
+      ) : null}
       {busy ? (
         <Button
           type="button"
@@ -113,11 +119,18 @@ export default function DownloadTransactionLogButton({
           Cancel
         </Button>
       ) : null}
+      {phase.step === "error" ? (
+        <p role="alert" className="text-xs text-destructive">
+          {phase.message}
+        </p>
+      ) : null}
       <AppTooltip content={LABEL}>
         <IconButton
           icon="download"
           label={LABEL}
           disabled={disabled || busy}
+          focusableWhenDisabled
+          className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
           onClick={startDownload}
         />
       </AppTooltip>

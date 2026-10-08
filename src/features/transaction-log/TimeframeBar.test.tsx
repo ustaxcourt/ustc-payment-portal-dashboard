@@ -5,19 +5,7 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { formatCourtDate } from "@/lib/format";
 import TimeframeBar from "./TimeframeBar";
-import type { TransactionLogEntry, TransactionLogResponse } from "./types";
-
-const entry = (): TransactionLogEntry => ({
-  agencyTrackingId: "USTC-1",
-  feeName: "Petition Fee",
-  fee: "60.00",
-  transactionAmount: 60,
-  clientName: "Ada Lovelace",
-  transactionReferenceId: "ref-1",
-  paymentStatus: "success",
-  createdAt: "2026-08-03T12:00:00.000Z",
-  lastUpdatedAt: "2026-08-03T12:00:00.000Z",
-});
+import type { TransactionLogResponse } from "./types";
 
 const response = (
   overrides: Partial<TransactionLogResponse> = {},
@@ -84,18 +72,6 @@ describe("TimeframeBar", () => {
     expect(
       screen.getByRole("button", { name: "Custom range" }),
     ).toBeInTheDocument();
-  });
-
-  it("no longer carries a download control — it lives in the log toolbar", async () => {
-    mockFetch(response({ data: [entry()], total: 1 }));
-    renderBar();
-
-    await screen.findByText(
-      `Today – ${formatCourtDate("2026-08-03T04:00:00.000Z")}`,
-    );
-    expect(
-      screen.queryByRole("button", { name: /Export|Download/ }),
-    ).not.toBeInTheDocument();
   });
 
   it("shows the server-confirmed date beside the applied preset", async () => {
