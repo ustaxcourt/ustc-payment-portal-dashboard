@@ -53,6 +53,7 @@ Core constraints:
 - Never execute destructive file operations like `rm`, `rmdir`, or `del`.
 - Never use `sudo`, `chmod`, `chown`, `kill`, or `killall`.
 - Never use `curl`, `wget`, or `eval`.
+- Never read the contents of `.env.local`, instead read `.env.example` if you need to find env variable name.
 - If a task requires any of these commands, provide the command for the developer to run manually.
 
 ### Project-specific Conventions
