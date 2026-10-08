@@ -8,18 +8,18 @@ test.describe("payment breakdown cards", () => {
   }) => {
     await page.goto("/?range=last7");
 
-    const pane = page.getByTestId("payment-breakdown-pane");
-    const cards = pane.getByRole("listitem");
+    const section = page.getByTestId("payment-breakdown-section");
+    const cards = section.getByRole("listitem");
 
     await expect(cards.first()).toContainText("Successful Payments");
     await expect(cards.first()).toContainText(AMOUNT);
     await expect(cards.first()).toContainText("Total");
 
     await expect(
-      pane.getByRole("listitem").filter({ hasText: "Petition Filing Fee" }),
+      section.getByRole("listitem").filter({ hasText: "Petition Filing Fee" }),
     ).toContainText(/\d+ transactions?/);
     await expect(
-      pane
+      section
         .getByRole("listitem")
         .filter({ hasText: "Non-Attorney Exam Registration Fee" }),
     ).toBeVisible();

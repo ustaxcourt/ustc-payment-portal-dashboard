@@ -6,7 +6,7 @@ import type {
   FeeBreakdownRow,
   TransactionLogResponse,
 } from "../transaction-log/types";
-import PaymentBreakdownPane from "./PaymentBreakdownPane";
+import PaymentBreakdownSection from "./PaymentBreakdownSection";
 import { usePaymentBreakdown } from "./usePaymentBreakdown";
 
 const response = (
@@ -39,7 +39,7 @@ const feeBreakdown: FeeBreakdownRow[] = [
   },
 ];
 
-const renderPane = (searchParams = "") => {
+const renderSection = (searchParams = "") => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -47,7 +47,7 @@ const renderPane = (searchParams = "") => {
   return render(
     <NuqsTestingAdapter searchParams={searchParams}>
       <QueryClientProvider client={client}>
-        <PaymentBreakdownPane />
+        <PaymentBreakdownSection />
       </QueryClientProvider>
     </NuqsTestingAdapter>,
   );
@@ -67,11 +67,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("PaymentBreakdownPane", () => {
+describe("PaymentBreakdownSection", () => {
   it("shows the overall total first, then a card per fee from the API", async () => {
     const fetchMock = mockFetch(response({ feeBreakdown }));
 
-    renderPane();
+    renderSection();
 
     expect(
       screen.getByRole("heading", { name: "Payment Breakdown", hidden: true }),
@@ -96,7 +96,7 @@ describe("PaymentBreakdownPane", () => {
   it("fails loudly when the API returns no fee breakdown", async () => {
     mockFetch(response());
 
-    renderPane();
+    renderSection();
 
     expect(
       await screen.findByText("Could not load the payment breakdown."),
@@ -116,7 +116,7 @@ describe("PaymentBreakdownPane", () => {
       }),
     );
 
-    renderPane();
+    renderSection();
 
     const petitionCard = (
       await screen.findByText("Petition Filing Fee")
@@ -175,7 +175,7 @@ describe("PaymentBreakdownPane", () => {
       }),
     );
 
-    renderPane();
+    renderSection();
 
     expect(
       await screen.findByText("Could not load the payment breakdown."),

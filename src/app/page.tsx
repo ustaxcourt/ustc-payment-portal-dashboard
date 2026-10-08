@@ -1,14 +1,14 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { Suspense } from "react";
 import LogoutButton from "@/components/ui/LogoutButton";
+import PaymentBreakdownSection from "@/features/payment-breakdown/PaymentBreakdownSection";
 import RevenueTotals from "@/features/revenue-totals/RevenueTotals";
 import TimeframeBar from "@/features/transaction-log/TimeframeBar";
 import TransactionLog from "@/features/transaction-log/TransactionLog";
 import { getSessionAuthOptions, hasValidDashboardSession } from "@/lib/auth";
 import { loginUrlReturningTo } from "@/lib/callbackUrl";
-import Image from "next/image";
-import PaymentBreakdownPane from "@/features/payment-breakdown/PaymentBreakdownPane";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -88,7 +88,7 @@ export default async function Home({
         className="flex flex-1 flex-col p-6 sm:p-8 lg:min-h-0"
       >
          <Suspense fallback={<div aria-hidden="true" />}>
-          <PaymentBreakdownPane />
+          <PaymentBreakdownSection />
         </Suspense>
         <Suspense
           fallback={
