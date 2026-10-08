@@ -4,8 +4,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useState } from "react";
+import { ToastProvider } from "@/components/ui/toast-context";
 import { SESSION_MAX_AGE_SECONDS } from "@/lib/session";
+import { AppTooltipProvider } from "./AppTooltipProvider";
 import { useIdleLogout } from "./useIdleLogout";
+
 
 const SESSION_REFETCH_INTERVAL_SECONDS = Math.max(
   1,
@@ -35,9 +38,14 @@ export default function Providers({
       refetchOnWindowFocus
     >
       <IdleLogout />
+
       <NuqsAdapter>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <ToastProvider>
+            <AppTooltipProvider>
+              {children}
+            </AppTooltipProvider>
+          </ToastProvider>
         </QueryClientProvider>
       </NuqsAdapter>
     </SessionProvider>
