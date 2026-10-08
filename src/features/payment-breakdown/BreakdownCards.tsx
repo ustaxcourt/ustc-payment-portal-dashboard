@@ -4,6 +4,8 @@ export type BreakdownCardData = {
   /** Already formatted for display. */
   amount: string;
   caption: string;
+  /** Bolds the label. */
+  emphasized?: boolean;
 };
 
 /** Display-only: renders the cards it is given, in order. */
@@ -15,14 +17,17 @@ export default function BreakdownCards({
   ariaLabel: string;
 }) {
   return (
-    <ul aria-label={ariaLabel} className="flex flex-wrap gap-3">
+    <ul aria-label={ariaLabel} className="grid grid-cols-4 gap-3">
       {cards.map((card) => (
         <li
           key={card.id}
           data-testid={`payment-breakdown-card-${card.id}`}
-          className="flex flex-col gap-1 rounded-lg border bg-slate-100 px-5 py-3 text-card-foreground"
+          className="flex min-w-0 flex-col gap-1 rounded-lg border bg-slate-100 px-5 py-3 text-card-foreground"
         >
-          <span className="text-xs font-semibold tracking-wider uppercase">
+          <span
+            title={card.label}
+            className={`truncate text-xs tracking-wider uppercase ${card.emphasized ? "font-bold" : "font-semibold"}`}
+          >
             {card.label}
           </span>
           <span className="flex items-baseline gap-3">

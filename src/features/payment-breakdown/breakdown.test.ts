@@ -51,6 +51,7 @@ describe("toCards", () => {
         label: "Successful Payments",
         amount: "$370.00",
         caption: "Total",
+        emphasized: true,
       },
       {
         id: "NONATTORNEY_EXAM_REGISTRATION_FEE",

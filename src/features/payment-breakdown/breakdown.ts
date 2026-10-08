@@ -29,6 +29,7 @@ export const toCards = ({
     label: "Successful Payments",
     amount: formatCurrency(grandTotal),
     caption: "Total",
+    emphasized: true,
   },
   ...rows.map((row) => ({
     id: row.fee,
