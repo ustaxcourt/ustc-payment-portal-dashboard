@@ -35,11 +35,13 @@ export default function ColumnPicker({
   visibility,
   searchedIds,
   onToggle,
+  defaultVisibility,
   onReset,
 }: {
   visibility: ColumnVisibility;
   searchedIds: readonly TransactionColumnId[];
   onToggle: (id: TransactionColumnId, visible: boolean) => void;
+  defaultVisibility: ColumnVisibility;
   onReset: () => void;
 }) {
   const lastColumnHintId = useId();
@@ -47,7 +49,7 @@ export default function ColumnPicker({
   const shownVisibility = withSearchedColumns(visibility, searchedIds);
   const chosenCount = COLUMN_IDS.filter((id) => visibility[id]).length;
   const isDefault = COLUMN_IDS.every(
-    (id) => visibility[id] === DEFAULT_COLUMN_VISIBILITY[id],
+    (id) => visibility[id] === defaultVisibility[id],
   );
 
   const hintFor = (id: TransactionColumnId) => {

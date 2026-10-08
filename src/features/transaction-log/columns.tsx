@@ -16,6 +16,7 @@ import SortableHeader from "./SortableHeader";
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
 import {
   METADATA_KEYS,
+  PaymentStatus,
   type MetadataKey,
   type TransactionLogEntry,
   type TransactionSearchFilters,
@@ -274,3 +275,11 @@ export const TRANSACTION_COLUMNS: TransactionColumnDef[] = [
 export const COLUMN_IDS: TransactionColumnId[] = TRANSACTION_COLUMNS.map(
   (column) => column.id,
 );
+
+export const defaultVisibilityFor = (
+  paymentStatus: PaymentStatus | null,
+): ColumnVisibility => ({
+  ...DEFAULT_COLUMN_VISIBILITY,
+  transactionStatus: paymentStatus === "failed",
+  returnDetail: paymentStatus === "failed",
+});

@@ -22,6 +22,7 @@ import ColumnPicker from "./ColumnPicker";
 import { COLUMN_LABEL } from "./columnLabels";
 import {
   DEFAULT_COLUMN_VISIBILITY,
+  defaultVisibilityFor,
   searchedColumnIds,
   TRANSACTION_COLUMNS,
   withSearchedColumns,
@@ -60,6 +61,9 @@ export default function TransactionLog() {
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
+  const defaultVisibility = defaultVisibilityFor(
+    searchFilters.paymentStatus,
+  );
 
   const { showToast } = useToast();
 
@@ -145,8 +149,8 @@ export default function TransactionLog() {
   const tableVisibility = withSearchedColumns(
     {
       ...columnVisibility,
-      transactionStatus: showFailureColumns,
-      returnDetail: showFailureColumns,
+      transactionStatus: defaultVisibility.transactionStatus,
+      returnDetail: defaultVisibility.returnDetail,
     },
     searchedIds,
   );
@@ -226,6 +230,7 @@ export default function TransactionLog() {
         aria-live="polite"
         className="sr-only"
       >
+        Sorted by Last updated, descending
         {data?.sort && COLUMN_LABEL[data.sort]
           ? `Sorted by ${COLUMN_LABEL[data.sort]}, ${
               data.order === "desc" ? "descending" : "ascending"
@@ -281,7 +286,12 @@ export default function TransactionLog() {
                 onClick={downloadReport}
               />
               <ColumnPicker
-                visibility={columnVisibility}
+                visibility={{
+                  ...columnVisibility,
+                  transactionStatus: defaultVisibility.transactionStatus,
+                  returnDetail: defaultVisibility.returnDetail,
+                }}
+                defaultVisibility={defaultVisibility}
                 searchedIds={searchedIds}
                 onToggle={(id, visible) =>
                   setColumnVisibility((previous) => ({
@@ -289,7 +299,7 @@ export default function TransactionLog() {
                     [id]: visible,
                   }))
                 }
-                onReset={() => setColumnVisibility(DEFAULT_COLUMN_VISIBILITY)}
+                onReset={() => setColumnVisibility(defaultVisibility)}
               />
             </div>
           </div>
