@@ -24,9 +24,9 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.2.4 — deferred (2026-08-04, re-confirmed 2026-09-23)
+### @tanstack/react-table 8.21.3 → 9.2.6 — deferred (2026-08-04, re-confirmed 2026-10-06)
 
-- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.2.4`.
+- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.2.6`.
 - **Reason:** v9 is not backward compatible with the v8 API used throughout the
   transaction log. The application currently imports and relies on v8-specific
   APIs including `useReactTable` and `getCoreRowModel`. Attempting to resolve the
@@ -41,33 +41,9 @@ enough context that the next person doesn't have to re-derive the decision.
   of all table-related components, sorting behavior, and tests. Pin the package
   exactly to prevent automated dependency-update workflows from introducing v9.
 
-### hashicorp/aws provider 6.56.0 → 6.66.0 — deferred (2026-07-29, re-confirmed 2026-09-17)
+### next 15.5.26 → 16.3.8 — deferred (2026-07-27, re-confirmed 2026-10-02)
 
-- **Current:** `6.56.0` (pinned exactly, not `~> 6.0`). **Available latest:** `6.65.0`.
-- **Reason:** 6.57.0 fails reading the GitHub OIDC provider. Every `terraform plan`
-  errors on the `aws_iam_openid_connect_provider` data source with
-  `ListOpenIDConnectProviders ... StatusCode: 302, api error UnknownError`. The AWS
-  CLI makes the identical call successfully against the same credentials and account,
-  and every apply on 6.56.0 worked, so this is a provider regression rather than a
-  network, permissions, or configuration problem. It blocks all four Terraform roots,
-  since each reads that data source through `modules/iam`.
-- **Status as of 2026-09-17:** The original revisit condition — "revisit when 6.58.0
-  ships" — is now met on the calendar: 6.58.0 through 6.65.0 have all shipped.
-  It is **not** met on the evidence. Every shipped release from 6.57.0 through
-  6.65.0 was checked, and none mentions the `ListOpenIDConnectProviders`
-  regression or any other OIDC fix. So there is no published reason to believe the
-  bug is fixed — only that nobody has said otherwise.
-- **Plan:** Kept pinned. Clearing this entry requires a real `terraform plan` in
-  `environments/dev` against AWS — `terraform validate` cannot exercise the data
-  source, because the failure only appears when the provider actually calls IAM.
-  That needs credentials, so it is a task for someone with dev access:
-  relax to `~> 6.0`, run `terraform plan`, and confirm the data source reads.
-  Pinned exactly in the meantime so `terraform init -upgrade` cannot silently
-  reintroduce it.
-
-### next 15.5.26 → 16.3.6 — deferred (2026-07-27, re-confirmed 2026-09-23)
-
-- **Current:** `15.5.26` (pinned exactly, not a range). **Available latest:** `16.3.6`.
+- **Current:** `15.5.26` (pinned exactly, not a range). **Available latest:** `16.3.8`.
 - **Reason:** AWS Amplify Hosting — the hosting target chosen for this app — documents
   Next.js support through version 15. Next 16 is not officially supported, and the
   Amplify Hosting issue tracker carries a concrete failure for it: _"Next.js 16.1 build
@@ -86,7 +62,7 @@ enough context that the next person doesn't have to re-derive the decision.
   15.5.25 → 15.5.26 within the pin. Patch releases on the 15.5 line should continue
   to be taken promptly while Next 16 remains deferred.
 
-### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17)
+### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17, re-confirmed 2026-10-02)
 
 - **Current:** `^5.9.3`. **Available latest:** `7.0.2`.
 - **Reason:** TypeScript 7 is the native port, and it breaks `next build` on
@@ -108,9 +84,9 @@ enough context that the next person doesn't have to re-derive the decision.
   and re-test with `npm run build`, not just `npm run tsc` — a passing typecheck
   hides this failure entirely.
 
-### @types/node 24.13.5 → 26.6.1 — deferred (2026-09-17)
+### @types/node 24.19.1 → 26.6.4 — deferred (2026-09-17, re-confirmed 2026-10-02)
 
-- **Current:** `^24.13.3`. **Available latest:** `26.6.1`.
+- **Current:** `^24.19.1`. **Available latest:** `26.6.4`.
 - **Reason:** `@types/node` majors track Node.js majors. This app runs Node 24 —
   `.nvmrc` pins 24.20.0, `package.json` `engines` requires `>=24.20.0 <25.0.0`,
   and CI resolves its Node from `.nvmrc`. Installing types for Node 26 against a
@@ -138,7 +114,7 @@ enough context that the next person doesn't have to re-derive the decision.
   `@tailwindcss/postcss` resolves a patched PostCSS version. The flagged copy
   remains vendored inside `next@15.5.26` at
   `node_modules/next/node_modules/postcss`. We do not control that pin. The
-  only remediation offered by `npm audit` is upgrading to `next@16.3.6`, which
+  only remediation offered by `npm audit` is upgrading to `next@16.3.8`, which
   is currently deferred (see Deferred upgrades).
 - **Mitigation:** All four advisories require attacker-controlled CSS reaching
   the compiler. This application compiles only first-party CSS during CI/build
@@ -146,6 +122,23 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Revisit:** Re-test whenever a new 15.5.x patch is released or when the
   deferred Next 16 upgrade is revisited. Remove this entry once Next ships a
   patched bundled PostCSS version.
+
+### GHSA-vfj7-8cjw-p6xm — braces@3.0.3 (high)
+
+- **Reason it can't be fixed now:** `braces` through 3.0.3 has recursive AST walkers
+  with no depth guard, so deeply nested brace patterns exhaust the call stack. The
+  advisory (published 2026-09-18) has **no patched version**. It reaches us only
+  through the `shadcn` CLI (devDependency): `shadcn` → `fast-glob` → `micromatch` →
+  `braces` (and `@ts-morph/common` → `fast-glob`). `npm audit` flags `shadcn`,
+  `@shadcn/registry`, `@ts-morph/common`, `fast-glob`, `micromatch` and `braces` for
+  this one advisory; its suggested "fix" (downgrading `shadcn` to 1.0.0) is not real
+  remediation.
+- **Mitigation:** Exploiting it needs attacker-controlled brace patterns reaching
+  `braces`. It is a dev-time CLI used to add components, not shipped in the app
+  bundle or run at request time, and it only globs our own repository.
+- **Revisit:** When `braces` publishes a patched release, or `shadcn`/`fast-glob`
+  moves off it. Re-run `npm audit` on each dependency update and remove this entry
+  once a fix lands.
 
 <!-- Format:
 ### <advisory-id> — <package>@<version> (<severity>)
