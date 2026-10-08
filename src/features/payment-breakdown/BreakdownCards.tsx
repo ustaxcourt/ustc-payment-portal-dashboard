@@ -30,11 +30,11 @@ export default function BreakdownCards({
           >
             {card.label}
           </span>
-          <span className="flex items-baseline gap-3">
+          <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="font-mono text-2xl font-semibold tabular-nums text-status-success-foreground">
               {card.amount}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="whitespace-nowrap text-xs text-muted-foreground">
               {card.caption}
             </span>
           </span>
