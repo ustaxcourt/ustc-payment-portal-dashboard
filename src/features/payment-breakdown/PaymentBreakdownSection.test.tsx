@@ -128,6 +128,16 @@ describe("PaymentBreakdownSection", () => {
     ).toHaveTextContent("$250.00");
   });
 
+  it("shows only the total card when the API returns no fees", async () => {
+    mockFetch(response({ feeBreakdown: [] }));
+
+    renderSection();
+
+    const items = await screen.findAllByRole("listitem");
+    expect(items).toHaveLength(1);
+    expect(items[0]).toHaveTextContent("$0.00");
+  });
+
   it("re-enters the pending state when the timeframe changes, instead of keeping the previous range's data", async () => {
     const fetchMock = vi
       .fn()
