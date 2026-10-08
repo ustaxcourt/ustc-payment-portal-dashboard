@@ -20,7 +20,7 @@ export default function BreakdownCards({
         <li
           key={card.id}
           data-testid={`payment-breakdown-card-${card.id}`}
-          className="flex flex-col gap-1 rounded-lg border bg-card px-5 py-3 text-card-foreground"
+          className="flex flex-col gap-1 rounded-lg border bg-slate-100 px-5 py-3 text-card-foreground"
         >
           <span className="text-xs font-semibold tracking-wider uppercase">
             {card.label}
