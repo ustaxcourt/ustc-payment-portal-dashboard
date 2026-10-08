@@ -2,5 +2,18 @@
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
   "editor.formatOnSave": true,
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+  "chat.tools.terminal.autoApprove": {
+    "/^git\\s+(commit|push|merge|rebase|reset|clean|revert|cherry-pick|tag|stash|checkout|switch|restore|add)\\b/": false,
+    "rm": false,
+    "rmdir": false,
+    "sudo": false,
+    "chmod": false,
+    "chown": false,
+    "kill": false,
+    "killall": false,
+    "curl": false,
+    "wget": false,
+    "eval": false
+  },
 }
