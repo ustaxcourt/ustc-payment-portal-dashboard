@@ -14,7 +14,8 @@ const renderPicker = (
 ) => {
   const props = {
     visibility: DEFAULT_COLUMN_VISIBILITY,
-    searchedIds: [],
+    lockedId: null,
+    isDefault: true,
     onToggle: vi.fn(),
     onReset: vi.fn(),
     ...overrides,
@@ -80,6 +81,7 @@ describe("ColumnPicker", () => {
   it("won't let the last visible column be hidden, and says why", async () => {
     const { onToggle } = renderPicker({
       visibility: onlyVisible("feeName"),
+      lockedId: "feeName",
     });
     const dialog = await openPicker();
 
@@ -97,43 +99,25 @@ describe("ColumnPicker", () => {
     expect(amount).not.toHaveAccessibleDescription();
   });
 
-  it("keeps a searched column checked and locked, and says why", async () => {
-    const { onToggle } = renderPicker({ searchedIds: ["transactionStatus"] });
+  it("locks only the locked column while others are checked too", async () => {
+    const { onToggle } = renderPicker({
+      visibility: { ...onlyVisible("feeName"), transactionStatus: true },
+      lockedId: "feeName",
+    });
     const dialog = await openPicker();
 
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Fee" }),
+    ).toHaveAttribute("aria-disabled", "true");
     const transactionStatus = within(dialog).getByRole("checkbox", {
       name: "Transaction status",
     });
     expect(transactionStatus).toBeChecked();
-    expect(transactionStatus).toHaveAttribute("aria-disabled", "true");
-    expect(transactionStatus).toHaveAccessibleDescription(
-      "Shown while you're searching by this column",
-    );
+    expect(transactionStatus).not.toHaveAttribute("aria-disabled", "true");
 
     await userEvent.click(transactionStatus);
 
-    expect(onToggle).not.toHaveBeenCalled();
-    expect(
-      within(dialog).getByRole("button", { name: "Reset to defaults" }),
-    ).toBeDisabled();
-  });
-
-  it("guards the last chosen column even while a filter shows another", async () => {
-    const { onToggle } = renderPicker({
-      visibility: onlyVisible("feeName"),
-      searchedIds: ["transactionStatus"],
-    });
-    const dialog = await openPicker();
-
-    const fee = within(dialog).getByRole("checkbox", { name: "Fee" });
-    expect(fee).toHaveAttribute("aria-disabled", "true");
-    expect(fee).toHaveAccessibleDescription(
-      "At least one column must stay visible",
-    );
-
-    await userEvent.click(fee);
-
-    expect(onToggle).not.toHaveBeenCalled();
+    expect(onToggle).toHaveBeenCalledWith("transactionStatus", false);
   });
 
   it("disables Reset to defaults while showing the defaults", async () => {
@@ -145,10 +129,8 @@ describe("ColumnPicker", () => {
     ).toBeDisabled();
   });
 
-  it("resets once the visibility differs from the defaults", async () => {
-    const { onReset } = renderPicker({
-      visibility: { ...DEFAULT_COLUMN_VISIBILITY, createdAt: true },
-    });
+  it("enables Reset to defaults when not at the defaults", async () => {
+    const { onReset } = renderPicker({ isDefault: false });
     const dialog = await openPicker();
 
     await userEvent.click(

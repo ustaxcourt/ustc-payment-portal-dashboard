@@ -15,9 +15,7 @@ import { COLUMN_LABEL, type TransactionColumnId } from "./columnLabels";
 import {
   COLUMN_IDS,
   type ColumnVisibility,
-  DEFAULT_COLUMN_VISIBILITY,
   isMetadataColumnId,
-  withSearchedColumns,
 } from "./columns";
 
 const COLUMN_GROUPS: { legend: string; ids: TransactionColumnId[] }[] = [
@@ -29,36 +27,21 @@ const COLUMN_GROUPS: { legend: string; ids: TransactionColumnId[] }[] = [
 ];
 
 const LAST_COLUMN_HINT = "At least one column must stay visible";
-const SEARCHED_COLUMN_HINT = "Shown while you're searching by this column";
 
 export default function ColumnPicker({
   visibility,
-  searchedIds,
+  lockedId,
+  isDefault,
   onToggle,
   onReset,
 }: {
   visibility: ColumnVisibility;
-  searchedIds: readonly TransactionColumnId[];
+  lockedId: TransactionColumnId | null;
+  isDefault: boolean;
   onToggle: (id: TransactionColumnId, visible: boolean) => void;
   onReset: () => void;
 }) {
   const lastColumnHintId = useId();
-  const searchedColumnHintId = useId();
-  const shownVisibility = withSearchedColumns(visibility, searchedIds);
-  const chosenCount = COLUMN_IDS.filter((id) => visibility[id]).length;
-  const isDefault = COLUMN_IDS.every(
-    (id) => visibility[id] === DEFAULT_COLUMN_VISIBILITY[id],
-  );
-
-  const hintFor = (id: TransactionColumnId) => {
-    if (searchedIds.includes(id)) {
-      return { id: searchedColumnHintId, text: SEARCHED_COLUMN_HINT };
-    }
-    if (visibility[id] && chosenCount === 1) {
-      return { id: lastColumnHintId, text: LAST_COLUMN_HINT };
-    }
-    return null;
-  };
 
   return (
     <Popover>
@@ -91,17 +74,17 @@ export default function ColumnPicker({
               {group.legend}
             </legend>
             {group.ids.map((id) => {
-              const hint = hintFor(id);
+              const isLocked = id === lockedId;
               return (
                 <Label
                   key={id}
-                  title={hint?.text}
+                  title={isLocked ? LAST_COLUMN_HINT : undefined}
                   className="cursor-pointer font-normal leading-normal has-data-disabled:cursor-not-allowed has-data-disabled:opacity-60"
                 >
                   <Checkbox
-                    checked={shownVisibility[id]}
-                    disabled={hint !== null}
-                    aria-describedby={hint?.id}
+                    checked={visibility[id]}
+                    disabled={isLocked}
+                    aria-describedby={isLocked ? lastColumnHintId : undefined}
                     onCheckedChange={(checked) => onToggle(id, checked)}
                   />
                   <span>{COLUMN_LABEL[id]}</span>
@@ -112,9 +95,6 @@ export default function ColumnPicker({
         ))}
         <p id={lastColumnHintId} className="sr-only">
           {LAST_COLUMN_HINT}
-        </p>
-        <p id={searchedColumnHintId} className="sr-only">
-          {SEARCHED_COLUMN_HINT}
         </p>
       </PopoverContent>
     </Popover>
