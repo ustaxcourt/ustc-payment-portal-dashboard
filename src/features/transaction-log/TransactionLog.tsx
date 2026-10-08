@@ -138,22 +138,16 @@ export default function TransactionLog() {
     metadataDraftRef.current = undefined;
   }
 
-  useEffect(() => {
-    console.log("paymentStatus", searchFilters.paymentStatus);
-
-    const showFailureColumns =
-      searchFilters.paymentStatus === "failed";
-
-    setColumnVisibility((previous) => ({
-      ...previous,
-      transactionStatus: showFailureColumns,
-      returnDetail: showFailureColumns,
-    }));
-  }, [searchFilters.paymentStatus]);
+  const showFailureColumns =
+    searchFilters.paymentStatus === "failed";
 
   const searchedIds = searchedColumnIds(searchFilters);
   const tableVisibility = withSearchedColumns(
-    columnVisibility,
+    {
+      ...columnVisibility,
+      transactionStatus: showFailureColumns,
+      returnDetail: showFailureColumns,
+    },
     searchedIds,
   );
 
