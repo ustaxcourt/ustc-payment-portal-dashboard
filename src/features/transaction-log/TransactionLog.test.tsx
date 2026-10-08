@@ -678,55 +678,81 @@ describe("TransactionLog column picker", () => {
     });
   });
 
-  it("allows Transaction Status to be unchecked after failed status makes it visible", async () => {
+  it("checks Transaction Status and Failure Reason in the picker when payment status is failed", async () => {
     mockFetch(response());
 
     renderLog("?status=failed");
 
-    await waitFor(() =>
-      expect(headers()).toContain("Transaction status"),
-    );
+    const dialog = await openPicker();
 
-    await toggleColumn("Transaction status");
+    expect(
+      within(dialog).getByRole("checkbox", {
+        name: "Transaction status",
+      }),
+    ).toBeChecked();
 
-    expect(headers()).not.toContain("Transaction status");
+    expect(
+      within(dialog).getByRole("checkbox", {
+        name: "Failure reason",
+      }),
+    ).toBeChecked();
   });
 
-  it("allows Failure Reason to be unchecked after failed status makes it visible", async () => {
+  it("resets to failed-status defaults", async () => {
     mockFetch(response());
 
     renderLog("?status=failed");
 
-    await waitFor(() =>
-      expect(headers()).toContain("Failure reason"),
+    await toggleColumn("Client");
+
+    const dialog = await openPicker();
+
+    await userEvent.click(
+      within(dialog).getByRole("button", {
+        name: "Reset to defaults",
+      }),
     );
-
-    await toggleColumn("Failure reason");
-
-    expect(headers()).not.toContain("Failure reason");
-  });
-
-  it("allows Transaction Status to be enabled when viewing successful transactions", async () => {
-    mockFetch(response());
-
-    renderLog("?status=success");
-
-    expect(headers()).not.toContain("Transaction status");
-
-    await toggleColumn("Transaction status");
 
     expect(headers()).toContain("Transaction status");
+    expect(headers()).toContain("Failure reason");
   });
 
-  it("allows Failure Reason to be enabled when viewing successful transactions", async () => {
+  it("leaves Transaction Status and Failure Reason unchecked in the picker when payment status is successful", async () => {
     mockFetch(response());
 
     renderLog("?status=success");
 
-    expect(headers()).not.toContain("Failure reason");
+    const dialog = await openPicker();
 
-    await toggleColumn("Failure reason");
+    expect(
+      within(dialog).getByRole("checkbox", {
+        name: "Transaction status",
+      }),
+    ).not.toBeChecked();
 
+    expect(
+      within(dialog).getByRole("checkbox", {
+        name: "Failure reason",
+      }),
+    ).not.toBeChecked();
+  });
+
+  it("resets to failed-status defaults", async () => {
+    mockFetch(response());
+
+    renderLog("?status=failed");
+
+    await toggleColumn("Client");
+
+    const dialog = await openPicker();
+
+    await userEvent.click(
+      within(dialog).getByRole("button", {
+        name: "Reset to defaults",
+      }),
+    );
+
+    expect(headers()).toContain("Transaction status");
     expect(headers()).toContain("Failure reason");
   });
 

@@ -230,7 +230,6 @@ export default function TransactionLog() {
         aria-live="polite"
         className="sr-only"
       >
-        Sorted by Last updated, descending
         {data?.sort && COLUMN_LABEL[data.sort]
           ? `Sorted by ${COLUMN_LABEL[data.sort]}, ${
               data.order === "desc" ? "descending" : "ascending"

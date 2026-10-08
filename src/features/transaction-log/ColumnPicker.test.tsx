@@ -19,7 +19,15 @@ const renderPicker = (
     onReset: vi.fn(),
     ...overrides,
   };
-  render(<ColumnPicker {...props} />);
+  render(
+    <ColumnPicker
+      visibility={props.visibility}
+      searchedIds={props.searchedIds}
+      onToggle={props.onToggle}
+      defaultVisibility={DEFAULT_COLUMN_VISIBILITY}
+      onReset={props.onReset}
+    />,
+  );
   return props;
 };
 
