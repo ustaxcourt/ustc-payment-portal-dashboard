@@ -7,8 +7,8 @@
 // "\x2e" is a literal dot; it is written escaped so this file does not itself
 // trip the hook when edited.
 
-const ENV_FILE = /(^|[\/\\\s'"=:@(])\x2eenv/i;
-const TEMPLATE_FILE = /\x2eenv[\w.\-]*\.(example|sample|template)(?![\w\-])/gi;
+const ENV_FILE = /(^|[/\\\s'"=:@(])\x2eenv/i;
+const TEMPLATE_FILE = /\x2eenv[\w.-]*\.(example|sample|template)(?![\w-])/gi;
 
 let input = "";
 process.stdin.setEncoding("utf8");
