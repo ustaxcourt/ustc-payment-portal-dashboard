@@ -1,6 +1,8 @@
 {
   "permissions": {
     "deny": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
       "Read(**/\u002eenv)",
       "Read(**/\u002eenv.local)",
       "Read(**/\u002eenv.*.local)",
