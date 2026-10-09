@@ -40,7 +40,7 @@ test.describe("dashboard accessibility", () => {
         ).toBeVisible();
 
         await expect(
-          page.getByRole("table", { name: /Successful payments by fee/i }),
+          page.getByRole("list", { name: /Successful payments by fee/i }),
         ).toBeVisible();
 
         await expect(
@@ -77,7 +77,7 @@ test.describe("dashboard accessibility", () => {
         ).toBeVisible();
 
         await expect(
-          page.getByRole("table", { name: /Successful payments by fee/i }),
+          page.getByRole("list", { name: /Successful payments by fee/i }),
         ).toBeVisible();
 
         await expect(
@@ -167,7 +167,7 @@ test.describe("dashboard accessibility", () => {
           ).toBeVisible();
 
           await expect(
-            page.getByRole("table", { name: /Successful payments by fee/i }),
+            page.getByRole("list", { name: /Successful payments by fee/i }),
           ).toBeVisible();
 
           await expect(

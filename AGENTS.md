@@ -19,7 +19,7 @@ Core constraints:
 - [`src/features/`](src/features/): one folder per dashboard feature, with components, hooks, pure logic and tests colocated.
   - `transaction-log/`: the table, filters, timeframe controls, column picker and Excel export (including the export web worker).
   - `revenue-totals/`: totals shown for the selected timeframe.
-  - `payment-breakdown/`: per-payment breakdown pane.
+  - `payment-breakdown/`: per-payment breakdown section.
 - [`src/components/ui/`](src/components/ui/): shared, feature-agnostic UI primitives.
 - [`src/lib/`](src/lib/): shared non-UI code: auth config, the payment-portal API client (SigV4-signed), session helpers, formatting and the court calendar.
 - [`src/providers/`](src/providers/): client-side providers and the idle-logout hook.
