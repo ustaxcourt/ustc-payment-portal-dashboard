@@ -14,16 +14,20 @@ import {
 } from "./columnLabels";
 import SortableHeader from "./SortableHeader";
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
+import type {
+  FeeType,
+  MetadataKey,
+  PaymentStatus,
+  TransactionLogEntry,
+  TransactionSearchFilters,
+  TransactionSortField,
+} from "./types";
 import {
   FEE_METADATA_KEYS,
-  type FeeType,
   METADATA_KEYS,
-  PaymentStatus,
-  type MetadataKey,
-  type TransactionLogEntry,
-  type TransactionSearchFilters,
-  type TransactionSortField,
 } from "./types";
+
+
 
 export type ColumnVisibility = Record<TransactionColumnId, boolean>;
 
