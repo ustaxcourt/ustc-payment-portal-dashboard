@@ -175,11 +175,33 @@ describe("useColumnVisibility", () => {
 
     expect(result.current.visibility.returnDetail).toBe(true);
     expect(result.current.visibility.transactionStatus).toBe(true);
+  });
 
-    // expect(result.current.visibility).toEqual(
-    //   effectiveDefaultVisibility(null, "failed"),
-    // );
-    // expect(result.current.isDefault).toBe(true);
+  it("treats failed-status visibility as the default state", () => {
+    const { result } = renderColumns(
+      filtered({
+        feeType: "PETITION_FILING_FEE",
+        paymentStatus: "failed",
+      }),
+    );
+
+    expect(result.current.isDefault).toBe(true);
+  });
+
+  it("resets to the failed-status defaults", () => {
+    const { result } = renderColumns(
+      filtered({
+        feeType: "PETITION_FILING_FEE",
+        paymentStatus: "failed",
+      }),
+    );
+
+    act(() => result.current.toggle("clientName", true));
+    act(() => result.current.reset());
+
+    expect(result.current.isDefault).toBe(true);
+    expect(result.current.visibility.transactionStatus).toBe(true);
+    expect(result.current.visibility.returnDetail).toBe(true);
   });
 
   it("resets to the selected fee's defaults and shows hidden searched columns", () => {

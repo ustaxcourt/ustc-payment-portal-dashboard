@@ -170,7 +170,10 @@ export const useColumnVisibility = (filters: TransactionSearchFilters) => {
     lockedId: chosenIds.length === 1 ? chosenIds[0] : null,
     isDefault:
       Object.keys(state.chosenBeforeHiding).length === 0 &&
-      isSameVisibility(state.chosen, defaultColumnVisibility(state.feeType)),
+      isSameVisibility(
+        state.chosen,
+        effectiveDefaultVisibility(state.feeType, state.paymentStatus),
+      ),
     toggle: (id: TransactionColumnId, visible: boolean) =>
       dispatch({ type: "toggled", id, visible }),
     reset: () => dispatch({ type: "reset" }),
