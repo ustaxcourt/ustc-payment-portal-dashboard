@@ -5,7 +5,6 @@ import type { TransactionColumnId } from "./columnLabels";
 import {
   COLUMN_IDS,
   type ColumnVisibility,
-  defaultColumnVisibility,
   effectiveDefaultVisibility,
   isSameVisibility,
   searchedColumnIds,
@@ -113,11 +112,16 @@ const columnsReducer = (
           transactionStatus: showFailureColumns,
           returnDetail: showFailureColumns,
         };
+
+        const hasVisibleColumn = COLUMN_IDS.some((id) => chosen[id]);
+
+        if (!hasVisibleColumn) {
+          chosen = effectiveDefaultVisibility(
+            action.feeType,
+            action.paymentStatus,
+          );
+        }
       }
-      // const chosen =
-      //   action.feeType === state.feeType
-      //     ? state.chosen
-      //     : withFeeDefaults(state.chosen, action.feeType);
       return {
         feeType: action.feeType,
         paymentStatus: action.paymentStatus,

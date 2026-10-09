@@ -1,10 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import {
-  DEFAULT_COLUMN_VISIBILITY,
-  defaultColumnVisibility,
-  effectiveDefaultVisibility,
-} from "./columns";
+import { DEFAULT_COLUMN_VISIBILITY, defaultColumnVisibility } from "./columns";
 import type { TransactionSearchFilters } from "./types";
 import { useColumnVisibility } from "./useColumnVisibility";
 
