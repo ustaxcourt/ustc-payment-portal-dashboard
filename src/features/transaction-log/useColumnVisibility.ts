@@ -5,16 +5,17 @@ import type { TransactionColumnId } from "./columnLabels";
 import {
   COLUMN_IDS,
   type ColumnVisibility,
-  defaultColumnVisibility,
+  effectiveDefaultVisibility,
   isSameVisibility,
   searchedColumnIds,
   withFeeDefaults,
   withSearchedColumns,
 } from "./columns";
-import type { FeeType, TransactionSearchFilters } from "./types";
+import type { FeeType, PaymentStatus, TransactionSearchFilters } from "./types";
 
 type ColumnState = {
   feeType: FeeType | null;
+  paymentStatus: PaymentStatus | null;
   searchedIds: readonly TransactionColumnId[];
   chosen: ColumnVisibility;
   chosenBeforeHiding: Partial<ColumnVisibility>;
@@ -24,6 +25,7 @@ type ColumnAction =
   | {
       type: "filtersChanged";
       feeType: FeeType | null;
+      paymentStatus: PaymentStatus | null;
       searchedIds: readonly TransactionColumnId[];
     }
   | { type: "toggled"; id: TransactionColumnId; visible: boolean }
@@ -31,11 +33,13 @@ type ColumnAction =
 
 const initialState = (
   feeType: FeeType | null,
+  paymentStatus: PaymentStatus | null,
   searchedIds: readonly TransactionColumnId[],
 ): ColumnState => ({
   feeType,
   searchedIds,
-  chosen: defaultColumnVisibility(feeType),
+  paymentStatus,
+  chosen: effectiveDefaultVisibility(feeType, paymentStatus),
   chosenBeforeHiding: {},
 });
 
@@ -94,12 +98,33 @@ const columnsReducer = (
 ): ColumnState => {
   switch (action.type) {
     case "filtersChanged": {
-      const chosen =
+      const paymentStatusChanged = action.paymentStatus !== state.paymentStatus;
+      let chosen =
         action.feeType === state.feeType
           ? state.chosen
           : withFeeDefaults(state.chosen, action.feeType);
+
+      if (paymentStatusChanged) {
+        const showFailureColumns = action.paymentStatus === "failed";
+
+        chosen = {
+          ...chosen,
+          transactionStatus: showFailureColumns,
+          returnDetail: showFailureColumns,
+        };
+
+        const hasVisibleColumn = COLUMN_IDS.some((id) => chosen[id]);
+
+        if (!hasVisibleColumn) {
+          chosen = effectiveDefaultVisibility(
+            action.feeType,
+            action.paymentStatus,
+          );
+        }
+      }
       return {
         feeType: action.feeType,
+        paymentStatus: action.paymentStatus,
         searchedIds: action.searchedIds,
         chosen,
         chosenBeforeHiding: keepStillHidden(
@@ -112,21 +137,31 @@ const columnsReducer = (
     case "toggled":
       return toggle(state, action.id, action.visible);
     case "reset":
-      return initialState(state.feeType, state.searchedIds);
+      return initialState(
+        state.feeType,
+        state.paymentStatus,
+        state.searchedIds,
+      );
   }
 };
 
 export const useColumnVisibility = (filters: TransactionSearchFilters) => {
   const searchedIds = searchedColumnIds(filters);
   const [state, dispatch] = useReducer(columnsReducer, undefined, () =>
-    initialState(filters.feeType, searchedIds),
+    initialState(filters.feeType, filters.paymentStatus, searchedIds),
   );
 
   if (
     state.feeType !== filters.feeType ||
+    state.paymentStatus !== filters.paymentStatus ||
     !isSameIds(state.searchedIds, searchedIds)
   ) {
-    dispatch({ type: "filtersChanged", feeType: filters.feeType, searchedIds });
+    dispatch({
+      type: "filtersChanged",
+      feeType: filters.feeType,
+      paymentStatus: filters.paymentStatus,
+      searchedIds,
+    });
   }
 
   const shownSearchedIds = state.searchedIds.filter(
@@ -139,7 +174,10 @@ export const useColumnVisibility = (filters: TransactionSearchFilters) => {
     lockedId: chosenIds.length === 1 ? chosenIds[0] : null,
     isDefault:
       Object.keys(state.chosenBeforeHiding).length === 0 &&
-      isSameVisibility(state.chosen, defaultColumnVisibility(state.feeType)),
+      isSameVisibility(
+        state.chosen,
+        effectiveDefaultVisibility(state.feeType, state.paymentStatus),
+      ),
     toggle: (id: TransactionColumnId, visible: boolean) =>
       dispatch({ type: "toggled", id, visible }),
     reset: () => dispatch({ type: "reset" }),

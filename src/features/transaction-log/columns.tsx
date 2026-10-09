@@ -14,15 +14,20 @@ import {
 } from "./columnLabels";
 import SortableHeader from "./SortableHeader";
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
+import type {
+  FeeType,
+  MetadataKey,
+  PaymentStatus,
+  TransactionLogEntry,
+  TransactionSearchFilters,
+  TransactionSortField,
+} from "./types";
 import {
   FEE_METADATA_KEYS,
-  type FeeType,
   METADATA_KEYS,
-  type MetadataKey,
-  type TransactionLogEntry,
-  type TransactionSearchFilters,
-  type TransactionSortField,
 } from "./types";
+
+
 
 export type ColumnVisibility = Record<TransactionColumnId, boolean>;
 
@@ -308,3 +313,12 @@ export const TRANSACTION_COLUMNS: TransactionColumnDef[] = [
 export const COLUMN_IDS: TransactionColumnId[] = TRANSACTION_COLUMNS.map(
   (column) => column.id,
 );
+
+export const effectiveDefaultVisibility = (
+  feeType: FeeType | null,
+  paymentStatus: PaymentStatus | null,
+): ColumnVisibility => ({
+  ...defaultColumnVisibility(feeType),
+  transactionStatus: paymentStatus === "failed",
+  returnDetail: paymentStatus === "failed",
+});
