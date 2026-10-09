@@ -1,6 +1,10 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_COLUMN_VISIBILITY, defaultColumnVisibility } from "./columns";
+import {
+  DEFAULT_COLUMN_VISIBILITY,
+  defaultColumnVisibility,
+  effectiveDefaultVisibility,
+} from "./columns";
 import type { TransactionSearchFilters } from "./types";
 import { useColumnVisibility } from "./useColumnVisibility";
 
@@ -260,5 +264,29 @@ describe("useColumnVisibility", () => {
 
     expect(result.current.visibility.transactionStatus).toBe(false);
     expect(result.current.visibility.returnDetail).toBe(false);
+  });
+
+  it("falls back to effective defaults when changing payment status hides the last visible column", () => {
+    const { result, rerender } = renderColumns(
+      filtered({ paymentStatus: "failed" }),
+    );
+
+    // Hide every visible column except Failure Reason.
+    act(() => result.current.toggle("lastUpdatedAt", false));
+    act(() => result.current.toggle("feeName", false));
+    act(() => result.current.toggle("transactionAmount", false));
+    act(() => result.current.toggle("paymentStatus", false));
+    act(() => result.current.toggle("transactionStatus", false));
+
+    expect(result.current.visibility.returnDetail).toBe(true);
+
+    rerender({
+      filters: filtered({ paymentStatus: null }),
+    });
+
+    expect(result.current.visibility).toEqual(
+      effectiveDefaultVisibility(null, null),
+    );
+    expect(result.current.isDefault).toBe(true);
   });
 });
