@@ -100,10 +100,6 @@ const columnsReducer = (
   switch (action.type) {
     case "filtersChanged": {
       const paymentStatusChanged = action.paymentStatus !== state.paymentStatus;
-      console.log("reducer", {
-        statePaymentStatus: state.paymentStatus,
-        actionPaymentStatus: action.paymentStatus,
-      });
       let chosen =
         action.feeType === state.feeType
           ? state.chosen
@@ -156,14 +152,6 @@ export const useColumnVisibility = (filters: TransactionSearchFilters) => {
     state.paymentStatus !== filters.paymentStatus ||
     !isSameIds(state.searchedIds, searchedIds)
   ) {
-    console.log({
-      stateFeeType: state.feeType,
-      filterFeeType: filters.feeType,
-      statePaymentStatus: state.paymentStatus,
-      filterPaymentStatus: filters.paymentStatus,
-      stateSearchedIds: state.searchedIds,
-      searchedIds,
-    });
     dispatch({
       type: "filtersChanged",
       feeType: filters.feeType,
