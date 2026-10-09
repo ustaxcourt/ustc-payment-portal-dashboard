@@ -162,7 +162,7 @@ describe("useColumnVisibility", () => {
     expect(result.current.visibility["metadata.docketNumber"]).toBe(false);
   });
 
-  it("forgets a hidden searched column that the fee's defaults show again", () => {
+  it("shows failure columns when payment status is failed", () => {
     const { result, rerender } = renderColumns(
       filtered({ feeType: "PETITION_FILING_FEE", paymentStatus: "failed" }),
     );
