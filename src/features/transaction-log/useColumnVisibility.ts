@@ -99,13 +99,32 @@ const columnsReducer = (
 ): ColumnState => {
   switch (action.type) {
     case "filtersChanged": {
-      const chosen =
+      const paymentStatusChanged = action.paymentStatus !== state.paymentStatus;
+      console.log("reducer", {
+        statePaymentStatus: state.paymentStatus,
+        actionPaymentStatus: action.paymentStatus,
+      });
+      let chosen =
         action.feeType === state.feeType
           ? state.chosen
           : withFeeDefaults(state.chosen, action.feeType);
+
+      if (paymentStatusChanged) {
+        const showFailureColumns = action.paymentStatus === "failed";
+
+        chosen = {
+          ...chosen,
+          transactionStatus: showFailureColumns,
+          returnDetail: showFailureColumns,
+        };
+      }
+      // const chosen =
+      //   action.feeType === state.feeType
+      //     ? state.chosen
+      //     : withFeeDefaults(state.chosen, action.feeType);
       return {
         feeType: action.feeType,
-        paymentStatus: state.paymentStatus,
+        paymentStatus: action.paymentStatus,
         searchedIds: action.searchedIds,
         chosen,
         chosenBeforeHiding: keepStillHidden(
@@ -134,8 +153,17 @@ export const useColumnVisibility = (filters: TransactionSearchFilters) => {
 
   if (
     state.feeType !== filters.feeType ||
+    state.paymentStatus !== filters.paymentStatus ||
     !isSameIds(state.searchedIds, searchedIds)
   ) {
+    console.log({
+      stateFeeType: state.feeType,
+      filterFeeType: filters.feeType,
+      statePaymentStatus: state.paymentStatus,
+      filterPaymentStatus: filters.paymentStatus,
+      stateSearchedIds: state.searchedIds,
+      searchedIds,
+    });
     dispatch({
       type: "filtersChanged",
       feeType: filters.feeType,

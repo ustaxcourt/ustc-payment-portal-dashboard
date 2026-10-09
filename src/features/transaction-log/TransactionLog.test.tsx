@@ -818,7 +818,7 @@ describe("TransactionLog column picker", () => {
     await waitFor(() =>
       expect(fetchMock.mock.calls.at(-1)?.[0]).toContain("status=pending"),
     );
-    expect(headers()).toEqual(["Last updated", "Fee", "Amount", "Failure reason", "Transaction status"]);
+    expect(headers()).toEqual(["Last updated", "Fee", "Amount"]);
   });
 
   it("keeps a hidden Fee column hidden while the fee's metadata columns swap", async () => {

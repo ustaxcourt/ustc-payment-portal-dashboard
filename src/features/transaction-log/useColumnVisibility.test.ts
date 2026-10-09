@@ -227,4 +227,20 @@ describe("useColumnVisibility", () => {
 
     expect(result.current.lockedId).toBe("paymentStatus");
   });
+
+  it("hides failure columns when payment status changes from failed to pending", () => {
+    const { result, rerender } = renderColumns(
+      filtered({ paymentStatus: "failed" }),
+    );
+
+    expect(result.current.visibility.transactionStatus).toBe(true);
+    expect(result.current.visibility.returnDetail).toBe(true);
+
+    rerender({
+      filters: filtered({ paymentStatus: "pending" }),
+    });
+
+    expect(result.current.visibility.transactionStatus).toBe(false);
+    expect(result.current.visibility.returnDetail).toBe(false);
+  });
 });
