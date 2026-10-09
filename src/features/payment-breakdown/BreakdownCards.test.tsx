@@ -24,4 +24,26 @@ describe("BreakdownCards", () => {
     expect(items[0]).toHaveTextContent("2 things");
     expect(items[1]).toHaveTextContent("First");
   });
+
+  it("bolds only the emphasized card's label", () => {
+    render(
+      <BreakdownCards
+        ariaLabel="Payments by fee"
+        cards={[
+          {
+            id: "total",
+            label: "Total",
+            amount: "$3.00",
+            caption: "3 things",
+            emphasized: true,
+          },
+          { id: "fee", label: "Fee", amount: "$1.00", caption: "1 thing" },
+        ]}
+      />,
+    );
+
+    expect(screen.getByTitle("Total")).toHaveClass("uppercase", "font-bold");
+    expect(screen.getByTitle("Fee")).toHaveClass("uppercase", "font-semibold");
+    expect(screen.getByTitle("Fee")).not.toHaveClass("font-bold");
+  });
 });

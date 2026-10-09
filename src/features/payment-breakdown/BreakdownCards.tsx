@@ -26,7 +26,7 @@ export default function BreakdownCards({
         >
           <span
             title={card.label}
-            className={`truncate text-xs tracking-widest text-slate-900 uppercase${card.emphasized ? "font-bold" : "font-semibold"}`}
+            className={`truncate text-xs tracking-widest text-slate-900 uppercase ${card.emphasized ? "font-bold" : "font-semibold"}`}
           >
             {card.label}
           </span>
