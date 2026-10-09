@@ -10,6 +10,8 @@ export const DEFAULT_COLUMNS = [
 export const HIDDEN_BY_DEFAULT_COLUMNS = [
   "Created",
   "Payment method",
+  "Failure reason",
+  "Transaction status",
   "Client",
   "Reference ID",
   "Pay.gov tracking ID",
