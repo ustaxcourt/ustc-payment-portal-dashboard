@@ -11,12 +11,12 @@ test.beforeEach(async ({ page }) => {
 const FILENAME =
   /^\d{4}-\d{2}-\d{2}( to \d{4}-\d{2}-\d{2})? - USTC Fee Payment Summary( \((Successful|Failed|Pending)\))?\.xlsx$/;
 
-test("exporting downloads a workbook named for the current view", async ({
+test("the download button saves a workbook named for the current view", async ({
   page,
 }) => {
   await page.goto("/?range=last7");
 
-  const button = page.getByRole("button", { name: "Export" });
+  const button = page.getByRole("button", { name: "Download Transaction Log" });
   await expect(button).toBeEnabled();
 
   const downloadPromise = page.waitForEvent("download");
@@ -31,21 +31,21 @@ test("a filtered tab stamps its status into the filename", async ({ page }) => {
   await page.goto("/?range=last7&status=failed");
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export" }).click();
+  await page.getByRole("button", { name: "Download Transaction Log" }).click();
   const download = await downloadPromise;
 
   expect(download.suggestedFilename()).toMatch(/ \(Failed\)\.xlsx$/);
 });
 
-test("the export announces progress politely and returns to idle", async ({
+test("the download announces progress politely and returns to idle", async ({
   page,
 }) => {
   await page.goto("/?range=last7");
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export" }).click();
+  await page.getByRole("button", { name: "Download Transaction Log" }).click();
   await downloadPromise;
 
-  await expect(page.getByRole("button", { name: "Export" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Download Transaction Log" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
 });

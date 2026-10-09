@@ -5,19 +5,7 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { formatCourtDate } from "@/lib/format";
 import TimeframeBar from "./TimeframeBar";
-import type { TransactionLogEntry, TransactionLogResponse } from "./types";
-
-const entry = (): TransactionLogEntry => ({
-  agencyTrackingId: "USTC-1",
-  feeName: "Petition Fee",
-  fee: "60.00",
-  transactionAmount: 60,
-  clientName: "Ada Lovelace",
-  transactionReferenceId: "ref-1",
-  paymentStatus: "success",
-  createdAt: "2026-08-03T12:00:00.000Z",
-  lastUpdatedAt: "2026-08-03T12:00:00.000Z",
-});
+import type { TransactionLogResponse } from "./types";
 
 const response = (
   overrides: Partial<TransactionLogResponse> = {},
@@ -70,7 +58,7 @@ afterEach(() => {
 });
 
 describe("TimeframeBar", () => {
-  it("shows the timeframe presets and the export button", async () => {
+  it("shows the timeframe presets", async () => {
     mockFetch(response());
     renderBar();
 
@@ -84,27 +72,6 @@ describe("TimeframeBar", () => {
     expect(
       screen.getByRole("button", { name: "Custom range" }),
     ).toBeInTheDocument();
-    expect(
-      await screen.findByRole("button", { name: "Export" }),
-    ).toBeInTheDocument();
-  });
-
-  it("disables export while the log is empty", async () => {
-    mockFetch(response({ data: [], total: 0 }));
-    renderBar();
-
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Export" })).toBeDisabled(),
-    );
-  });
-
-  it("enables export once the log has rows", async () => {
-    mockFetch(response({ data: [entry()], total: 1 }));
-    renderBar();
-
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Export" })).toBeEnabled(),
-    );
   });
 
   it("shows the server-confirmed date beside the applied preset", async () => {
