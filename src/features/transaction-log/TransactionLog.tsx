@@ -20,7 +20,7 @@ import { useToast } from "@/components/ui/toast-context";
 import { cn } from "@/lib/utils";
 import ColumnPicker from "./ColumnPicker";
 import { COLUMN_LABEL } from "./columnLabels";
-import { defaultVisibilityFor, TRANSACTION_COLUMNS } from "./columns";
+import { TRANSACTION_COLUMNS } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
 import TransactionTable from "./TransactionTable";

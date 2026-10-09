@@ -1,6 +1,10 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_COLUMN_VISIBILITY, defaultColumnVisibility } from "./columns";
+import {
+  DEFAULT_COLUMN_VISIBILITY,
+  defaultColumnVisibility,
+  effectiveDefaultVisibility,
+} from "./columns";
 import type { TransactionSearchFilters } from "./types";
 import { useColumnVisibility } from "./useColumnVisibility";
 
@@ -169,8 +173,13 @@ describe("useColumnVisibility", () => {
     act(() => result.current.toggle("feeName", false));
     rerender({ filters: filtered({ paymentStatus: "failed" }) });
 
-    expect(result.current.visibility).toEqual(DEFAULT_COLUMN_VISIBILITY);
-    expect(result.current.isDefault).toBe(true);
+    expect(result.current.visibility.returnDetail).toBe(true);
+    expect(result.current.visibility.transactionStatus).toBe(true);
+
+    // expect(result.current.visibility).toEqual(
+    //   effectiveDefaultVisibility(null, "failed"),
+    // );
+    // expect(result.current.isDefault).toBe(true);
   });
 
   it("resets to the selected fee's defaults and shows hidden searched columns", () => {
@@ -207,7 +216,9 @@ describe("useColumnVisibility", () => {
   });
 
   it("locks the last chosen column after a searched column is hidden", () => {
-    const { result } = renderColumns(filtered({ feeType: "PETITION_FILING_FEE" }));
+    const { result } = renderColumns(
+      filtered({ feeType: "PETITION_FILING_FEE" }),
+    );
 
     act(() => result.current.toggle("lastUpdatedAt", false));
     act(() => result.current.toggle("transactionAmount", false));

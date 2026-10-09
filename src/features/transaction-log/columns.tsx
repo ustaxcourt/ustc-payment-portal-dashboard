@@ -317,3 +317,12 @@ export const defaultVisibilityFor = (
   transactionStatus: paymentStatus === "failed",
   returnDetail: paymentStatus === "failed",
 });
+
+export const effectiveDefaultVisibility = (
+  feeType: FeeType | null,
+  paymentStatus: PaymentStatus | null,
+): ColumnVisibility => ({
+  ...defaultColumnVisibility(feeType),
+  transactionStatus: paymentStatus === "failed",
+  returnDetail: paymentStatus === "failed",
+});

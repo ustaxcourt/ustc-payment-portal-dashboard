@@ -6,15 +6,17 @@ import {
   COLUMN_IDS,
   type ColumnVisibility,
   defaultColumnVisibility,
+  effectiveDefaultVisibility,
   isSameVisibility,
   searchedColumnIds,
   withFeeDefaults,
   withSearchedColumns,
 } from "./columns";
-import type { FeeType, TransactionSearchFilters } from "./types";
+import type { FeeType, PaymentStatus, TransactionSearchFilters } from "./types";
 
 type ColumnState = {
   feeType: FeeType | null;
+  paymentStatus: PaymentStatus | null;
   searchedIds: readonly TransactionColumnId[];
   chosen: ColumnVisibility;
   chosenBeforeHiding: Partial<ColumnVisibility>;
@@ -24,6 +26,7 @@ type ColumnAction =
   | {
       type: "filtersChanged";
       feeType: FeeType | null;
+      paymentStatus: PaymentStatus | null;
       searchedIds: readonly TransactionColumnId[];
     }
   | { type: "toggled"; id: TransactionColumnId; visible: boolean }
@@ -31,11 +34,13 @@ type ColumnAction =
 
 const initialState = (
   feeType: FeeType | null,
+  paymentStatus: PaymentStatus | null,
   searchedIds: readonly TransactionColumnId[],
 ): ColumnState => ({
   feeType,
   searchedIds,
-  chosen: defaultColumnVisibility(feeType),
+  paymentStatus,
+  chosen: effectiveDefaultVisibility(feeType, paymentStatus),
   chosenBeforeHiding: {},
 });
 
@@ -100,6 +105,7 @@ const columnsReducer = (
           : withFeeDefaults(state.chosen, action.feeType);
       return {
         feeType: action.feeType,
+        paymentStatus: state.paymentStatus,
         searchedIds: action.searchedIds,
         chosen,
         chosenBeforeHiding: keepStillHidden(
@@ -112,21 +118,30 @@ const columnsReducer = (
     case "toggled":
       return toggle(state, action.id, action.visible);
     case "reset":
-      return initialState(state.feeType, state.searchedIds);
+      return initialState(
+        state.feeType,
+        state.paymentStatus,
+        state.searchedIds,
+      );
   }
 };
 
 export const useColumnVisibility = (filters: TransactionSearchFilters) => {
   const searchedIds = searchedColumnIds(filters);
   const [state, dispatch] = useReducer(columnsReducer, undefined, () =>
-    initialState(filters.feeType, searchedIds),
+    initialState(filters.feeType, filters.paymentStatus, searchedIds),
   );
 
   if (
     state.feeType !== filters.feeType ||
     !isSameIds(state.searchedIds, searchedIds)
   ) {
-    dispatch({ type: "filtersChanged", feeType: filters.feeType, searchedIds });
+    dispatch({
+      type: "filtersChanged",
+      feeType: filters.feeType,
+      paymentStatus: filters.paymentStatus,
+      searchedIds,
+    });
   }
 
   const shownSearchedIds = state.searchedIds.filter(
