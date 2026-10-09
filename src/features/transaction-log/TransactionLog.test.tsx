@@ -50,13 +50,18 @@ const renderLog = (
     defaultOptions: { queries: { retry: false } },
   });
 
-  return render(
-    <NuqsTestingAdapter searchParams={searchParams} hasMemory {...options}>
+  const tree = (params: string) => (
+    <NuqsTestingAdapter searchParams={params} hasMemory {...options}>
       <TestProviders client={client}>
         <TransactionLog />
       </TestProviders>
-    </NuqsTestingAdapter>,
+    </NuqsTestingAdapter>
   );
+  const result = render(tree(searchParams));
+  return {
+    ...result,
+    navigate: (params: string) => result.rerender(tree(params)),
+  };
 };
 
 /** The timeframe presets live in the bar; render both when a flow spans them. */
@@ -476,8 +481,15 @@ const stubNarrowViewport = () => {
 };
 
 describe("TransactionLog column picker", () => {
+  const DEFAULT_HEADERS = ["Last updated", "Fee", "Amount", "Payment status"];
+
   const headers = () =>
     screen.getAllByRole("columnheader").map((header) => header.textContent);
+
+  const selectFee = async (name: string) => {
+    await userEvent.click(screen.getByLabelText("Fee Type"));
+    await userEvent.click(await screen.findByRole("option", { name }));
+  };
 
   const openPicker = async () => {
     await userEvent.click(
@@ -625,12 +637,289 @@ describe("TransactionLog column picker", () => {
     await waitFor(() => expect(headers()).toEqual(["Payment status"]));
   });
 
-  it("no longer adds metadata columns when a fee is selected", async () => {
+  it("opens a fee carried in the url with that fee's metadata columns", async () => {
     mockFetch(response());
     renderLog("?feeType=PETITION_FILING_FEE");
 
-    await waitFor(() => expect(headers()).toHaveLength(4));
-    expect(headers()).not.toContain("Docket number");
+    await waitFor(() =>
+      expect(headers()).toEqual([...DEFAULT_HEADERS, "Docket number"]),
+    );
+  });
+
+  it("shows and checks the selected fee's metadata columns", async () => {
+    mockFetch(response());
+    renderLog("");
+
+    await selectFee("Non-Attorney Exam Registration Fee");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        ...DEFAULT_HEADERS,
+        "Email",
+        "Full name",
+        "Access code",
+      ]),
+    );
+    const dialog = await openPicker();
+    for (const name of ["Email", "Full name", "Access code"]) {
+      expect(within(dialog).getByRole("checkbox", { name })).toBeChecked();
+    }
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Docket number" }),
+    ).not.toBeChecked();
+  });
+
+  it("swaps the metadata columns when the fee changes", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await selectFee("Non-Attorney Exam Registration Fee");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        ...DEFAULT_HEADERS,
+        "Email",
+        "Full name",
+        "Access code",
+      ]),
+    );
+  });
+
+  it("hides and unchecks the metadata columns when the fee goes back to Any", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await selectFee("Any");
+
+    await waitFor(() => expect(headers()).toEqual(DEFAULT_HEADERS));
+    const dialog = await openPicker();
+    expect(
+      within(dialog).getByRole("checkbox", { name: "Docket number" }),
+    ).not.toBeChecked();
+  });
+
+  it("hides the metadata columns when Clear All drops the fee", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() => expect(headers()).toEqual(DEFAULT_HEADERS));
+  });
+
+  it("follows the fee through Back and Forward navigation", async () => {
+    mockFetch(response());
+    const { navigate } = renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+
+    navigate("?feeType=NONATTORNEY_EXAM_REGISTRATION_FEE");
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        ...DEFAULT_HEADERS,
+        "Email",
+        "Full name",
+        "Access code",
+      ]),
+    );
+
+    navigate("");
+    await waitFor(() => expect(headers()).toEqual(DEFAULT_HEADERS));
+  });
+
+  it("keeps the admin's other columns when the fee changes", async () => {
+    mockFetch(response());
+    renderLog("");
+
+    await toggleColumn("Client");
+    await selectFee("Petition Filing Fee");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        ...DEFAULT_HEADERS,
+        "Client",
+        "Docket number",
+      ]),
+    );
+  });
+
+  it("lets the admin hide a fee's metadata column", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await toggleColumn("Docket number");
+
+    expect(headers()).toEqual(DEFAULT_HEADERS);
+  });
+
+  it("resets to the selected fee's defaults", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await toggleColumn("Client");
+    await toggleColumn("Docket number");
+    const dialog = await openPicker();
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    );
+
+    expect(headers()).toEqual([...DEFAULT_HEADERS, "Docket number"]);
+  });
+
+  it("treats a fee carried in the url as already showing the defaults", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    ).toBeDisabled();
+  });
+
+  it("treats the new fee's columns as the defaults after the fee changes", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await selectFee("Non-Attorney Exam Registration Fee");
+    await waitFor(() => expect(headers()).toContain("Email"));
+    const dialog = await openPicker();
+
+    expect(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    ).toBeDisabled();
+  });
+
+  it("lets the admin hide the column a filter searches by", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Transaction status");
+
+    expect(headers()).toEqual(DEFAULT_HEADERS);
+  });
+
+  it("keeps a hidden searched column hidden while its filter value changes", async () => {
+    const fetchMock = mockFetch(response());
+    renderLog("?status=failed");
+
+    await waitFor(() => expect(headers()).toContain("Payment status"));
+    await toggleColumn("Payment status");
+    await userEvent.click(screen.getByText("Pending (0)"));
+
+    await waitFor(() =>
+      expect(fetchMock.mock.calls.at(-1)?.[0]).toContain("status=pending"),
+    );
+    expect(headers()).toEqual(["Last updated", "Fee", "Amount"]);
+  });
+
+  it("keeps a hidden Fee column hidden while the fee's metadata columns swap", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await toggleColumn("Fee");
+    await selectFee("Non-Attorney Exam Registration Fee");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([
+        "Last updated",
+        "Amount",
+        "Payment status",
+        "Email",
+        "Full name",
+        "Access code",
+      ]),
+    );
+    const dialog = await openPicker();
+    expect(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    ).toBeEnabled();
+    await userEvent.click(within(dialog).getByRole("checkbox", { name: "Fee" }));
+
+    expect(headers()).toEqual([
+      ...DEFAULT_HEADERS,
+      "Email",
+      "Full name",
+      "Access code",
+    ]);
+  });
+
+  it("shows a hidden searched column again once its filter is reapplied", async () => {
+    mockFetch(response());
+    const { navigate } = renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Transaction status");
+    navigate("");
+    await waitFor(() => expect(headers()).toEqual(DEFAULT_HEADERS));
+
+    navigate("?transactionStatus=cancelled");
+
+    await waitFor(() =>
+      expect(headers()).toEqual([...DEFAULT_HEADERS, "Transaction status"]),
+    );
+  });
+
+  it("brings a hidden searched column back on Reset to defaults", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Transaction status");
+    const dialog = await openPicker();
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Reset to defaults" }),
+    );
+
+    expect(headers()).toEqual([...DEFAULT_HEADERS, "Transaction status"]);
+  });
+
+  it("keeps a default column after its searched column is hidden and re-checked", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await toggleColumn("Fee");
+    expect(headers()).not.toContain("Fee");
+    await toggleColumn("Fee");
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() => expect(headers()).toEqual(DEFAULT_HEADERS));
+  });
+
+  it("drops a re-checked searched column that is hidden by default once its filter is cleared", async () => {
+    mockFetch(response());
+    renderLog("?transactionStatus=cancelled");
+
+    await waitFor(() => expect(headers()).toContain("Transaction status"));
+    await toggleColumn("Transaction status");
+    await toggleColumn("Transaction status");
+    expect(headers()).toContain("Transaction status");
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() => expect(headers()).toEqual(DEFAULT_HEADERS));
+  });
+
+  it("keeps a hidden default column hidden once its filter is cleared", async () => {
+    mockFetch(response());
+    renderLog("?feeType=PETITION_FILING_FEE");
+
+    await waitFor(() => expect(headers()).toContain("Docket number"));
+    await toggleColumn("Fee");
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
+
+    await waitFor(() =>
+      expect(headers()).toEqual(["Last updated", "Amount", "Payment status"]),
+    );
   });
 
   it("still sorts by a hidden column carried in the url", async () => {

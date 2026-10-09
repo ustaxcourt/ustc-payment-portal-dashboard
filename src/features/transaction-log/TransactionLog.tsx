@@ -20,13 +20,7 @@ import { useToast } from "@/components/ui/toast-context";
 import { cn } from "@/lib/utils";
 import ColumnPicker from "./ColumnPicker";
 import { COLUMN_LABEL } from "./columnLabels";
-import {
-  DEFAULT_COLUMN_VISIBILITY,
-  defaultVisibilityFor,
-  searchedColumnIds,
-  TRANSACTION_COLUMNS,
-  withSearchedColumns,
-} from "./columns";
+import { defaultVisibilityFor, TRANSACTION_COLUMNS } from "./columns";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
 import TransactionTable from "./TransactionTable";
@@ -36,6 +30,7 @@ import type {
   PaymentStatus,
   TransactionSearchFilters,
 } from "./types";
+import { useColumnVisibility } from "./useColumnVisibility";
 import { useRetainedCounts } from "./useRetainedCounts";
 import { useTransactionLog } from "./useTransactionLog";
 import { useTransactionLogParams } from "./useTransactionLogParams";
@@ -56,14 +51,9 @@ export default function TransactionLog() {
   // Below `lg` the filters live in a Drawer overlay instead of the static
   // sidebar, so they never compete with the table for vertical space.
   const [isNarrow, setIsNarrow] = useState(false);
-  const [columnVisibility, setColumnVisibility] = useState(
-    DEFAULT_COLUMN_VISIBILITY,
-  );
+  const columns = useColumnVisibility(searchFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersScopeRef = useRef<HTMLDivElement>(null);
-  const defaultVisibility = defaultVisibilityFor(
-    searchFilters.paymentStatus,
-  );
 
   const { showToast } = useToast();
 
@@ -141,19 +131,6 @@ export default function TransactionLog() {
     previousMetadataValueRef.current = searchFilters.metadataValue;
     metadataDraftRef.current = undefined;
   }
-
-  const showFailureColumns =
-    searchFilters.paymentStatus === "failed";
-
-  const searchedIds = searchedColumnIds(searchFilters);
-  const tableVisibility = withSearchedColumns(
-    {
-      ...columnVisibility,
-      transactionStatus: defaultVisibility.transactionStatus,
-      returnDetail: defaultVisibility.returnDetail,
-    },
-    searchedIds,
-  );
 
   const onFilterChange = (
     key: keyof TransactionSearchFilters,
@@ -285,20 +262,11 @@ export default function TransactionLog() {
                 onClick={downloadReport}
               />
               <ColumnPicker
-                visibility={{
-                  ...columnVisibility,
-                  transactionStatus: defaultVisibility.transactionStatus,
-                  returnDetail: defaultVisibility.returnDetail,
-                }}
-                defaultVisibility={defaultVisibility}
-                searchedIds={searchedIds}
-                onToggle={(id, visible) =>
-                  setColumnVisibility((previous) => ({
-                    ...previous,
-                    [id]: visible,
-                  }))
-                }
-                onReset={() => setColumnVisibility(defaultVisibility)}
+                visibility={columns.visibility}
+                lockedId={columns.lockedId}
+                isDefault={columns.isDefault}
+                onToggle={columns.toggle}
+                onReset={columns.reset}
               />
             </div>
           </div>
@@ -328,7 +296,7 @@ export default function TransactionLog() {
                 headerTone="bg-status-neutral-subtle"
                 sorting={activeSorting}
                 onSortingChange={setParams}
-                columnVisibility={tableVisibility}
+                columnVisibility={columns.visibility}
                 wrapperClassName="flex-1 overflow-auto rounded-br-[calc(var(--radius-md)-2px)] border lg:min-h-0"
                 isRefreshing={isPlaceholderData}
                 emptyMessage={
