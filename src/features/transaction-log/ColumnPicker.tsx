@@ -39,7 +39,6 @@ export default function ColumnPicker({
   lockedId: TransactionColumnId | null;
   isDefault: boolean;
   onToggle: (id: TransactionColumnId, visible: boolean) => void;
-  defaultVisibility: ColumnVisibility;
   onReset: () => void;
 }) {
   const lastColumnHintId = useId();
