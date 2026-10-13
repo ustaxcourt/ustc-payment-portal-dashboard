@@ -1,10 +1,8 @@
 export type BreakdownCardData = {
   id: string;
   label: string;
-  /** Already formatted for display. */
   amount: string;
   caption: string;
-  /** Bolds the label. */
   emphasized?: boolean;
 };
 

@@ -87,7 +87,7 @@ export default async function Home({
         tabIndex={-1}
         className="flex flex-1 flex-col p-6 sm:p-8 lg:min-h-0"
       >
-         <Suspense fallback={<div aria-hidden="true" />}>
+        <Suspense fallback={<div aria-hidden="true" />}>
           <PaymentBreakdownSection />
         </Suspense>
         <Suspense
