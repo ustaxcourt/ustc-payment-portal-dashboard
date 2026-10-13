@@ -107,11 +107,11 @@
   --status-success-foreground: var(--color-green-800);
   --status-success-subtle: var(--color-green-50);
   --status-failed: var(--color-red-200);
-  --status-failed-foreground: var(--color-red-800);
+  --status-failed-foreground: var(--color-red-900);
   --status-failed-subtle: var(--color-red-50);
-  --status-pending: var(--color-yellow-200);
-  --status-pending-foreground: var(--color-yellow-900);
-  --status-pending-subtle: var(--color-yellow-50);
+  --status-pending: var(--color-amber-200);
+  --status-pending-foreground: var(--color-amber-900);
+  --status-pending-subtle: var(--color-amber-50);
   --totals-header: var(--color-blue-100);
 }
 
