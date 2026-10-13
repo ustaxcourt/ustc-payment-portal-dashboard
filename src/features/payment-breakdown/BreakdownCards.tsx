@@ -24,7 +24,7 @@ export default function BreakdownCards({
         >
           <span
             title={card.label}
-            className={`truncate text-xs tracking-widest text-slate-900 uppercase ${card.emphasized ? "font-bold" : "font-semibold"}`}
+            className={`truncate text-xs tracking-widest text-label uppercase ${card.emphasized ? "font-bold" : "font-semibold"}`}
           >
             {card.label}
           </span>
@@ -32,7 +32,7 @@ export default function BreakdownCards({
             <span className="font-mono text-2xl font-semibold tabular-nums text-status-success-foreground">
               {card.amount}
             </span>
-            <span className="whitespace-nowrap text-xs text-muted-foreground">
+            <span className="whitespace-nowrap text-xs text-label">
               {card.caption}
             </span>
           </span>

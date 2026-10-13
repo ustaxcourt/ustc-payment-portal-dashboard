@@ -234,7 +234,7 @@ export default function TransactionLog() {
           <div className="flex items-center justify-between rounded-t-[calc(var(--radius-md)-2px)] border-b-2 bg-status-neutral px-4 py-2">
             <h2
               className={cn(
-                "text-base font-bold tracking-tight",
+                "text-base font-bold tracking-tight text-label",
                 isPlaceholderData && "opacity-60",
               )}
             >

@@ -102,7 +102,7 @@ export default function TransactionFilters({
     <aside className="flex w-56 shrink-0 flex-col overflow-y-auto lg:min-h-0">
       <div className="flex flex-col gap-6 p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Filters</h3>
+          <h3 className="text-sm font-semibold text-label">Filters</h3>
           <div className="flex items-center gap-2">
             <Button
               type="button"

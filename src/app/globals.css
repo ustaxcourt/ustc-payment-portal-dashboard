@@ -31,6 +31,7 @@
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
+  --color-label: var(--label);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
@@ -75,6 +76,8 @@
   --muted: var(--color-slate-100);
   /* No Tailwind swatch matches this gray. */
   --muted-foreground: oklch(0.46 0 0);
+  /* Headings, labels and counts that are darker than body text. */
+  --label: var(--color-slate-900);
   --accent: var(--color-neutral-100);
   --accent-foreground: var(--color-neutral-900);
   --destructive: var(--color-red-600);
@@ -104,11 +107,11 @@
   --status-success-foreground: var(--color-green-800);
   --status-success-subtle: var(--color-green-50);
   --status-failed: var(--color-red-200);
-  --status-failed-foreground: var(--color-red-900);
+  --status-failed-foreground: var(--color-red-800);
   --status-failed-subtle: var(--color-red-50);
-  --status-pending: var(--color-amber-200);
-  --status-pending-foreground: var(--color-amber-900);
-  --status-pending-subtle: var(--color-amber-50);
+  --status-pending: var(--color-yellow-200);
+  --status-pending-foreground: var(--color-yellow-900);
+  --status-pending-subtle: var(--color-yellow-50);
   --totals-header: var(--color-blue-100);
 }
 
