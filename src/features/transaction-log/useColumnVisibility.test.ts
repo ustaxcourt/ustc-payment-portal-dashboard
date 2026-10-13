@@ -1,6 +1,10 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_COLUMN_VISIBILITY, defaultColumnVisibility } from "./columns";
+import {
+  DEFAULT_COLUMN_VISIBILITY,
+  defaultColumnVisibility,
+  effectiveDefaultVisibility,
+} from "./columns";
 import type { TransactionSearchFilters } from "./types";
 import { useColumnVisibility } from "./useColumnVisibility";
 
@@ -158,7 +162,7 @@ describe("useColumnVisibility", () => {
     expect(result.current.visibility["metadata.docketNumber"]).toBe(false);
   });
 
-  it("forgets a hidden searched column that the fee's defaults show again", () => {
+  it("shows failure columns when payment status is failed", () => {
     const { result, rerender } = renderColumns(
       filtered({ feeType: "PETITION_FILING_FEE", paymentStatus: "failed" }),
     );
@@ -169,8 +173,35 @@ describe("useColumnVisibility", () => {
     act(() => result.current.toggle("feeName", false));
     rerender({ filters: filtered({ paymentStatus: "failed" }) });
 
-    expect(result.current.visibility).toEqual(DEFAULT_COLUMN_VISIBILITY);
+    expect(result.current.visibility.returnDetail).toBe(true);
+    expect(result.current.visibility.transactionStatus).toBe(true);
+  });
+
+  it("treats failed-status visibility as the default state", () => {
+    const { result } = renderColumns(
+      filtered({
+        feeType: "PETITION_FILING_FEE",
+        paymentStatus: "failed",
+      }),
+    );
+
     expect(result.current.isDefault).toBe(true);
+  });
+
+  it("resets to the failed-status defaults", () => {
+    const { result } = renderColumns(
+      filtered({
+        feeType: "PETITION_FILING_FEE",
+        paymentStatus: "failed",
+      }),
+    );
+
+    act(() => result.current.toggle("clientName", true));
+    act(() => result.current.reset());
+
+    expect(result.current.isDefault).toBe(true);
+    expect(result.current.visibility.transactionStatus).toBe(true);
+    expect(result.current.visibility.returnDetail).toBe(true);
   });
 
   it("resets to the selected fee's defaults and shows hidden searched columns", () => {
@@ -207,7 +238,9 @@ describe("useColumnVisibility", () => {
   });
 
   it("locks the last chosen column after a searched column is hidden", () => {
-    const { result } = renderColumns(filtered({ feeType: "PETITION_FILING_FEE" }));
+    const { result } = renderColumns(
+      filtered({ feeType: "PETITION_FILING_FEE" }),
+    );
 
     act(() => result.current.toggle("lastUpdatedAt", false));
     act(() => result.current.toggle("transactionAmount", false));
@@ -215,5 +248,45 @@ describe("useColumnVisibility", () => {
     act(() => result.current.toggle("feeName", false));
 
     expect(result.current.lockedId).toBe("paymentStatus");
+  });
+
+  it("hides failure columns when payment status changes from failed to pending", () => {
+    const { result, rerender } = renderColumns(
+      filtered({ paymentStatus: "failed" }),
+    );
+
+    expect(result.current.visibility.transactionStatus).toBe(true);
+    expect(result.current.visibility.returnDetail).toBe(true);
+
+    rerender({
+      filters: filtered({ paymentStatus: "pending" }),
+    });
+
+    expect(result.current.visibility.transactionStatus).toBe(false);
+    expect(result.current.visibility.returnDetail).toBe(false);
+  });
+
+  it("falls back to effective defaults when changing payment status hides the last visible column", () => {
+    const { result, rerender } = renderColumns(
+      filtered({ paymentStatus: "failed" }),
+    );
+
+    // Hide every visible column except Failure Reason.
+    act(() => result.current.toggle("lastUpdatedAt", false));
+    act(() => result.current.toggle("feeName", false));
+    act(() => result.current.toggle("transactionAmount", false));
+    act(() => result.current.toggle("paymentStatus", false));
+    act(() => result.current.toggle("transactionStatus", false));
+
+    expect(result.current.visibility.returnDetail).toBe(true);
+
+    rerender({
+      filters: filtered({ paymentStatus: null }),
+    });
+
+    expect(result.current.visibility).toEqual(
+      effectiveDefaultVisibility(null, null),
+    );
+    expect(result.current.isDefault).toBe(true);
   });
 });
