@@ -7,10 +7,11 @@ export type PaymentBreakdown = {
   grandTotal: number;
 };
 
-/** Rows are ordered by name, not amount, so cards keep their place as the
- *  timeframe changes. */
+/** Rows are ordered by amount, largest first, with ties broken by name. */
 export const summarize = (rows: FeeBreakdownRow[]): PaymentBreakdown => ({
-  rows: [...rows].sort((a, b) => a.feeName.localeCompare(b.feeName)),
+  rows: [...rows].sort(
+    (a, b) => b.subtotal - a.subtotal || a.feeName.localeCompare(b.feeName),
+  ),
   grandTotal:
     rows.reduce((cents, row) => cents + Math.round(row.subtotal * 100), 0) /
     100,

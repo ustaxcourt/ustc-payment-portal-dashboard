@@ -15,7 +15,7 @@ const exam = {
 };
 
 describe("summarize", () => {
-  it("orders rows by fee name, regardless of amount, and totals them", () => {
+  it("orders rows by amount, largest first, and totals them", () => {
     const { rows, grandTotal } = summarize([petition, exam]);
 
     expect(rows.map((row) => row.fee)).toEqual([
@@ -26,6 +26,14 @@ describe("summarize", () => {
 
     expect(
       summarize([{ ...exam, subtotal: 1 }, petition]).rows.map(
+        (row) => row.fee,
+      ),
+    ).toEqual(["PETITION_FILING_FEE", "NONATTORNEY_EXAM_REGISTRATION_FEE"]);
+  });
+
+  it("breaks amount ties by fee name", () => {
+    expect(
+      summarize([petition, { ...exam, subtotal: 120 }]).rows.map(
         (row) => row.fee,
       ),
     ).toEqual(["NONATTORNEY_EXAM_REGISTRATION_FEE", "PETITION_FILING_FEE"]);
