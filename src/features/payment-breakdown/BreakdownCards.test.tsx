@@ -42,8 +42,8 @@ describe("BreakdownCards", () => {
       />,
     );
 
-    expect(screen.getByTitle("Total")).toHaveClass("uppercase", "font-bold");
-    expect(screen.getByTitle("Fee")).toHaveClass("uppercase", "font-semibold");
-    expect(screen.getByTitle("Fee")).not.toHaveClass("font-bold");
+    expect(screen.getByText("Total")).toHaveClass("uppercase", "font-bold");
+    expect(screen.getByText("Fee")).toHaveClass("uppercase", "font-semibold");
+    expect(screen.getByText("Fee")).not.toHaveClass("font-bold");
   });
 });
