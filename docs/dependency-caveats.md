@@ -17,6 +17,9 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Accepted vulnerability** → add an entry under
   [Accepted vulnerabilities](#accepted-vulnerabilities) with the advisory ID,
   severity, why it can't be fixed now, and any mitigation.
+- **Vulnerability fixed by an `overrides` entry** → add an entry under
+  [Vulnerabilities resolved via override](#vulnerabilities-resolved-via-override)
+  with the advisory, why the parent cannot reach a fix, and when to remove it.
 - If an upgrade is involved enough to warrant its own ticket, cut the ticket,
   notify the PO, and reference it here.
 
@@ -24,22 +27,30 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.2.6 — deferred (2026-08-04, re-confirmed 2026-10-06)
+### @tanstack/react-table 8.21.3 → 9.3.1 — deferred (2026-08-04, re-confirmed 2026-10-14)
 
-- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.2.6`.
-- **Reason:** v9 is not backward compatible with the v8 API used throughout the
-  transaction log. The application currently imports and relies on v8-specific
-  APIs including `useReactTable` and `getCoreRowModel`. Attempting to resolve the
-  dependency to v9 causes build failures such as:
-  `Export getCoreRowModel doesn't exist in target module` and
-  `Export useReactTable doesn't exist in target module`.
-  The migration requires source changes rather than a lockfile refresh. The
-  shadcn table examples and existing transaction-log implementation are still
-  based on the v8 API surface.
-- **Plan:** Remain on v8 until there is a planned effort to migrate the
-  transaction-log components to the v9 API. The upgrade should include a review
-  of all table-related components, sorting behavior, and tests. Pin the package
-  exactly to prevent automated dependency-update workflows from introducing v9.
+- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.3.1`.
+- **Reason:** v9 renames the table hook and changes its types, so the upgrade is a
+  source migration rather than a lockfile refresh. Sized on 2026-10-14:
+  - **Surface:** three files — `src/features/transaction-log/TransactionTable.tsx`,
+    `columns.tsx` and `columns.test.ts`. The table uses only the core row model
+    with `manualSorting`, plus sorting and column-visibility state. No client-side
+    filtering, pagination or grouping.
+  - **Changes:** `useReactTable` + `getCoreRowModel()` become `useTable({ features,
+    columns, data })` with the sorting and column-visibility features registered.
+    `ColumnDef<TData>` gains a leading `TFeatures` generic, which has to be threaded
+    through `columns.tsx`, the table props and the test. The `ColumnMeta` module
+    augmentation keeps working with `TFeatures` as its first generic.
+  - **Unchanged:** `flexRender`, `getHeaderGroups`, `getRowModel`,
+    `getIsSorted`/`toggleSorting`/`getCanSort`, `manualSorting`, and controlled
+    `state` with `onSortingChange`. v9 methods live on the prototype, but the table
+    only destructures the `{ row }` and `{ column }` context objects, not methods.
+  - **Estimate:** about 3 points. The code change is small, but the transaction log
+    is the app's riskiest surface (timeframe, filters, sorting, column visibility
+    and export must stay coherent), so it needs a full manual pass and e2e run.
+- **Plan:** Migrate under its own ticket rather than a dependency rotation. Skip
+  v9's deprecated `useLegacyTable` bridge, which would mean migrating twice. Keep
+  the exact pin so automated updates cannot pull in v9.
 
 ### next 15.5.28 → 16.4.1 — deferred (2026-07-27, re-confirmed 2026-10-14)
 
@@ -62,7 +73,12 @@ enough context that the next person doesn't have to re-derive the decision.
   "built with Next.js versions up through Next.js 15", and compute-managed SSR for
   "versions 12 through 15". No Next 16 support has been announced.
 - **Note:** Staying on 15.x is not the same as staying still. This cycle moved
-  15.5.26 → 15.5.28 within the pin. Patch releases on the 15.5 line should continue
+  15.5.26 → 15.5.28 within the pin. 15.5.28 (2026-10-14) is a security release:
+  GHSA-2464-fhr4-w9xw (critical, unauthenticated RCE in the Image Optimization API
+  when processing SVGs) and GHSA-p3m5-59mp-jv5r (high, App Router Server Actions
+  DoS). This app is in scope for the first: `src/app/page.tsx` uses `next/image`,
+  and `src/middleware.ts` excludes `_next/image` from the auth gate, so the
+  optimizer endpoint is reachable without login. Patch releases on the 15.5 line should continue
   to be taken promptly while Next 16 remains deferred.
 
 ### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17, re-confirmed 2026-10-14)
@@ -91,9 +107,9 @@ enough context that the next person doesn't have to re-derive the decision.
   and re-test with `npm run build`, not just `npm run tsc` — a passing typecheck
   hides this failure entirely.
 
-### @types/node 24.19.1 → 26.6.4 — deferred (2026-09-17, re-confirmed 2026-10-02)
+### @types/node 24.19.2 → 26.6.5 — deferred (2026-09-17, re-confirmed 2026-10-14)
 
-- **Current:** `^24.19.1`. **Available latest:** `26.6.4`.
+- **Current:** `^24.13.3` (resolves to `24.19.2`). **Available latest:** `26.6.5`.
 - **Reason:** `@types/node` majors track Node.js majors. This app runs Node 24 —
   `.nvmrc` pins 24.20.0, `package.json` `engines` requires `>=24.20.0 <25.0.0`,
   and CI resolves its Node from `.nvmrc`. Installing types for Node 26 against a
@@ -167,3 +183,20 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Mitigation:** ...
 - **Revisit:** <condition or date>
 -->
+
+---
+
+## Vulnerabilities resolved via override
+
+### GHSA-w5hq-g745-h8pq — uuid < 11.1.1 (moderate) — overridden to `11.1.1` (2026-09-18, documented 2026-10-14)
+
+- **Advisory:** `uuid` before 11.1.1 is missing a buffer bounds check in v3/v5/v6
+  when a `buf` argument is provided.
+- **Why an override:** `exceljs@4.4.0` (the latest release, unchanged since
+  December 2024) depends on `uuid@^8.3.0`, which cannot reach a fixed version.
+  `package.json` `overrides` forces `"uuid": "11.1.1"` for the whole tree;
+  `next-auth@4.24.15` (`uuid@^11.1.1`) dedupes onto the same copy. Added in PAY-455.
+- **Verification:** `npm ls uuid` shows `uuid@11.1.1 overridden` under `exceljs`,
+  and the Excel export works. Re-test export when this override changes.
+- **Remove when:** `exceljs` publishes a release that depends on `uuid >= 11.1.1`.
+  Drop the override then, rather than moving it to a newer `uuid` major.
