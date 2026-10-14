@@ -41,9 +41,9 @@ enough context that the next person doesn't have to re-derive the decision.
   of all table-related components, sorting behavior, and tests. Pin the package
   exactly to prevent automated dependency-update workflows from introducing v9.
 
-### next 15.5.26 → 16.3.8 — deferred (2026-07-27, re-confirmed 2026-10-02)
+### next 15.5.28 → 16.4.1 — deferred (2026-07-27, re-confirmed 2026-10-14)
 
-- **Current:** `15.5.26` (pinned exactly, not a range). **Available latest:** `16.3.8`.
+- **Current:** `15.5.28` (pinned exactly, not a range). **Available latest:** `16.4.1`.
 - **Reason:** AWS Amplify Hosting — the hosting target chosen for this app — documents
   Next.js support through version 15. Next 16 is not officially supported, and the
   Amplify Hosting issue tracker carries a concrete failure for it: _"Next.js 16.1 build
@@ -58,11 +58,14 @@ enough context that the next person doesn't have to re-derive the decision.
   through a lockfile refresh. **This pin is contingent on the Amplify hosting decision
   (ADR 0001 open question 3); if the team selects OpenNext instead, re-evaluate rather
   than assuming the pin is still required.**
+- **Re-checked 2026-10-14:** The Amplify Hosting docs still state support for apps
+  "built with Next.js versions up through Next.js 15", and compute-managed SSR for
+  "versions 12 through 15". No Next 16 support has been announced.
 - **Note:** Staying on 15.x is not the same as staying still. This cycle moved
-  15.5.25 → 15.5.26 within the pin. Patch releases on the 15.5 line should continue
+  15.5.26 → 15.5.28 within the pin. Patch releases on the 15.5 line should continue
   to be taken promptly while Next 16 remains deferred.
 
-### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17, re-confirmed 2026-10-02)
+### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17, re-confirmed 2026-10-14)
 
 - **Current:** `^5.9.3`. **Available latest:** `7.0.2`.
 - **Reason:** TypeScript 7 is the native port, and it breaks `next build` on
@@ -70,7 +73,7 @@ enough context that the next person doesn't have to re-derive the decision.
   app's own types are fine — but Next loads `next.config.ts` through the TypeScript
   compiler API, and against 7.x that path throws:
 
-  ```
+  ```text
   ⨯ Failed to load next.config.ts
   [TypeError: Cannot read properties of undefined (reading 'fileExists')]
   ```
@@ -78,6 +81,10 @@ enough context that the next person doesn't have to re-derive the decision.
   The build fails before compiling anything. Verified by reverting to 5.9.3 on an
   otherwise identical tree, where the build succeeds — so this is the TypeScript
   major, not anything else in this cycle.
+
+- **Re-checked 2026-10-14:** Same failure on `next@15.5.28` with `typescript@7.0.2`.
+  On the same tree with `typescript@5.9.3`, `next build` loads `next.config.ts` and
+  proceeds to compile.
 
 - **Plan:** Revisit when Next.js supports the TypeScript 7 compiler API for
   `next.config.ts` loading. Tied to the Next 16 entry above: check both together,
@@ -94,6 +101,16 @@ enough context that the next person doesn't have to re-derive the decision.
   production, which is worse than being a major behind.
 - **Plan:** Bump in lockstep with the Node runtime, not on its own. When this app
   moves to Node 26, move `@types/node` with it in the same change.
+
+### axe-core 4.13.0 → 4.14.0 — deferred (2026-10-14)
+
+- **Current:** `4.13.0` (pinned exactly). **Available latest:** `4.14.0`.
+- **Reason:** `axe-core` is pinned to the same version as `@axe-core/playwright`,
+  which drives the accessibility suite (`npm run test:a11y`). The latest
+  `@axe-core/playwright` is still `4.13.0`, so moving `axe-core` alone would run the
+  a11y checks on a rules engine the Playwright integration was not released against.
+- **Plan:** Bump `axe-core` and `@axe-core/playwright` together once
+  `@axe-core/playwright` 4.14.x is published, and re-run `npm run test:a11y`.
 
 <!-- Format:
 ### <package> <current> → <available> — deferred (<date>)
@@ -112,10 +129,13 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Reason it can't be fixed now:** These four advisories together cover
   `postcss <= 8.5.22`. Our direct dependency tree is already clear —
   `@tailwindcss/postcss` resolves a patched PostCSS version. The flagged copy
-  remains vendored inside `next@15.5.26` at
-  `node_modules/next/node_modules/postcss`. We do not control that pin. The
-  only remediation offered by `npm audit` is upgrading to `next@16.3.8`, which
-  is currently deferred (see Deferred upgrades).
+  remains vendored inside `next@15.5.28` at
+  `node_modules/next/node_modules/postcss` (still `8.4.31`). We do not control that
+  pin. The only remediation offered by `npm audit` is upgrading to `next@16.4.1`,
+  which is currently deferred (see Deferred upgrades). This is also the only reason
+  `npm audit` still lists `next` itself (moderate): GHSA-4jqv-mc3x-m676 and
+  GHSA-mcj8-r9mp-w47p (SSG/ISR cache poisoning) were resolved by the move to
+  `next@15.5.28` on 2026-10-14.
 - **Mitigation:** All four advisories require attacker-controlled CSS reaching
   the compiler. This application compiles only first-party CSS during CI/build
   and does not process user-supplied stylesheets.
