@@ -256,7 +256,7 @@ export default function RevenueTotals() {
             <tr>
               <th
                 scope="row"
-                className={cn(CELL, "text-right text-sm font-semibold whitespace-nowrap")}
+                className={cn(CELL, "text-right text-sm font-semibold whitespace-nowrap text-label")}
               >
                 Current Total
               </th>

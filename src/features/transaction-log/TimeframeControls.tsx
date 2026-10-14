@@ -122,6 +122,7 @@ export default function TimeframeControls({
                 type="button"
                 size="sm"
                 variant={isSelected ? "default" : "outline"}
+                className={cn(!isSelected && "text-label")}
                 onClick={() => {
                   if (isCustom) {
                     openCustomEditor();

@@ -6,7 +6,7 @@ import type {
   FeeBreakdownRow,
   TransactionLogResponse,
 } from "../transaction-log/types";
-import PaymentBreakdownPane from "./PaymentBreakdownPane";
+import PaymentBreakdownSection from "./PaymentBreakdownSection";
 import { usePaymentBreakdown } from "./usePaymentBreakdown";
 
 const response = (
@@ -39,7 +39,7 @@ const feeBreakdown: FeeBreakdownRow[] = [
   },
 ];
 
-const renderPane = (searchParams = "") => {
+const renderSection = (searchParams = "") => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -47,7 +47,7 @@ const renderPane = (searchParams = "") => {
   return render(
     <NuqsTestingAdapter searchParams={searchParams}>
       <QueryClientProvider client={client}>
-        <PaymentBreakdownPane />
+        <PaymentBreakdownSection />
       </QueryClientProvider>
     </NuqsTestingAdapter>,
   );
@@ -67,29 +67,26 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("PaymentBreakdownPane", () => {
-  it("shows the API's rows and the grand total, largest subtotal first", async () => {
+describe("PaymentBreakdownSection", () => {
+  it("shows the overall total first, then a card per fee from the API", async () => {
     const fetchMock = mockFetch(response({ feeBreakdown }));
 
-    renderPane();
+    renderSection();
 
     expect(
-      screen.getByRole("heading", { name: "Payment Breakdown" }),
+      screen.getByRole("heading", { name: "Payment Breakdown", hidden: true }),
     ).toBeInTheDocument();
 
-    const examRow = (
-      await screen.findByText("Non-Attorney Exam Registration Fee")
-    ).closest("tr");
-    expect(examRow).toHaveTextContent("1");
-    expect(examRow).toHaveTextContent("$250.00");
-
-    const petitionRow = screen.getByText("Petition Filing Fee").closest("tr");
-    expect(petitionRow).toHaveTextContent("2");
-    expect(petitionRow).toHaveTextContent("$120.00");
-
-    expect(screen.getByTestId("payment-breakdown-total")).toHaveTextContent(
-      "Total: $370.00",
-    );
+    const items = await screen.findAllByRole("listitem");
+    expect(items).toHaveLength(3);
+    expect(items[0]).toHaveTextContent("Successful Payments");
+    expect(items[0]).toHaveTextContent("$370.00");
+    expect(items[1]).toHaveTextContent("Non-Attorney Exam Registration Fee");
+    expect(items[1]).toHaveTextContent("$250.00");
+    expect(items[1]).toHaveTextContent("1 transaction");
+    expect(items[2]).toHaveTextContent("Petition Filing Fee");
+    expect(items[2]).toHaveTextContent("$120.00");
+    expect(items[2]).toHaveTextContent("2 transactions");
 
     const requested = String(fetchMock.mock.calls[0][0]);
     expect(requested).toContain("includeFeeBreakdown=true");
@@ -99,7 +96,7 @@ describe("PaymentBreakdownPane", () => {
   it("fails loudly when the API returns no fee breakdown", async () => {
     mockFetch(response());
 
-    renderPane();
+    renderSection();
 
     expect(
       await screen.findByText("Could not load the payment breakdown."),
@@ -109,7 +106,7 @@ describe("PaymentBreakdownPane", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows dashes, not zeros, for a fee with no payments", async () => {
+  it("keeps a card, at zero, for a fee with no payments", async () => {
     mockFetch(
       response({
         feeBreakdown: [
@@ -119,16 +116,26 @@ describe("PaymentBreakdownPane", () => {
       }),
     );
 
-    renderPane();
+    renderSection();
 
-    const petitionRow = (
+    const petitionCard = (
       await screen.findByText("Petition Filing Fee")
-    ).closest("tr");
-    expect(petitionRow).toHaveTextContent("—");
-    expect(petitionRow).not.toHaveTextContent("$0.00");
-    expect(screen.getByTestId("payment-breakdown-total")).toHaveTextContent(
-      "Total: $250.00",
-    );
+    ).closest("li");
+    expect(petitionCard).toHaveTextContent("$0.00");
+    expect(petitionCard).toHaveTextContent("0 transactions");
+    expect(
+      screen.getByTestId("payment-breakdown-card-total"),
+    ).toHaveTextContent("$250.00");
+  });
+
+  it("shows only the total card when the API returns no fees", async () => {
+    mockFetch(response({ feeBreakdown: [] }));
+
+    renderSection();
+
+    const items = await screen.findAllByRole("listitem");
+    expect(items).toHaveLength(1);
+    expect(items[0]).toHaveTextContent("$0.00");
   });
 
   it("re-enters the pending state when the timeframe changes, instead of keeping the previous range's data", async () => {
@@ -178,7 +185,7 @@ describe("PaymentBreakdownPane", () => {
       }),
     );
 
-    renderPane();
+    renderSection();
 
     expect(
       await screen.findByText("Could not load the payment breakdown."),
