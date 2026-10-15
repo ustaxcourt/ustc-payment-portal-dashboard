@@ -118,15 +118,20 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Plan:** Bump in lockstep with the Node runtime, not on its own. When this app
   moves to Node 26, move `@types/node` with it in the same change.
 
-### axe-core 4.13.0 → 4.14.0 — deferred (2026-10-14)
+### traverse 0.3.9 → 0.3.10 — held back via override (2026-10-15)
 
-- **Current:** `4.13.0` (pinned exactly). **Available latest:** `4.14.0`.
-- **Reason:** `axe-core` is pinned to the same version as `@axe-core/playwright`,
-  which drives the accessibility suite (`npm run test:a11y`). The latest
-  `@axe-core/playwright` is still `4.13.0`, so moving `axe-core` alone would run the
-  a11y checks on a rules engine the Playwright integration was not released against.
-- **Plan:** Bump `axe-core` and `@axe-core/playwright` together once
-  `@axe-core/playwright` 4.14.x is published, and re-run `npm run test:a11y`.
+- **Current:** `0.3.9` (forced by `package.json` `overrides`). **Available latest
+  in range:** `0.3.10`.
+- **Reason:** `traverse` reaches the production tree only through `exceljs` →
+  `unzipper` → `binary` → `chainsaw` (`traverse@>=0.3.0 <0.4`). `0.3.10`
+  (2026-10-07) adds no fix for this line; it swaps built-ins for polyfill
+  packages, which pulled about 78 extra packages into the production install.
+  `0.3.9` has no published advisories (`npm audit` is clean for it).
+- **Verification:** `npm ls traverse` shows `traverse@0.3.9 overridden` under
+  `chainsaw`. Re-test the Excel export when this override changes.
+- **Remove when:** an advisory is published against `traverse` 0.3.x, or
+  `exceljs` stops depending on `unzipper@0.10`. Re-run `npm audit` on each
+  dependency update to catch the first case.
 
 <!-- Format:
 ### <package> <current> → <available> — deferred (<date>)
