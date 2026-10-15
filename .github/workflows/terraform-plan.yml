@@ -28,7 +28,7 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
@@ -44,7 +44,7 @@ jobs:
       matrix:
         env: [dev, stg, prod]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
@@ -82,7 +82,7 @@ jobs:
             echo "has_role=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: steps.check.outputs.has_role == 'true'
 
       - name: Configure AWS Credentials (OIDC - ${{ matrix.env }})
