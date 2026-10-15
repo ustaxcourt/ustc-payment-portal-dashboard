@@ -3,7 +3,7 @@
 Infrastructure for the Case Services & Finance dashboards. Layout mirrors
 `ustc-payment-portal` so that anyone who works on the backend can read it.
 
-```
+```text
 terraform/
   bootstrap/            # State bucket. Run once per account, by a human.
   modules/iam/          # GitHub Actions OIDC roles.
@@ -119,6 +119,13 @@ Re-confirmed 2026-10-14 on AWS provider 6.68.0: `terraform plan` reports
 stg and prod reached that state only after applying the PAY-331 (SSM policy,
 `NEXTAUTH_URL`) and PAY-385 (SSR compute role and its API invoke policy) changes
 that had been merged to `main` but never applied there.
+
+"Done" above covers the infrastructure only. As of 2026-10-14, stg and prod have
+never completed an Amplify build: every `main` job in both apps has failed. The
+`/amplify/shared/<app-id>/` SSM parameters that `amplify.yml` reads (the Entra ID,
+secret and issuer, and `NEXTAUTH_SECRET`) do not exist in stg, and stg/prod have
+no Entra app registration yet. `PAYMENT_PORTAL_API_URL` is set on the stg app
+only. Bringing stg and prod up needs its own ticket.
 
 The NS records producing that delegation live in `ustc-payment-portal`, not
 here, so this repo's state cannot show them — check with
