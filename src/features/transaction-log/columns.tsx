@@ -27,8 +27,6 @@ import {
   METADATA_KEYS,
 } from "./types";
 
-
-
 export type ColumnVisibility = Record<TransactionColumnId, boolean>;
 
 export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
@@ -125,6 +123,21 @@ const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
   />
 );
 
+const courtStampText = (iso: string) => {
+  const stamp = formatCourtStamp(iso);
+  return `${stamp.date} ${stamp.time}`;
+};
+
+const CourtStamp = ({ iso }: { iso: string }) => {
+  const stamp = formatCourtStamp(iso);
+  return (
+    <div className="leading-tight">
+      <div>{stamp.date}</div>{" "}
+      <div className="text-muted-foreground">{stamp.time}</div>
+    </div>
+  );
+};
+
 type TransactionColumnDef = ColumnDef<TransactionLogEntry> & {
   id: TransactionColumnId;
 };
@@ -136,20 +149,9 @@ const SORTABLE_COLUMNS: TransactionColumnDef[] = [
     header: sortable,
     sortDescFirst: true,
     size: 115,
-    cell: ({ row }) => {
-      const stamp = formatCourtStamp(row.original.createdAt);
-      return (
-        <div className="leading-tight">
-          <div>{stamp.date}</div>
-          <div className="text-muted-foreground">{stamp.time}</div>
-        </div>
-      );
-    },
+    cell: ({ row }) => <CourtStamp iso={row.original.createdAt} />,
     meta: {
-      copyText: (row) => {
-        const stamp = formatCourtStamp(row.createdAt);
-        return `${stamp.date} ${stamp.time}`;
-      },
+      copyText: (row) => courtStampText(row.createdAt),
       headerLabel: COLUMN_LABEL.createdAt,
     },
   },
@@ -159,20 +161,9 @@ const SORTABLE_COLUMNS: TransactionColumnDef[] = [
     header: sortable,
     sortDescFirst: true,
     size: 115,
-    cell: ({ row }) => {
-      const stamp = formatCourtStamp(row.original.lastUpdatedAt);
-      return (
-        <div className="leading-tight">
-          <div>{stamp.date}</div>
-          <div className="text-muted-foreground">{stamp.time}</div>
-        </div>
-      );
-    },
+    cell: ({ row }) => <CourtStamp iso={row.original.lastUpdatedAt} />,
     meta: {
-      copyText: (row) => {
-        const stamp = formatCourtStamp(row.lastUpdatedAt);
-        return `${stamp.date} ${stamp.time}`;
-      },
+      copyText: (row) => courtStampText(row.lastUpdatedAt),
       headerLabel: COLUMN_LABEL.lastUpdatedAt,
     },
   },

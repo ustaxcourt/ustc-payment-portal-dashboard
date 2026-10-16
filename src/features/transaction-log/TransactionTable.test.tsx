@@ -196,6 +196,19 @@ describe("TransactionTable sort state", () => {
     expect(await screen.findByText("Copied to clipboard")).toBeInTheDocument();
   });
 
+  it("keeps a timestamp cell's visible text inside its accessible name", () => {
+    renderTable();
+
+    const stampButtons = screen.getAllByRole("button", {
+      name: /^Copy 2026-08-03/,
+    });
+
+    expect(stampButtons).toHaveLength(2);
+    for (const button of stampButtons) {
+      expect(button).toHaveAccessibleName(`Copy ${button.textContent}`);
+    }
+  });
+
   it("keeps the headers usable when there are no rows", () => {
     renderTable({ rows: [] });
 
