@@ -1,8 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AppliedDateRange } from "./dateRange";
 import DownloadTransactionLogButton from "./DownloadTransactionLogButton";
+import type { AppliedDateRange } from "./dateRange";
 import { ExportTooLargeError } from "./exportTransactions";
 
 vi.mock("./exportTransactions", async (importOriginal) => ({
@@ -35,15 +36,28 @@ const sorting = { sort: "createdAt", order: "desc" } as const;
 
 const LABEL = "Download Transaction Log";
 
-const renderButton = (disabled = false) =>
-  render(
-    <DownloadTransactionLogButton
-      tab="all"
-      range={range}
-      sorting={sorting}
-      disabled={disabled}
-    />,
+// Mirrors the real parent, which renders the message outside the button.
+function Harness({ disabled, tab }: { disabled: boolean; tab: "all" | "success" }) {
+  const [message, setMessage] = useState<string | null>(null);
+  const [progress, setProgress] = useState("");
+  return (
+    <>
+      <p role="alert">{message}</p>
+      <p role="status">{progress}</p>
+      <DownloadTransactionLogButton
+        tab={tab}
+        range={range}
+        sorting={sorting}
+        disabled={disabled}
+        onError={setMessage}
+        onProgress={setProgress}
+      />
+    </>
   );
+}
+
+const renderButton = (disabled = false, tab: "all" | "success" = "all") =>
+  render(<Harness disabled={disabled} tab={tab} />);
 
 const downloadButton = () => screen.getByRole("button", { name: LABEL });
 
@@ -98,7 +112,7 @@ describe("DownloadTransactionLogButton", () => {
       expectDownloadDisabled(false),
     );
     expect(fetchAllTransactions).not.toHaveBeenCalled();
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeEmptyDOMElement();
   });
 
   it("shows the too-large guidance instead of downloading", async () => {
@@ -109,8 +123,10 @@ describe("DownloadTransactionLogButton", () => {
     renderButton();
     await userEvent.click(downloadButton());
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      /60,000.*Narrow the timeframe/,
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "This view has 60,000 transactions, but downloads are limited to 50,000. Shorten the timeframe and try again.",
+      ),
     );
     expect(saveWorkbook).not.toHaveBeenCalled();
   });
@@ -121,10 +137,26 @@ describe("DownloadTransactionLogButton", () => {
     renderButton();
     await userEvent.click(downloadButton());
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The download failed. Try again.",
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "The download failed. Try again.",
+      ),
     );
     expectDownloadDisabled(false);
+  });
+
+  it("clears the message when the view changes", async () => {
+    vi.mocked(fetchAllTransactions).mockRejectedValue(new Error("boom"));
+
+    const { rerender } = renderButton();
+    await userEvent.click(downloadButton());
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).not.toBeEmptyDOMElement(),
+    );
+
+    rerender(<Harness disabled={false} tab="success" />);
+
+    expect(screen.getByRole("alert")).toBeEmptyDOMElement();
   });
 
   it("returns quietly to idle when the user cancels", async () => {
@@ -138,7 +170,7 @@ describe("DownloadTransactionLogButton", () => {
     await waitFor(() =>
       expectDownloadDisabled(false),
     );
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeEmptyDOMElement();
   });
 
   it("deletes the picked file when the download is cancelled", async () => {
@@ -233,12 +265,14 @@ describe("DownloadTransactionLogButton", () => {
     await userEvent.click(downloadButton());
 
     await waitFor(() => expectDownloadDisabled(true));
-    expect(
-      (await screen.findAllByText("Preparing download…")).length,
-    ).toBeGreaterThan(0);
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Preparing download…",
+      ),
+    );
   });
 
-  it("announces fetch progress politely", async () => {
+  it("reports fetch progress to its parent", async () => {
     vi.mocked(fetchAllTransactions).mockImplementation(
       (_tab, _range, _sorting, options) => {
         options?.onProgress?.({ fetched: 5_000, total: 12_000 });
@@ -249,11 +283,11 @@ describe("DownloadTransactionLogButton", () => {
     renderButton();
     await userEvent.click(downloadButton());
 
-    const [liveRegion] = await screen.findAllByText(
-      "Preparing download… 5,000 of 12,000",
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Preparing download… 5,000 of 12,000",
+      ),
     );
-    expect(liveRegion).toHaveAttribute("aria-live", "polite");
-    expect(liveRegion).toHaveClass("sr-only");
   });
 
   it("aborts an in-flight download when the toolbar unmounts", async () => {

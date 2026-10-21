@@ -19,9 +19,9 @@ import { IconButton } from "@/components/ui/icon-button";
 import { useToast } from "@/components/ui/toast-context";
 import { cn } from "@/lib/utils";
 import ColumnPicker from "./ColumnPicker";
-import DownloadTransactionLogButton from "./DownloadTransactionLogButton";
 import { COLUMN_LABEL } from "./columnLabels";
 import { TRANSACTION_COLUMNS } from "./columns";
+import DownloadTransactionLogButton from "./DownloadTransactionLogButton";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
 import TransactionTable from "./TransactionTable";
@@ -54,6 +54,8 @@ export default function TransactionLog() {
   const [isNarrow, setIsNarrow] = useState(false);
   const columns = useColumnVisibility(searchFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportProgress, setExportProgress] = useState("");
   const filtersScopeRef = useRef<HTMLDivElement>(null);
 
   const { showToast } = useToast();
@@ -230,6 +232,30 @@ export default function TransactionLog() {
               {typeof data?.total === "number" ? ` (${data.total})` : ""}
             </h2>
             <div className="flex flex-wrap items-center justify-end gap-2">
+              {/* Export feedback shares this one spot, left of the buttons.
+                  Both regions stay mounted so screen readers announce the text
+                  when it is filled in; sr-only while empty so they add no
+                  flex gap. */}
+              <p
+                aria-live="polite"
+                className={
+                  exportProgress
+                    ? "text-xs text-muted-foreground"
+                    : "sr-only"
+                }
+              >
+                {exportProgress}
+              </p>
+              <p
+                role="alert"
+                className={
+                  exportError
+                    ? "max-w-prose text-right text-xs text-destructive"
+                    : "sr-only"
+                }
+              >
+                {exportError}
+              </p>
               <span className="relative lg:hidden">
                 <IconButton
                   icon="filter"
@@ -258,6 +284,8 @@ export default function TransactionLog() {
                 range={appliedRange}
                 sorting={activeSorting}
                 disabled={!data || data.data.length === 0}
+                onError={setExportError}
+                onProgress={setExportProgress}
               />
               <ColumnPicker
                 visibility={columns.visibility}

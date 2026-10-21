@@ -7,6 +7,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import type { AppliedDateRange } from "./dateRange";
 import { exportFilename } from "./exportFilename";
 import {
+  EXPORT_ROW_LIMIT,
   ExportTooLargeError,
   fetchAllTransactions,
 } from "./exportTransactions";
@@ -24,8 +25,7 @@ const LABEL = "Download Transaction Log";
 type DownloadPhase =
   | { step: "idle" }
   | { step: "fetching"; fetched: number; total: number }
-  | { step: "building" }
-  | { step: "error"; message: string };
+  | { step: "building" };
 
 const isAbort = (err: unknown) =>
   err instanceof DOMException && err.name === "AbortError";
@@ -35,16 +35,26 @@ export default function DownloadTransactionLogButton({
   range,
   sorting,
   disabled,
+  onError,
+  onProgress,
 }: {
   tab: TransactionTab;
   range: AppliedDateRange;
   sorting: TransactionSorting;
   disabled?: boolean;
+  onError: (message: string | null) => void;
+  onProgress: (text: string) => void;
 }) {
   const [phase, setPhase] = useState<DownloadPhase>({ step: "idle" });
   const abortRef = useRef<AbortController | null>(null);
 
   const busy = phase.step === "fetching" || phase.step === "building";
+
+  // A message about one view must not outlive it.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the inputs are the trigger, not values read in the effect
+  useEffect(() => {
+    onError(null);
+  }, [tab, range.from, range.to, sorting.sort, sorting.order, onError]);
 
   // The toolbar unmounts when the log query errors.
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -53,6 +63,7 @@ export default function DownloadTransactionLogButton({
     const controller = new AbortController();
     abortRef.current = controller;
     let destination: SaveDestination | null = null;
+    onError(null);
 
     try {
       const filename = exportFilename(range, tab);
@@ -77,13 +88,12 @@ export default function DownloadTransactionLogButton({
         setPhase({ step: "idle" });
       } else {
         console.error("Transaction log download failed:", err);
-        setPhase({
-          step: "error",
-          message:
-            err instanceof ExportTooLargeError
-              ? `${err.message} Narrow the timeframe and try again.`
-              : "The download failed. Try again.",
-        });
+        setPhase({ step: "idle" });
+        onError(
+          err instanceof ExportTooLargeError
+            ? `This view has ${err.total.toLocaleString()} transactions, but downloads are limited to ${EXPORT_ROW_LIMIT.toLocaleString()}. Shorten the timeframe and try again.`
+            : "The download failed. Try again.",
+        );
       }
     } finally {
       abortRef.current = null;
@@ -99,16 +109,12 @@ export default function DownloadTransactionLogButton({
           ? "Building file…"
           : "";
 
+  useEffect(() => {
+    onProgress(progressText);
+  }, [progressText, onProgress]);
+
   return (
     <>
-      <span aria-live="polite" className="sr-only">
-        {progressText}
-      </span>
-      {progressText ? (
-        <p aria-hidden className="text-xs text-muted-foreground">
-          {progressText}
-        </p>
-      ) : null}
       {busy ? (
         <Button
           type="button"
@@ -118,11 +124,6 @@ export default function DownloadTransactionLogButton({
         >
           Cancel
         </Button>
-      ) : null}
-      {phase.step === "error" ? (
-        <p role="alert" className="text-xs text-destructive">
-          {phase.message}
-        </p>
       ) : null}
       <AppTooltip content={LABEL}>
         <IconButton
