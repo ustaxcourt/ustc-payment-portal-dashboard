@@ -348,6 +348,55 @@ describe("DownloadTransactionLogButton", () => {
     );
   });
 
+  it("clears the parent's progress text when the toolbar unmounts", async () => {
+    vi.mocked(fetchAllTransactions).mockImplementation(
+      (_filters, _range, _sorting, options) => {
+        options?.onProgress?.({ fetched: 400, total: 1_200 });
+        return new Promise(() => {});
+      },
+    );
+
+    // The parent outlives the button, as TransactionLog does.
+    function Parent() {
+      const [show, setShow] = useState(true);
+      const [progress, setProgress] = useState("");
+      return (
+        <>
+          <p data-testid="progress">{progress}</p>
+          <button type="button" onClick={() => setShow(false)}>
+            Remove toolbar
+          </button>
+          {show ? (
+            <DownloadTransactionLogButton
+              filters={NO_FILTERS}
+              range={range}
+              sorting={sorting}
+              onProgress={setProgress}
+            />
+          ) : null}
+        </>
+      );
+    }
+    render(
+      <ToastProvider>
+        <Parent />
+      </ToastProvider>,
+    );
+
+    await userEvent.click(downloadButton());
+    await waitFor(() =>
+      expect(screen.getByTestId("progress")).toHaveTextContent(
+        "Preparing download… 400 of 1,200",
+      ),
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Remove toolbar" }),
+    );
+
+    expect(screen.getByTestId("progress")).toBeEmptyDOMElement();
+  });
+
   it("aborts an in-flight download when the toolbar unmounts", async () => {
     let signal: AbortSignal | undefined;
     vi.mocked(fetchAllTransactions).mockImplementation(

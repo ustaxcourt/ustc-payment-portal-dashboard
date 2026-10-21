@@ -5,7 +5,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
@@ -51,7 +53,26 @@ const VARIANT_CLASSES: Record<ToastVariant, string> = {
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  const timers = useRef(
+    new Map<string, { auto?: number; remove?: number }>(),
+  );
+
+  useEffect(() => {
+    const live = timers.current;
+    return () => {
+      for (const { auto, remove } of live.values()) {
+        window.clearTimeout(auto);
+        window.clearTimeout(remove);
+      }
+      live.clear();
+    };
+  }, []);
+
   const dismissToast = useCallback((id: string) => {
+    const entry = timers.current.get(id);
+    if (!entry || entry.remove !== undefined) return;
+    window.clearTimeout(entry.auto);
+
     // Start closing animation
     setToasts((current) =>
       current.map((toast) =>
@@ -60,7 +81,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Remove after animation completes
-    window.setTimeout(() => {
+    entry.remove = window.setTimeout(() => {
+      timers.current.delete(id);
       setToasts((current) => current.filter((toast) => toast.id !== id));
     }, TOAST_ANIMATION_DURATION);
   }, []);
@@ -72,6 +94,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       { persistent = false }: ToastOptions = {},
     ) => {
       const id = crypto.randomUUID();
+      const entry: { auto?: number; remove?: number } = {};
+      timers.current.set(id, entry);
 
       setToasts((current) => [
         ...current,
@@ -79,7 +103,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       ]);
 
       if (!persistent) {
-        window.setTimeout(() => dismissToast(id), TOAST_DISPLAY_DURATION);
+        entry.auto = window.setTimeout(
+          () => dismissToast(id),
+          TOAST_DISPLAY_DURATION,
+        );
       }
 
       return id;

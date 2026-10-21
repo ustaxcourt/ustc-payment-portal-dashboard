@@ -87,13 +87,15 @@ export default function DownloadTransactionLogButton({
     clearError,
   ]);
 
-  // The toolbar unmounts when the log query errors.
+  // The toolbar unmounts when the log query errors. The parent renders the
+  // progress text, so it must be told to drop it too.
   useEffect(
     () => () => {
       abortRef.current?.abort();
       clearError();
+      onProgress("");
     },
-    [clearError],
+    [clearError, onProgress],
   );
 
   const startDownload = async () => {
