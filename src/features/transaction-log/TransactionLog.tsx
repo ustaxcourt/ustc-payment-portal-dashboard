@@ -269,10 +269,12 @@ export default function TransactionLog() {
               </AppTooltip>
               <DownloadTransactionLogButton
                 filters={searchFilters}
-                total={data?.total}
+                total={isPlaceholderData ? undefined : data?.total}
                 range={appliedRange}
                 sorting={activeSorting}
-                disabled={!data || data.data.length === 0}
+                disabled={
+                  !data || data.data.length === 0 || isPlaceholderData
+                }
                 onProgress={setExportProgress}
               />
               <ColumnPicker

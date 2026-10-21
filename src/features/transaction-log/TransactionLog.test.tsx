@@ -11,6 +11,16 @@ import TimeframeBar from "./TimeframeBar";
 import TransactionLog from "./TransactionLog";
 import type { TransactionLogResponse } from "./types";
 
+// The picker must never really open; a cancelled pick is a quiet no-op.
+vi.mock("./exportWorkbook", () => ({
+  buildWorkbookInWorker: vi.fn(),
+  discardSaveDestination: vi.fn(),
+  pickSaveDestination: vi.fn().mockRejectedValue(
+    new DOMException("cancelled", "AbortError"),
+  ),
+  saveWorkbook: vi.fn(),
+}));
+
 const response = (
   overrides: Partial<TransactionLogResponse> = {},
 ): TransactionLogResponse => ({
@@ -405,6 +415,54 @@ describe("TransactionLog", () => {
       expect(
         screen.queryByText("Petition Filing Fee", { selector: "button" }),
       ).not.toBeInTheDocument();
+    });
+
+    it("disables Download while stale rows are showing", async () => {
+      const bigRow = {
+        agencyTrackingId: "agency-1",
+        feeName: "Petition Filing Fee",
+        fee: "PETITION_FILING_FEE" as const,
+        transactionAmount: 60,
+        clientName: "payment-portal",
+        transactionReferenceId: "ref-1",
+        paymentStatus: "success" as const,
+        createdAt: "2026-08-03T12:00:00.000Z",
+        lastUpdatedAt: "2026-08-03T13:00:00.000Z",
+      };
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => response({ data: [bigRow], total: 60_000 }),
+        })
+        .mockImplementationOnce(() => new Promise(() => {}));
+      vi.stubGlobal("fetch", fetchMock);
+
+      renderLog("");
+      const download = await screen.findByRole("button", {
+        name: "Download Transaction Log",
+      });
+
+      // Settled total over the limit: refused before anything else happens.
+      await userEvent.click(download);
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "This view has 60,000 transactions",
+      );
+      await userEvent.click(
+        screen.getByRole("button", { name: "Dismiss notification" }),
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument(),
+      );
+
+      // New query in flight: the 60,000 belongs to the old view, so the
+      // export is unavailable until the new rows land.
+      await userEvent.click(screen.getByText("Failed (0)"));
+      expect(screen.getByRole("status")).toHaveTextContent("Updating");
+      expect(download).toHaveAttribute("aria-disabled", "true");
+      await userEvent.click(download);
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
 
     it("disables Clear All until a filter is active, then resets on click", async () => {
