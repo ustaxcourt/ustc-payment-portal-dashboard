@@ -54,7 +54,6 @@ export default function TransactionLog() {
   const [isNarrow, setIsNarrow] = useState(false);
   const columns = useColumnVisibility(searchFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
   const [exportProgress, setExportProgress] = useState("");
   const filtersScopeRef = useRef<HTMLDivElement>(null);
 
@@ -232,10 +231,9 @@ export default function TransactionLog() {
               {typeof data?.total === "number" ? ` (${data.total})` : ""}
             </h2>
             <div className="flex flex-wrap items-center justify-end gap-2">
-              {/* Export feedback shares this one spot, left of the buttons.
-                  Both regions stay mounted so screen readers announce the text
-                  when it is filled in; sr-only while empty so they add no
-                  flex gap. */}
+              {/* Export progress, left of the buttons. Stays mounted so screen
+                  readers announce the text when it is filled in; sr-only while
+                  empty so it adds no flex gap. */}
               <p
                 aria-live="polite"
                 className={
@@ -245,16 +243,6 @@ export default function TransactionLog() {
                 }
               >
                 {exportProgress}
-              </p>
-              <p
-                role="alert"
-                className={
-                  exportError
-                    ? "max-w-prose text-right text-xs text-destructive"
-                    : "sr-only"
-                }
-              >
-                {exportError}
               </p>
               <span className="relative lg:hidden">
                 <IconButton
@@ -280,11 +268,11 @@ export default function TransactionLog() {
                 />
               </AppTooltip>
               <DownloadTransactionLogButton
-                tab={searchFilters.paymentStatus ?? "all"}
+                filters={searchFilters}
+                total={data?.total}
                 range={appliedRange}
                 sorting={activeSorting}
                 disabled={!data || data.data.length === 0}
-                onError={setExportError}
                 onProgress={setExportProgress}
               />
               <ColumnPicker

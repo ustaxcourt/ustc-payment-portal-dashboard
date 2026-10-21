@@ -2,9 +2,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ToastProvider } from "@/components/ui/toast-context";
 import DownloadTransactionLogButton from "./DownloadTransactionLogButton";
 import type { AppliedDateRange } from "./dateRange";
 import { ExportTooLargeError } from "./exportTransactions";
+import type { TransactionSearchFilters } from "./types";
 
 vi.mock("./exportTransactions", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./exportTransactions")>()),
@@ -32,32 +34,51 @@ const range: AppliedDateRange = {
   label: "Today",
 };
 
+const NO_FILTERS: TransactionSearchFilters = {
+  feeType: null,
+  payType: null,
+  paymentStatus: null,
+  transactionStatus: null,
+  metadataKey: null,
+  metadataValue: null,
+};
+
 const sorting = { sort: "createdAt", order: "desc" } as const;
 
 const LABEL = "Download Transaction Log";
 
-// Mirrors the real parent, which renders the message outside the button.
-function Harness({ disabled, tab }: { disabled: boolean; tab: "all" | "success" }) {
-  const [message, setMessage] = useState<string | null>(null);
+// Mirrors the real parent: progress text is rendered outside the button.
+function Harness({
+  disabled,
+  paymentStatus,
+  total,
+}: {
+  disabled: boolean;
+  total?: number;
+  paymentStatus: "success" | null;
+}) {
   const [progress, setProgress] = useState("");
   return (
     <>
-      <p role="alert">{message}</p>
       <p role="status">{progress}</p>
       <DownloadTransactionLogButton
-        tab={tab}
+        filters={{ ...NO_FILTERS, paymentStatus }}
         range={range}
         sorting={sorting}
         disabled={disabled}
-        onError={setMessage}
+        total={total}
         onProgress={setProgress}
       />
     </>
   );
 }
 
-const renderButton = (disabled = false, tab: "all" | "success" = "all") =>
-  render(<Harness disabled={disabled} tab={tab} />);
+const renderButton = (disabled = false, total?: number) =>
+  render(
+    <ToastProvider>
+      <Harness disabled={disabled} paymentStatus={null} total={total} />
+    </ToastProvider>,
+  );
 
 const downloadButton = () => screen.getByRole("button", { name: LABEL });
 
@@ -112,7 +133,7 @@ describe("DownloadTransactionLogButton", () => {
       expectDownloadDisabled(false),
     );
     expect(fetchAllTransactions).not.toHaveBeenCalled();
-    expect(screen.getByRole("alert")).toBeEmptyDOMElement();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows the too-large guidance instead of downloading", async () => {
@@ -131,6 +152,17 @@ describe("DownloadTransactionLogButton", () => {
     expect(saveWorkbook).not.toHaveBeenCalled();
   });
 
+  it("refuses an oversized view before opening the save dialog", async () => {
+    renderButton(false, 60_000);
+    await userEvent.click(downloadButton());
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "This view has 60,000 transactions, but downloads are limited to 50,000.",
+    );
+    expect(pickSaveDestination).not.toHaveBeenCalled();
+    expect(fetchAllTransactions).not.toHaveBeenCalled();
+  });
+
   it("shows a retryable error when the download fails", async () => {
     vi.mocked(fetchAllTransactions).mockRejectedValue(new Error("boom"));
 
@@ -145,18 +177,44 @@ describe("DownloadTransactionLogButton", () => {
     expectDownloadDisabled(false);
   });
 
+  it("keeps the error until the user dismisses it", async () => {
+    vi.mocked(fetchAllTransactions).mockRejectedValue(new Error("boom"));
+
+    renderButton();
+    await userEvent.click(downloadButton());
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toBeInTheDocument(),
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 3_500));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Dismiss notification" }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument(),
+    );
+  }, 10_000);
+
   it("clears the message when the view changes", async () => {
     vi.mocked(fetchAllTransactions).mockRejectedValue(new Error("boom"));
 
     const { rerender } = renderButton();
     await userEvent.click(downloadButton());
     await waitFor(() =>
-      expect(screen.getByRole("alert")).not.toBeEmptyDOMElement(),
+      expect(screen.getByRole("alert")).toBeInTheDocument(),
     );
 
-    rerender(<Harness disabled={false} tab="success" />);
+    rerender(
+      <ToastProvider>
+        <Harness disabled={false} paymentStatus="success" />
+      </ToastProvider>,
+    );
 
-    expect(screen.getByRole("alert")).toBeEmptyDOMElement();
+    await waitFor(() =>
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument(),
+    );
   });
 
   it("returns quietly to idle when the user cancels", async () => {
@@ -170,7 +228,7 @@ describe("DownloadTransactionLogButton", () => {
     await waitFor(() =>
       expectDownloadDisabled(false),
     );
-    expect(screen.getByRole("alert")).toBeEmptyDOMElement();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("deletes the picked file when the download is cancelled", async () => {

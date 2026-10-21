@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppTooltip } from "@/components/ui/AppTooltip";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
+import { useToast } from "@/components/ui/toast-context";
 import type { AppliedDateRange } from "./dateRange";
 import { exportFilename } from "./exportFilename";
 import {
@@ -18,7 +19,7 @@ import {
   type SaveDestination,
   saveWorkbook,
 } from "./exportWorkbook";
-import type { TransactionSorting, TransactionTab } from "./types";
+import type { TransactionSearchFilters, TransactionSorting } from "./types";
 
 const LABEL = "Download Transaction Log";
 
@@ -27,50 +28,94 @@ type DownloadPhase =
   | { step: "fetching"; fetched: number; total: number }
   | { step: "building" };
 
+const tooLargeMessage = (total: number) =>
+  `This view has ${total.toLocaleString()} transactions, but downloads are limited to ${EXPORT_ROW_LIMIT.toLocaleString()}. Shorten the timeframe and try again.`;
+
 const isAbort = (err: unknown) =>
   err instanceof DOMException && err.name === "AbortError";
 
 export default function DownloadTransactionLogButton({
-  tab,
+  filters,
   range,
   sorting,
   disabled,
-  onError,
+  total,
   onProgress,
 }: {
-  tab: TransactionTab;
+  filters: TransactionSearchFilters;
   range: AppliedDateRange;
   sorting: TransactionSorting;
   disabled?: boolean;
-  onError: (message: string | null) => void;
+  /** Row count of the current view; lets an oversized export be refused
+   *  before the save dialog opens. */
+  total?: number;
   onProgress: (text: string) => void;
 }) {
   const [phase, setPhase] = useState<DownloadPhase>({ step: "idle" });
   const abortRef = useRef<AbortController | null>(null);
+  const { showToast, dismissToast } = useToast();
+  const errorToastRef = useRef<string | null>(null);
+
+  const clearError = useCallback(() => {
+    if (errorToastRef.current) dismissToast(errorToastRef.current);
+    errorToastRef.current = null;
+  }, [dismissToast]);
+
+  // Stays until dismissed: the user has to act on it.
+  const showError = (message: string) => {
+    clearError();
+    errorToastRef.current = showToast(message, "error", { persistent: true });
+  };
 
   const busy = phase.step === "fetching" || phase.step === "building";
 
   // A message about one view must not outlive it.
   // biome-ignore lint/correctness/useExhaustiveDependencies: the inputs are the trigger, not values read in the effect
   useEffect(() => {
-    onError(null);
-  }, [tab, range.from, range.to, sorting.sort, sorting.order, onError]);
+    clearError();
+  }, [
+    filters.feeType,
+    filters.payType,
+    filters.paymentStatus,
+    filters.transactionStatus,
+    filters.metadataKey,
+    filters.metadataValue,
+    range.from,
+    range.to,
+    sorting.sort,
+    sorting.order,
+    clearError,
+  ]);
 
   // The toolbar unmounts when the log query errors.
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      clearError();
+    },
+    [clearError],
+  );
 
   const startDownload = async () => {
     const controller = new AbortController();
     abortRef.current = controller;
     let destination: SaveDestination | null = null;
-    onError(null);
+    clearError();
+
+    // Best effort: the on-screen total can be stale, so the check after page 1
+    // in fetchAllTransactions remains the authority.
+    if (total !== undefined && total > EXPORT_ROW_LIMIT) {
+      showError(tooLargeMessage(total));
+      abortRef.current = null;
+      return;
+    }
 
     try {
-      const filename = exportFilename(range, tab);
+      const filename = exportFilename(range, filters.paymentStatus ?? "all");
       destination = await pickSaveDestination(filename);
 
       setPhase({ step: "fetching", fetched: 0, total: 0 });
-      const { rows } = await fetchAllTransactions(tab, range, sorting, {
+      const { rows } = await fetchAllTransactions(filters, range, sorting, {
         signal: controller.signal,
         onProgress: (progress) => setPhase({ step: "fetching", ...progress }),
       });
@@ -89,9 +134,9 @@ export default function DownloadTransactionLogButton({
       } else {
         console.error("Transaction log download failed:", err);
         setPhase({ step: "idle" });
-        onError(
+        showError(
           err instanceof ExportTooLargeError
-            ? `This view has ${err.total.toLocaleString()} transactions, but downloads are limited to ${EXPORT_ROW_LIMIT.toLocaleString()}. Shorten the timeframe and try again.`
+            ? tooLargeMessage(err.total)
             : "The download failed. Try again.",
         );
       }
