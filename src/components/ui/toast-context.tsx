@@ -123,16 +123,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={contextValue}>
       {children}
 
-      <div
-        aria-live="polite"
-        aria-atomic="true"
-        className="fixed top-24 right-4 z-[99999] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2"
-      >
+      {/* No live attributes here: each toast carries its own role, and a
+          polite/atomic parent would re-read or swallow an alert inside it.
+          Errors interrupt (the user has to act on them); successes wait. */}
+      <div className="fixed top-24 right-4 z-[99999] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            // Errors interrupt: the user has to act on them.
-            role={toast.variant === "error" ? "alert" : undefined}
+            role={toast.variant === "error" ? "alert" : "status"}
             className={cn(
               baseClasses,
               VARIANT_CLASSES[toast.variant],
