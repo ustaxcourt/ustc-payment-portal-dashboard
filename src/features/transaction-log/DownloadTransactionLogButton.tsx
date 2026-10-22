@@ -128,6 +128,7 @@ export default function DownloadTransactionLogButton({
       }
       await saveWorkbook(destination, buffer, filename);
       setPhase({ step: "idle" });
+      showToast("Download complete.", "success");
     } catch (err) {
       if (destination) void discardSaveDestination(destination);
       if (isAbort(err)) {

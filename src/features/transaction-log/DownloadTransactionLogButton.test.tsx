@@ -132,6 +132,7 @@ describe("DownloadTransactionLogButton", () => {
       [],
       expect.any(AbortSignal),
     );
+    expect(await screen.findByText("Download complete.")).toBeInTheDocument();
   });
 
   it("names the file for the filters in force and records them in the workbook", async () => {
@@ -227,6 +228,7 @@ describe("DownloadTransactionLogButton", () => {
     await waitFor(() =>
       expect(screen.getByRole("alert")).toBeInTheDocument(),
     );
+    expect(screen.queryByText("Download complete.")).not.toBeInTheDocument();
 
     await new Promise((resolve) => setTimeout(resolve, 3_500));
     expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -271,6 +273,7 @@ describe("DownloadTransactionLogButton", () => {
       expectDownloadDisabled(false),
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText("Download complete.")).not.toBeInTheDocument();
   });
 
   it("deletes the picked file when the download is cancelled", async () => {
