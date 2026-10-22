@@ -19,6 +19,7 @@ import {
   type SaveDestination,
   saveWorkbook,
 } from "./exportWorkbook";
+import { exportViewKey } from "./transactionLogParams";
 import type { TransactionSearchFilters, TransactionSorting } from "./types";
 
 const LABEL = "Download Transaction Log";
@@ -54,38 +55,31 @@ export default function DownloadTransactionLogButton({
   const [phase, setPhase] = useState<DownloadPhase>({ step: "idle" });
   const abortRef = useRef<AbortController | null>(null);
   const { showToast, dismissToast } = useToast();
-  const errorToastRef = useRef<string | null>(null);
+  const errorToastRef = useRef<{ id: string; viewKey: string } | null>(null);
+  const viewKey = exportViewKey(filters, range, sorting);
 
   const clearError = useCallback(() => {
-    if (errorToastRef.current) dismissToast(errorToastRef.current);
+    if (errorToastRef.current) dismissToast(errorToastRef.current.id);
     errorToastRef.current = null;
   }, [dismissToast]);
 
   // Stays until dismissed: the user has to act on it.
   const showError = (message: string) => {
     clearError();
-    errorToastRef.current = showToast(message, "error", { persistent: true });
+    errorToastRef.current = {
+      id: showToast(message, "error", { persistent: true }),
+      viewKey,
+    };
   };
 
   const busy = phase.step === "fetching" || phase.step === "building";
 
   // A message about one view must not outlive it.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the inputs are the trigger, not values read in the effect
   useEffect(() => {
-    clearError();
-  }, [
-    filters.feeType,
-    filters.payType,
-    filters.paymentStatus,
-    filters.transactionStatus,
-    filters.metadataKey,
-    filters.metadataValue,
-    range.from,
-    range.to,
-    sorting.sort,
-    sorting.order,
-    clearError,
-  ]);
+    if (errorToastRef.current && errorToastRef.current.viewKey !== viewKey) {
+      clearError();
+    }
+  }, [viewKey, clearError]);
 
   // The toolbar unmounts when the log query errors. The parent renders the
   // progress text, so it must be told to drop it too.
