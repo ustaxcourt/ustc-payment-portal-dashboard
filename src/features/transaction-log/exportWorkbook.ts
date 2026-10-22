@@ -1,8 +1,10 @@
+import type { CriteriaRow } from "./exportCriteria";
 import type { WorkbookResult } from "./exportWorkbook.worker";
 import type { TransactionLogEntry } from "./types";
 
 export const buildWorkbookInWorker = (
   rows: TransactionLogEntry[],
+  criteria: CriteriaRow[],
   signal?: AbortSignal,
 ): Promise<ArrayBuffer> =>
   new Promise((resolve, reject) => {
@@ -38,7 +40,7 @@ export const buildWorkbookInWorker = (
       );
     };
 
-    worker.postMessage({ rows });
+    worker.postMessage({ rows, criteria });
   });
 
 const XLSX_MIME =

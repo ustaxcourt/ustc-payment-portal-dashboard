@@ -19,9 +19,9 @@ import { IconButton } from "@/components/ui/icon-button";
 import { useToast } from "@/components/ui/toast-context";
 import { cn } from "@/lib/utils";
 import ColumnPicker from "./ColumnPicker";
-import DownloadTransactionLogButton from "./DownloadTransactionLogButton";
 import { COLUMN_LABEL } from "./columnLabels";
 import { TRANSACTION_COLUMNS } from "./columns";
+import DownloadTransactionLogButton from "./DownloadTransactionLogButton";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import TransactionFilters from "./TransactionFilters";
 import TransactionTable from "./TransactionTable";
@@ -54,6 +54,7 @@ export default function TransactionLog() {
   const [isNarrow, setIsNarrow] = useState(false);
   const columns = useColumnVisibility(searchFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [exportProgress, setExportProgress] = useState("");
   const filtersScopeRef = useRef<HTMLDivElement>(null);
 
   const { showToast } = useToast();
@@ -230,6 +231,19 @@ export default function TransactionLog() {
               {typeof data?.total === "number" ? ` (${data.total})` : ""}
             </h2>
             <div className="flex flex-wrap items-center justify-end gap-2">
+              {/* Export progress, left of the buttons. Stays mounted so screen
+                  readers announce the text when it is filled in; sr-only while
+                  empty so it adds no flex gap. */}
+              <p
+                aria-live="polite"
+                className={
+                  exportProgress
+                    ? "text-xs text-muted-foreground"
+                    : "sr-only"
+                }
+              >
+                {exportProgress}
+              </p>
               <span className="relative lg:hidden">
                 <IconButton
                   icon="filter"
@@ -254,10 +268,14 @@ export default function TransactionLog() {
                 />
               </AppTooltip>
               <DownloadTransactionLogButton
-                tab={searchFilters.paymentStatus ?? "all"}
+                filters={searchFilters}
+                total={isPlaceholderData ? undefined : data?.total}
                 range={appliedRange}
                 sorting={activeSorting}
-                disabled={!data || data.data.length === 0}
+                disabled={
+                  !data || data.data.length === 0 || isPlaceholderData
+                }
+                onProgress={setExportProgress}
               />
               <ColumnPicker
                 visibility={columns.visibility}

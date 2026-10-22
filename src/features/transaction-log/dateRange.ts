@@ -175,7 +175,14 @@ export const toDatePickerValue = (value: string): string => {
   return `${year}-${month}-${day}`;
 };
 
-export const fromDatePickerValue = (value: string): string | null => {
+/** "2026-08-17" for a single day, "2026-08-01 to 2026-08-17" otherwise. */
+export const formatDateSpan = (range: AppliedDateRange): string => {
+  const from = toDatePickerValue(range.from);
+  const to = toDatePickerValue(range.to);
+  return from === to ? from : `${from} to ${to}`;
+};
+
+export const fromDatePickerValue =(value: string): string | null => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return null;
   }

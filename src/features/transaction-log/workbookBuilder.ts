@@ -1,9 +1,11 @@
 import ExcelJS from "exceljs";
 import { exportColumns } from "./exportColumns";
+import type { CriteriaRow } from "./exportCriteria";
 import type { TransactionLogEntry } from "./types";
 
 export const buildWorkbook = async (
   rows: TransactionLogEntry[],
+  criteria: readonly CriteriaRow[],
 ): Promise<ArrayBuffer> => {
   const columns = exportColumns();
 
@@ -25,6 +27,18 @@ export const buildWorkbook = async (
 
   for (const row of rows) {
     sheet.addRow(columns.map((column) => column.value(row)));
+  }
+
+  // After the data sheet, so the workbook still opens on the transactions.
+  // An unfiltered export has nothing to record.
+  if (criteria.length > 0) {
+    const criteriaSheet = workbook.addWorksheet("Filters applied");
+    criteriaSheet.columns = [
+      { header: "Criteria", width: 20 },
+      { header: "Value", width: 60 },
+    ];
+    criteriaSheet.getRow(1).font = { bold: true };
+    for (const [label, value] of criteria) criteriaSheet.addRow([label, value]);
   }
 
   // In the browser writeBuffer() resolves to a Buffer polyfill; only its
