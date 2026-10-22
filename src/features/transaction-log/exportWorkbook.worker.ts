@@ -1,10 +1,12 @@
 /// <reference lib="webworker" />
 
+import type { CriteriaRow } from "./exportCriteria";
 import type { TransactionLogEntry } from "./types";
 import { buildWorkbook } from "./workbookBuilder";
 
 export type WorkbookRequest = {
   rows: TransactionLogEntry[];
+  criteria: CriteriaRow[];
 };
 
 export type WorkbookResult =
@@ -14,7 +16,10 @@ export type WorkbookResult =
 // Every path must post a message; a silent throw would hang the caller.
 self.onmessage = async (event: MessageEvent<WorkbookRequest>) => {
   try {
-    const buffer = await buildWorkbook(event.data.rows);
+    const buffer = await buildWorkbook(
+      event.data.rows,
+      event.data.criteria,
+    );
     const result: WorkbookResult = { ok: true, buffer };
     self.postMessage(result, { transfer: [buffer] });
   } catch (err) {

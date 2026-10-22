@@ -1,7 +1,9 @@
 import type { AppliedDateRange } from "./dateRange";
 import type { TransactionSearchFilters, TransactionSorting } from "./types";
 
-/** Metadata is a pair: a lookup runs only when both halves are set. */
+/** Metadata is a pair: a lookup runs only when both halves are set. The
+ *  backend models the pair as a single `metadataSearch`; the frontend keeps
+ *  the halves separate (`metadataKey`, `metadataValue`). */
 export const pairedMetadata = (filters?: TransactionSearchFilters) =>
   filters?.metadataKey && filters?.metadataValue
     ? { key: filters.metadataKey, value: filters.metadataValue }

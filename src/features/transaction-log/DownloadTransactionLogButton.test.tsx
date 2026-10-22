@@ -52,17 +52,19 @@ function Harness({
   disabled,
   paymentStatus,
   total,
+  filters,
 }: {
   disabled: boolean;
   total?: number;
   paymentStatus: "success" | null;
+  filters?: Partial<TransactionSearchFilters>;
 }) {
   const [progress, setProgress] = useState("");
   return (
     <>
       <p role="status">{progress}</p>
       <DownloadTransactionLogButton
-        filters={{ ...NO_FILTERS, paymentStatus }}
+        filters={{ ...NO_FILTERS, paymentStatus, ...filters }}
         range={range}
         sorting={sorting}
         disabled={disabled}
@@ -73,10 +75,19 @@ function Harness({
   );
 }
 
-const renderButton = (disabled = false, total?: number) =>
+const renderButton = (
+  disabled = false,
+  total?: number,
+  filters?: Partial<TransactionSearchFilters>,
+) =>
   render(
     <ToastProvider>
-      <Harness disabled={disabled} paymentStatus={null} total={total} />
+      <Harness
+        disabled={disabled}
+        paymentStatus={null}
+        total={total}
+        filters={filters}
+      />
     </ToastProvider>,
   );
 
@@ -118,6 +129,36 @@ describe("DownloadTransactionLogButton", () => {
     );
     expect(buildWorkbookInWorker).toHaveBeenCalledWith(
       rows,
+      [],
+      expect.any(AbortSignal),
+    );
+  });
+
+  it("names the file for the filters in force and records them in the workbook", async () => {
+    const rows = [{ agencyTrackingId: "a" }] as never[];
+    vi.mocked(fetchAllTransactions).mockResolvedValue({ rows, total: 1 });
+    vi.mocked(buildWorkbookInWorker).mockResolvedValue(new ArrayBuffer(8));
+
+    renderButton(false, undefined, {
+      paymentStatus: "failed",
+      feeType: "PETITION_FILING_FEE",
+      metadataKey: "docketNumber",
+      metadataValue: "12345-26",
+    });
+    await userEvent.click(downloadButton());
+
+    await waitFor(() =>
+      expect(saveWorkbook).toHaveBeenCalledWith(
+        { kind: "download" },
+        expect.any(ArrayBuffer),
+        "2026-08-17 - USTC Fee Payment Summary (Failed, Petition Filing Fee, Docket Number lookup).xlsx",
+      ),
+    );
+    expect(buildWorkbookInWorker).toHaveBeenCalledWith(
+      rows,
+      expect.arrayContaining([
+        ["Metadata lookup", "Docket Number: 12345-26"],
+      ]),
       expect.any(AbortSignal),
     );
   });

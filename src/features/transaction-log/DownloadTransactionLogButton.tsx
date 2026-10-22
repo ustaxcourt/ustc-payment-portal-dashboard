@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { useToast } from "@/components/ui/toast-context";
 import type { AppliedDateRange } from "./dateRange";
+import { exportCriteriaRows } from "./exportCriteria";
 import { exportFilename } from "./exportFilename";
 import {
   EXPORT_ROW_LIMIT,
@@ -107,7 +108,7 @@ export default function DownloadTransactionLogButton({
     }
 
     try {
-      const filename = exportFilename(range, filters.paymentStatus ?? "all");
+      const filename = exportFilename(range, filters);
       destination = await pickSaveDestination(filename);
 
       setPhase({ step: "fetching", fetched: 0, total: 0 });
@@ -116,7 +117,11 @@ export default function DownloadTransactionLogButton({
         onProgress: (progress) => setPhase({ step: "fetching", ...progress }),
       });
       setPhase({ step: "building" });
-      const buffer = await buildWorkbookInWorker(rows, controller.signal);
+      const buffer = await buildWorkbookInWorker(
+        rows,
+        exportCriteriaRows(range, sorting, filters),
+        controller.signal,
+      );
       // A cancel landing after the build resolves must not write the file.
       if (controller.signal.aborted) {
         throw new DOMException("Download cancelled", "AbortError");

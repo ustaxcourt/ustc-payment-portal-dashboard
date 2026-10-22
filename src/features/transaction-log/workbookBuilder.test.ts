@@ -19,7 +19,7 @@ const row = (id: number): TransactionLogEntry => ({
 
 describe("buildWorkbook", () => {
   it("produces a readable workbook with typed cells and table furniture", async () => {
-    const buffer = await buildWorkbook([row(1), row(2)]);
+    const buffer = await buildWorkbook([row(1), row(2)], []);
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
@@ -46,8 +46,39 @@ describe("buildWorkbook", () => {
     expect(sheet.autoFilter).toBeTruthy();
   });
 
+  it("records the criteria on a second sheet after the data", async () => {
+    const buffer = await buildWorkbook(
+      [row(1)],
+      [
+        ["Date range (ET)", "2026-08-17"],
+        ["Metadata lookup", "Email: someone@example.com"],
+      ],
+    );
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
+      "Transactions",
+      "Filters applied",
+    ]);
+    const sheet = workbook.getWorksheet("Filters applied");
+    expect(sheet?.getCell("A1").value).toBe("Criteria");
+    expect(sheet?.getCell("A3").value).toBe("Metadata lookup");
+    expect(sheet?.getCell("B3").value).toBe("Email: someone@example.com");
+  });
+
+  it("leaves the criteria sheet out when there are none", async () => {
+    const buffer = await buildWorkbook([row(1)], []);
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
+      "Transactions",
+    ]);
+  });
+
   it("returns a transferable ArrayBuffer", async () => {
-    const buffer = await buildWorkbook([row(1)]);
+    const buffer = await buildWorkbook([row(1)], []);
     expect(buffer).toBeInstanceOf(ArrayBuffer);
     expect(buffer.byteLength).toBeGreaterThan(0);
   });
