@@ -3,11 +3,20 @@ frontend:
   phases:
     preBuild:
       commands:
+        - nvm install
+        - nvm use
         - npm ci
     build:
       commands:
       - |
         set -euo pipefail
+
+        EXPECTED_NODE="v$(cat .nvmrc)"
+        echo "Build Node: $(node --version)"
+        if [ "$(node --version)" != "$EXPECTED_NODE" ]; then
+          echo "Build is not on Node $EXPECTED_NODE from .nvmrc" >&2
+          exit 1
+        fi
 
         APP_ID="${AWS_APP_ID}"
 
