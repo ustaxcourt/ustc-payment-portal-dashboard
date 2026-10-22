@@ -120,6 +120,12 @@ stg and prod reached that state only after applying the PAY-331 (SSM policy,
 `NEXTAUTH_URL`) and PAY-385 (SSR compute role and its API invoke policy) changes
 that had been merged to `main` but never applied there.
 
+Terraform is pinned to `~> 1.17.0` for security, not features: 1.17.0 is built with
+Go 1.26.10, which stops trusting certificates from a set of compromised eMudhra
+intermediate CAs ([CVE-2026-111943](https://github.com/hashicorp/terraform/releases/tag/v1.17.0)).
+That covers every TLS connection the CLI makes, including the provider registry
+and the S3 backend. Don't relax `required_version` below 1.17.0.
+
 "Done" above covers the infrastructure only. As of 2026-10-14, stg and prod have
 never completed an Amplify build: every `main` job in both apps has failed. The
 `/amplify/shared/<app-id>/` SSM parameters that `amplify.yml` reads (the Entra ID,

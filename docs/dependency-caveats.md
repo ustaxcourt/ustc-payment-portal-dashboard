@@ -203,14 +203,18 @@ enough context that the next person doesn't have to re-derive the decision.
   and AWS chooses the patch version. Until AWS rolls 24.22.1 out to its Node 24
   runtime, the deployed app can still be exposed to these CVEs. We have no setting to
   force a patch version.
-- **Mitigation:** The app's outbound calls go only to fixed, first-party endpoints:
-  the payment-portal backend (SigV4-signed), Microsoft Entra ID, and the AWS
-  credential endpoints used for signing. It does not
-  resolve or connect to user-supplied hosts, and does not use the Node permission
-  model.
-- **How to check:** Amplify build logs show only the _build_ Node version, not the
-  runtime's. Check the AWS Lambda/Amplify runtime release notes for a Node 24 update
-  that includes 24.22.1. Until a runtime-side check exists, treat this entry as open.
+- **Mitigation:** The `tls`, `dns` and `http` fixes are all on the outbound side.
+  CVE-2026-105481 is in the `http` client agent ("ensure agent data guard works
+  without I/O"), not the server. The app's outbound calls go only to fixed,
+  first-party endpoints: the payment-portal backend (SigV4-signed), Microsoft Entra
+  ID, and the AWS credential endpoints used for signing. It does not resolve or
+  connect to user-supplied hosts, and does not use the Node permission model. The
+  advisory doesn't describe the brotli and `crypto` fixes in detail, so treat those
+  two as unmitigated until the runtime is patched.
+- **How to check:** Amplify build logs show only the _build_ Node version.
+  `src/instrumentation.ts` logs the _runtime_ version once per server start, as
+  `[dashboard] Node.js runtime v24.x.y`. Search the app's `/aws/amplify/<app-id>`
+  CloudWatch log group for that line.
 - **Revisit:** On each dependency update. Remove this entry once AWS's Node 24 SSR
   runtime is confirmed to be on 24.22.1 or later.
 
