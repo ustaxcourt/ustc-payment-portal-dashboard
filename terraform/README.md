@@ -114,8 +114,8 @@ All three environments are fully applied, confirmed 2026-08-03 by
 `terraform state list` in each account plus `dig` against each hostname. Every
 hostname delegates to its own account's zone and resolves.
 
-Re-confirmed 2026-10-14 on AWS provider 6.68.0: `terraform plan` reports
-"No changes" for `bootstrap` and the environment root in all three accounts.
+Re-confirmed 2026-10-21 on AWS provider 6.69.1 and Terraform 1.16.6: `terraform plan`
+reports "No changes" for `bootstrap` and the environment root in all three accounts.
 stg and prod reached that state only after applying the PAY-331 (SSM policy,
 `NEXTAUTH_URL`) and PAY-385 (SSR compute role and its API invoke policy) changes
 that had been merged to `main` but never applied there.
