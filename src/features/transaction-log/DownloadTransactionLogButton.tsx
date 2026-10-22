@@ -135,7 +135,7 @@ export default function DownloadTransactionLogButton({
       showToast("Download complete.", "success");
     } catch (err) {
       if (destination) void discardSaveDestination(destination);
-      if (isAbort(err)) {
+      if (isAbort(err) || controller.signal.aborted) {
         setPhase({ step: "idle" });
       } else {
         console.error("Transaction log download failed:", err);
