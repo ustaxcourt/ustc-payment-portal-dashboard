@@ -447,7 +447,7 @@ describe("TransactionLog", () => {
       // Settled total over the limit: refused before anything else happens.
       await userEvent.click(download);
       expect(await screen.findByRole("alert")).toHaveTextContent(
-        "This view has 60,000 transactions",
+        "this view has 60,000",
       );
       await userEvent.click(
         screen.getByRole("button", { name: "Dismiss notification" }),

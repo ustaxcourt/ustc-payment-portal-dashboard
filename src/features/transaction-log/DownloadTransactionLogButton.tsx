@@ -30,7 +30,7 @@ type DownloadPhase =
   | { step: "building" };
 
 const tooLargeMessage = (total: number) =>
-  `This view has ${total.toLocaleString()} transactions, but downloads are limited to ${EXPORT_ROW_LIMIT.toLocaleString()}. Shorten the timeframe and try again.`;
+  `Downloads are limited to ${EXPORT_ROW_LIMIT.toLocaleString()} transactions, and this view has ${total.toLocaleString()}. Shorten the timeframe or add filters to reduce the count.`;
 
 const isAbort = (err: unknown) =>
   err instanceof DOMException && err.name === "AbortError";

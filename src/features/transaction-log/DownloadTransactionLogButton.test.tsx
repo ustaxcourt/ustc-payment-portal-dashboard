@@ -86,6 +86,7 @@ const expectDownloadDisabled = (yes: boolean) =>
   expect(downloadButton()).toHaveAttribute("aria-disabled", String(yes));
 
 describe("DownloadTransactionLogButton", () => {
+  const TOO_LARGE_MESSAGE = "Downloads are limited to 50,000 transactions, and this view has 60,000. Shorten the timeframe or add filters to reduce the count.";
   beforeEach(() => {
     vi.mocked(fetchAllTransactions).mockReset();
     vi.mocked(buildWorkbookInWorker).mockReset();
@@ -146,7 +147,7 @@ describe("DownloadTransactionLogButton", () => {
 
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "This view has 60,000 transactions, but downloads are limited to 50,000. Shorten the timeframe and try again.",
+        TOO_LARGE_MESSAGE,
       ),
     );
     expect(saveWorkbook).not.toHaveBeenCalled();
@@ -157,7 +158,7 @@ describe("DownloadTransactionLogButton", () => {
     await userEvent.click(downloadButton());
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "This view has 60,000 transactions, but downloads are limited to 50,000.",
+      TOO_LARGE_MESSAGE,
     );
     expect(pickSaveDestination).not.toHaveBeenCalled();
     expect(fetchAllTransactions).not.toHaveBeenCalled();
