@@ -12,12 +12,12 @@ Stack decisions are recorded in
 ## Getting started
 
 ```bash
-nvm use
+nvm install
 npm ci
 npm run dev
 ```
 
-The app runs at http://localhost:3000.
+The app runs at <http://localhost:3000>.
 
 ## Scripts
 
@@ -60,7 +60,7 @@ Gateway.
 npm run dev
 ```
 
-Then sign in at http://localhost:3000. Note `npm run build` and `npm run dev`
+Then sign in at <http://localhost:3000>. Note `npm run build` and `npm run dev`
 share `.next`, so running a build while the dev server is up will break it.
 
 Accessibility test setup and workflow notes live in

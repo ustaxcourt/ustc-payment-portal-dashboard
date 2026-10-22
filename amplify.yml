@@ -5,7 +5,7 @@ frontend:
       commands:
         - nvm install
         - nvm use
-        - npm ci --engine-strict
+        - npm ci
     build:
       commands:
       - |

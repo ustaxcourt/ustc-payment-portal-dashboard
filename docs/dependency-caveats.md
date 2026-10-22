@@ -114,7 +114,7 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Reason:** `@types/node` majors track Node.js majors. This app runs Node 24 —
   `.nvmrc` pins 24.22.1, `package.json` `engines` requires `>=24.22.1 <25.0.0`,
   and CI resolves its Node from `.nvmrc`. Amplify does too: `amplify.yml` runs
-  `nvm install` before `npm ci --engine-strict`, and Amplify runs the app on the
+  `nvm install` before `npm ci` (strict via `.npmrc` `engine-strict`), and Amplify runs the app on the
   Node major it was built with ([Node.js version support for Next.js
   apps](https://docs.aws.amazon.com/amplify/latest/userguide/node-version-support-ssr.html)).
   Before 2026-10-22 it skipped this and built on the image default, Node 22.18.0.
@@ -188,7 +188,7 @@ enough context that the next person doesn't have to re-derive the decision.
   moves off it. Re-run `npm audit` on each dependency update and remove this entry
   once a fix lands. Re-confirmed 2026-10-21: `braces` latest is still `3.0.3`.
 
-### Node.js 24.22.1 security fixes — Amplify SSR runtime patch version (high) (2026-10-22)
+### CVE-2026-106069, CVE-2026-106072, CVE-2026-105483, CVE-2026-105482, CVE-2026-111497, CVE-2026-105481, CVE-2026-106074, CVE-2026-106073 — node@<24.22.1 on the Amplify SSR runtime (high) (2026-10-22)
 
 - **Advisories:** [Node.js 24.22.1](https://nodejs.org/en/blog/release/v24.22.1)
   (2026-10-21) fixes CVE-2026-106069, CVE-2026-106072 and CVE-2026-105483 (high,
@@ -203,8 +203,10 @@ enough context that the next person doesn't have to re-derive the decision.
   and AWS chooses the patch version. Until AWS rolls 24.22.1 out to its Node 24
   runtime, the deployed app can still be exposed to these CVEs. We have no setting to
   force a patch version.
-- **Mitigation:** The `tls`, `dns` and `http` fixes are all on the outbound side.
-  CVE-2026-105481 is in the `http` client agent ("ensure agent data guard works
+- **Mitigation:** The `tls`, `dns` and `http` fixes are all on the outbound side,
+  and the app has no inbound TLS for them to affect: browsers connect to Amplify
+  Hosting's CloudFront distribution, which terminates TLS, and the Next.js server
+  never opens a TLS listener of its own. CVE-2026-105481 is in the `http` client agent ("ensure agent data guard works
   without I/O"), not the server. The app's outbound calls go only to fixed,
   first-party endpoints: the payment-portal backend (SigV4-signed), Microsoft Entra
   ID, and the AWS credential endpoints used for signing. It does not resolve or
