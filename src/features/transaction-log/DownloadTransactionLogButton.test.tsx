@@ -6,6 +6,7 @@ import { ToastProvider } from "@/components/ui/toast-context";
 import DownloadTransactionLogButton from "./DownloadTransactionLogButton";
 import type { AppliedDateRange } from "./dateRange";
 import { ExportTooLargeError } from "./exportTransactions";
+import { NO_FILTERS } from "./testFixtures";
 import type { TransactionSearchFilters } from "./types";
 
 vi.mock("./exportTransactions", async (importOriginal) => ({
@@ -32,15 +33,6 @@ const range: AppliedDateRange = {
   from: "08/17/2026",
   to: "08/17/2026",
   label: "Today",
-};
-
-const NO_FILTERS: TransactionSearchFilters = {
-  feeType: null,
-  payType: null,
-  paymentStatus: null,
-  transactionStatus: null,
-  metadataKey: null,
-  metadataValue: null,
 };
 
 const sorting = { sort: "createdAt", order: "desc" } as const;

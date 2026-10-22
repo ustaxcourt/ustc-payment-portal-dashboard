@@ -1,5 +1,4 @@
-import type { AppliedDateRange } from "./dateRange";
-import { toDatePickerValue } from "./dateRange";
+import { type AppliedDateRange, formatDateSpan } from "./dateRange";
 import { activeExportFilters } from "./exportCriteria";
 import type { TransactionSearchFilters } from "./types";
 
@@ -24,10 +23,6 @@ export const exportFilename = (
   range: AppliedDateRange,
   filters: TransactionSearchFilters,
 ): string => {
-  const from = toDatePickerValue(range.from);
-  const to = toDatePickerValue(range.to);
-  const span = from === to ? from : `${from} to ${to}`;
-
   const descriptors = activeExportFilters(filters).map((filter) =>
     safeSegment(filter.descriptor),
   );
@@ -36,5 +31,5 @@ export const exportFilename = (
   const parts = hidden > 0 ? [...named, `+${hidden} more`] : named;
   const suffix = parts.length > 0 ? ` (${parts.join(", ")})` : "";
 
-  return `${span} - USTC Fee Payment Summary${suffix}.xlsx`;
+  return `${formatDateSpan(range)} - USTC Fee Payment Summary${suffix}.xlsx`;
 };

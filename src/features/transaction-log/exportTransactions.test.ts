@@ -6,26 +6,14 @@ import {
   ExportTooLargeError,
   fetchAllTransactions,
 } from "./exportTransactions";
-import type {
-  TransactionLogEntry,
-  TransactionSearchFilters,
-  TransactionSorting,
-} from "./types";
+import { NO_FILTERS } from "./testFixtures";
+import type { TransactionLogEntry, TransactionSorting } from "./types";
 
 const range: AppliedDateRange = {
   preset: "today",
   from: "08/17/2026",
   to: "08/17/2026",
   label: "Today",
-};
-
-const NO_FILTERS: TransactionSearchFilters = {
-  feeType: null,
-  payType: null,
-  paymentStatus: null,
-  transactionStatus: null,
-  metadataKey: null,
-  metadataValue: null,
 };
 
 const sorting: TransactionSorting = { sort: "createdAt", order: "desc" };

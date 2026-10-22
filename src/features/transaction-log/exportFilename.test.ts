@@ -1,23 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AppliedDateRange } from "./dateRange";
 import { exportFilename } from "./exportFilename";
-import type { TransactionSearchFilters } from "./types";
-
-const range = (from: string, to: string): AppliedDateRange => ({
-  preset: "custom",
-  from,
-  to,
-  label: `${from} - ${to}`,
-});
-
-const NO_FILTERS: TransactionSearchFilters = {
-  feeType: null,
-  payType: null,
-  paymentStatus: null,
-  transactionStatus: null,
-  metadataKey: null,
-  metadataValue: null,
-};
+import { NO_FILTERS, customRange as range } from "./testFixtures";
 
 const day = range("08/17/2026", "08/17/2026");
 const week = range("08/01/2026", "08/17/2026");

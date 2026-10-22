@@ -1,6 +1,6 @@
 import { formatLabel } from "@/lib/format";
 import { COLUMN_LABEL } from "./columnLabels";
-import { type AppliedDateRange, toDatePickerValue } from "./dateRange";
+import { type AppliedDateRange, formatDateSpan } from "./dateRange";
 import { PAYMENT_STATUS_LABEL } from "./statusStyles";
 import { pairedMetadata } from "./transactionLogParams";
 import {
@@ -73,13 +73,11 @@ export const exportCriteriaRows = (
   sorting: TransactionSorting,
   filters: TransactionSearchFilters,
 ): CriteriaRow[] => {
-  const from = toDatePickerValue(range.from);
-  const to = toDatePickerValue(range.to);
   const active = activeExportFilters(filters);
   if (active.length === 0) return [];
 
   return [
-    ["Date range (ET)", from === to ? from : `${from} to ${to}`],
+    ["Date range (ET)", formatDateSpan(range)],
     [
       "Sorted by",
       `${COLUMN_LABEL[sorting.sort]}, ${
