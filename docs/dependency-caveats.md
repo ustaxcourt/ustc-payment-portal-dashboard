@@ -115,8 +115,11 @@ enough context that the next person doesn't have to re-derive the decision.
   `.nvmrc` pins 24.22.1, `package.json` `engines` requires `>=24.22.1 <25.0.0`,
   and CI resolves its Node from `.nvmrc`. Amplify does too: `amplify.yml` runs
   `nvm install` before `npm ci --engine-strict`, and Amplify runs the app on the
-  Node major it was built with. Before 2026-10-22 it skipped this and built on the
-  image default, Node 22.18.0. Installing types for Node 26 against a
+  Node major it was built with ([Node.js version support for Next.js
+  apps](https://docs.aws.amazon.com/amplify/latest/userguide/node-version-support-ssr.html)).
+  Before 2026-10-22 it skipped this and built on the image default, Node 22.18.0.
+  Only the major carries over; see the Node.js runtime entry under
+  [Accepted vulnerabilities](#accepted-vulnerabilities). Installing types for Node 26 against a
   Node 24 runtime would let the typechecker accept APIs that do not exist in
   production, which is worse than being a major behind.
 - **Plan:** Bump in lockstep with the Node runtime, not on its own. When this app
@@ -184,6 +187,32 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Revisit:** When `braces` publishes a patched release, or `shadcn`/`fast-glob`
   moves off it. Re-run `npm audit` on each dependency update and remove this entry
   once a fix lands. Re-confirmed 2026-10-21: `braces` latest is still `3.0.3`.
+
+### Node.js 24.22.1 security fixes — Amplify SSR runtime patch version (high) (2026-10-22)
+
+- **Advisories:** [Node.js 24.22.1](https://nodejs.org/en/blog/release/v24.22.1)
+  (2026-10-21) fixes CVE-2026-106069, CVE-2026-106072 and CVE-2026-105483 (high,
+  `tls`), CVE-2026-105482 (high, `dns`), CVE-2026-111497 (high, bundled brotli),
+  CVE-2026-105481 (medium, `http`), CVE-2026-106074 (medium, `crypto`) and
+  CVE-2026-106073 (low, permission model).
+- **Reason it can't be fixed now:** `.nvmrc`, `engines` and `amplify.yml` put the
+  build on 24.22.1, and the build fails on anything older. The SSR compute runtime is
+  different: Amplify picks it by the build's Node **major** only
+  ([Node.js version support for Next.js
+  apps](https://docs.aws.amazon.com/amplify/latest/userguide/node-version-support-ssr.html)),
+  and AWS chooses the patch version. Until AWS rolls 24.22.1 out to its Node 24
+  runtime, the deployed app can still be exposed to these CVEs. We have no setting to
+  force a patch version.
+- **Mitigation:** The app's outbound calls go only to fixed, first-party endpoints:
+  the payment-portal backend (SigV4-signed), Microsoft Entra ID, and the AWS
+  credential endpoints used for signing. It does not
+  resolve or connect to user-supplied hosts, and does not use the Node permission
+  model.
+- **How to check:** Amplify build logs show only the _build_ Node version, not the
+  runtime's. Check the AWS Lambda/Amplify runtime release notes for a Node 24 update
+  that includes 24.22.1. Until a runtime-side check exists, treat this entry as open.
+- **Revisit:** On each dependency update. Remove this entry once AWS's Node 24 SSR
+  runtime is confirmed to be on 24.22.1 or later.
 
 <!-- Format:
 ### <advisory-id> — <package>@<version> (<severity>)
