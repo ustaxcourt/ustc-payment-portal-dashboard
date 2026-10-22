@@ -64,8 +64,12 @@ export default function DownloadTransactionLogButton({
     errorToastRef.current = null;
   }, [dismissToast]);
 
-  // Stays until dismissed: the user has to act on it.
+  // The newest view, for an export that fails after the view has moved on.
+  const latestViewKeyRef = useRef(viewKey);
+  latestViewKeyRef.current = viewKey;
+
   const showError = (message: string) => {
+    if (viewKey !== latestViewKeyRef.current) return;
     clearError();
     errorToastRef.current = {
       id: showToast(message, "error", { persistent: true }),

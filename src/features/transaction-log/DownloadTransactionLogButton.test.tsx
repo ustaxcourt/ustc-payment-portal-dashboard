@@ -253,6 +253,29 @@ describe("DownloadTransactionLogButton", () => {
     );
   });
 
+  it("drops a failure that lands after the view has changed", async () => {
+    let rejectFetch: (reason: Error) => void = () => {};
+    vi.mocked(fetchAllTransactions).mockReturnValue(
+      new Promise((_resolve, reject) => {
+        rejectFetch = reject;
+      }),
+    );
+
+    const { rerender } = renderButton();
+    await userEvent.click(downloadButton());
+    await waitFor(() => expect(fetchAllTransactions).toHaveBeenCalled());
+
+    rerender(
+      <ToastProvider>
+        <Harness disabled={false} paymentStatus="success" />
+      </ToastProvider>,
+    );
+    rejectFetch(new ExportTooLargeError(60_000));
+
+    await waitFor(() => expectDownloadDisabled(false));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("returns quietly to idle when the user cancels", async () => {
     vi.mocked(fetchAllTransactions).mockRejectedValue(
       new DOMException("Download cancelled", "AbortError"),
