@@ -13,7 +13,7 @@ import {
   type TransactionColumnId,
 } from "./columnLabels";
 import SortableHeader from "./SortableHeader";
-import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE } from "./statusStyles";
+import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE, PAYMENT_STATUS_TEXT_TONE } from "./statusStyles";
 import type {
   FeeType,
   MetadataKey,
@@ -209,7 +209,9 @@ const SORTABLE_COLUMNS: TransactionColumnDef[] = [
       const status = row.original.paymentStatus;
       return (
         <Badge variant="secondary" className={PAYMENT_STATUS_TONE[status]}>
-          {PAYMENT_STATUS_LABEL[status]}
+          <span className={PAYMENT_STATUS_TEXT_TONE[status]}>
+            {PAYMENT_STATUS_LABEL[status]}
+          </span>
         </Badge>
       );
     },
