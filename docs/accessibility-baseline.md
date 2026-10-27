@@ -45,3 +45,26 @@ No automated WCAG 2.1 Level A or AA violations remained after the contrast fix.
 ## Notes
 
 This baseline is limited to automated axe checks. It does not replace manual testing for screen-reader behaviour, focus order during federated sign-in, or export-dialog interactions handled by the browser.
+
+## Status color verification (2026-10-27)
+
+The status palette uses green for successful payments, red for failed payments,
+and amber for pending payments, using the main branch palette:
+
+| Status | Background | Foreground |
+| ------ | ---------- | ---------- |
+| Successful | green-200 | green-800 |
+| Failed | red-200 | red-900 |
+| Pending | amber-200 | amber-900 |
+
+These pairs retain the reference design's saturated pastel badge backgrounds
+with darker text for AA contrast. The shared foregrounds also cover text-only
+filter labels, revenue trends, and payment breakdown amounts on white or muted
+surfaces. Unused alternate payment text tokens were removed so these surfaces
+continue to use the same accessible palette.
+
+All 8 tests in `npm run test:a11y` passed, including authentication setup, login,
+the default and filtered dashboards, the column picker, every column shown,
+the narrow filters drawer, and mixed positive, negative, and flat revenue trends.
+Verification required a fresh build cache because the previous generated CSS
+retained older, lower-contrast status colors despite changes to the source tokens.

@@ -44,12 +44,6 @@
   --color-status-neutral-foreground: var(--status-neutral-foreground);
   --color-status-neutral-subtle: var(--status-neutral-subtle);
   --color-status-success: var(--status-success);
-
-  --color-payment-status-success-text: var(--payment-status-success-text);
-  --color-payment-status-failed-text: var(--payment-status-failed-text);
-  --color-payment-status-pending-text: var(--payment-status-pending-text);
-
-  --color-status-success: var(--status-success);
   --color-status-success-foreground: var(--status-success-foreground);
   --color-status-success-subtle: var(--status-success-subtle);
   --color-status-failed: var(--status-failed);
@@ -109,22 +103,18 @@
   --status-neutral: var(--color-slate-200);
   --status-neutral-foreground: var(--color-slate-900);
   --status-neutral-subtle: var(--color-slate-100);
-  --status-success: var(--color-green-200);
 
+  /* Shared by badges and text-only indicators on white or muted surfaces. */
+  --status-success: var(--color-green-200);
   --status-success-foreground: var(--color-green-800);
   --status-success-subtle: var(--color-green-50);
   --status-failed: var(--color-red-200);
   --status-failed-foreground: var(--color-red-900);
   --status-failed-subtle: var(--color-red-50);
-  --status-pending: var(--color-yellow-200);
+  --status-pending: var(--color-amber-200);
   --status-pending-foreground: var(--color-amber-900);
-
   --status-pending-subtle: var(--color-amber-50);
   --totals-header: var(--color-blue-100);
-
-  --payment-status-success-text: var(--color-green-600);
-  --payment-status-failed-text: var(--color-red-700);
-  --payment-status-pending-text: var(--color-yellow-700);
 }
 
 @layer base {
