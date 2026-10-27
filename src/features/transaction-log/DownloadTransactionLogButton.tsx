@@ -66,7 +66,9 @@ export default function DownloadTransactionLogButton({
 
   // The newest view, for an export that fails after the view has moved on.
   const latestViewKeyRef = useRef(viewKey);
-  latestViewKeyRef.current = viewKey;
+  useEffect(() => {
+    latestViewKeyRef.current = viewKey;
+  }, [viewKey]);
 
   const showError = (message: string) => {
     if (viewKey !== latestViewKeyRef.current) return;
