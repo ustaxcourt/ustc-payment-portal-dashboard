@@ -65,16 +65,15 @@ export const activeExportFilters = (
 
 export type CriteriaRow = readonly [label: string, value: string];
 
-/** Everything that decides which rows the file holds, as label/value pairs
- *  for the workbook's Filters applied sheet. Empty when no filter is applied,
- *  which tells the builder to leave the sheet out. */
+/** Everything that decides which rows the file holds and in what order, as
+ *  label/value pairs for the workbook's Export details sheet. The date range
+ *  and sorting are always listed; filters only when applied. */
 export const exportCriteriaRows = (
   range: AppliedDateRange,
   sorting: TransactionSorting,
   filters: TransactionSearchFilters,
 ): CriteriaRow[] => {
   const active = activeExportFilters(filters);
-  if (active.length === 0) return [];
 
   return [
     ["Date range (ET)", formatDateSpan(range)],

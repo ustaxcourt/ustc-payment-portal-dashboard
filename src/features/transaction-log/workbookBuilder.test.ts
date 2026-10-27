@@ -59,22 +59,12 @@ describe("buildWorkbook", () => {
     await workbook.xlsx.load(buffer);
     expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
       "Transactions",
-      "Filters applied",
+      "Export details",
     ]);
-    const sheet = workbook.getWorksheet("Filters applied");
+    const sheet = workbook.getWorksheet("Export details");
     expect(sheet?.getCell("A1").value).toBe("Criteria");
     expect(sheet?.getCell("A3").value).toBe("Metadata lookup");
     expect(sheet?.getCell("B3").value).toBe("Email: someone@example.com");
-  });
-
-  it("leaves the criteria sheet out when there are none", async () => {
-    const buffer = await buildWorkbook([row(1)], []);
-
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
-      "Transactions",
-    ]);
   });
 
   it("returns a transferable ArrayBuffer", async () => {

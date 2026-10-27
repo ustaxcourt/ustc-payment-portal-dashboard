@@ -5,10 +5,13 @@ import { NO_FILTERS, customRange as range } from "./testFixtures";
 const sorting = { sort: "lastUpdatedAt", order: "asc" } as const;
 
 describe("exportCriteriaRows", () => {
-  it("is empty when no filters are applied", () => {
+  it("lists only the date range and sorting when no filters are applied", () => {
     expect(
       exportCriteriaRows(range("08/01/2026", "08/17/2026"), sorting, NO_FILTERS),
-    ).toEqual([]);
+    ).toEqual([
+      ["Date range (ET)", "2026-08-01 to 2026-08-17"],
+      ["Sorted by", "Last updated, ascending"],
+    ]);
   });
 
   it("lists every filter in full, including the metadata value", () => {

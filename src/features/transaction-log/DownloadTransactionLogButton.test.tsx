@@ -121,7 +121,10 @@ describe("DownloadTransactionLogButton", () => {
     );
     expect(buildWorkbookInWorker).toHaveBeenCalledWith(
       rows,
-      [],
+      [
+        ["Date range (ET)", "2026-08-17"],
+        ["Sorted by", expect.any(String)],
+      ],
       expect.any(AbortSignal),
     );
     expect(await screen.findByText("Download complete.")).toBeInTheDocument();

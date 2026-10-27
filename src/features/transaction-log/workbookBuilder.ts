@@ -30,16 +30,13 @@ export const buildWorkbook = async (
   }
 
   // After the data sheet, so the workbook still opens on the transactions.
-  // An unfiltered export has nothing to record.
-  if (criteria.length > 0) {
-    const criteriaSheet = workbook.addWorksheet("Filters applied");
-    criteriaSheet.columns = [
-      { header: "Criteria", width: 20 },
-      { header: "Value", width: 60 },
-    ];
-    criteriaSheet.getRow(1).font = { bold: true };
-    for (const [label, value] of criteria) criteriaSheet.addRow([label, value]);
-  }
+  const criteriaSheet = workbook.addWorksheet("Export details");
+  criteriaSheet.columns = [
+    { header: "Criteria", width: 20 },
+    { header: "Value", width: 60 },
+  ];
+  criteriaSheet.getRow(1).font = { bold: true };
+  for (const [label, value] of criteria) criteriaSheet.addRow([label, value]);
 
   // In the browser writeBuffer() resolves to a Buffer polyfill; only its
   // underlying ArrayBuffer can be transferred out of the worker.
