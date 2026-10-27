@@ -190,11 +190,20 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ### CVE-2026-106069, CVE-2026-106072, CVE-2026-105483, CVE-2026-105482, CVE-2026-111497, CVE-2026-105481, CVE-2026-106074, CVE-2026-106073 — node@<24.22.1 on the Amplify SSR runtime (high) (2026-10-22)
 
-- **Advisories:** [Node.js 24.22.1](https://nodejs.org/en/blog/release/v24.22.1)
-  (2026-10-21) fixes CVE-2026-106069, CVE-2026-106072 and CVE-2026-105483 (high,
-  `tls`), CVE-2026-105482 (high, `dns`), CVE-2026-111497 (high, bundled brotli),
-  CVE-2026-105481 (medium, `http`), CVE-2026-106074 (medium, `crypto`) and
-  CVE-2026-106073 (low, permission model).
+- **Advisory:** [Node.js October 21, 2026 security
+  releases](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
+  Fixed in 24.22.1. Severities are from the advisory, not the release notes, which
+  group CVE-2026-106069 and CVE-2026-106072 under one "High" line:
+  - CVE-2026-106069 (high): TLS hostname bypass when the host loosely resolves to an IP.
+  - CVE-2026-105483 (high): TLS hostname bypass for IPs written in fullwidth digits.
+  - CVE-2026-105482 (high): `dns.resolve` truncates names containing a NUL character.
+  - CVE-2026-111497 (high): Brotli decoder out-of-bounds write permits remote code execution.
+  - CVE-2026-106072 (medium): DNS SANs can authenticate non-canonical IPv4 endpoints.
+  - CVE-2026-105481 (medium): a keep-alive socket can process a response written
+    before its request was sent.
+  - CVE-2026-106074 (medium): `crypto` random caches are saved into startup snapshots
+    and single executable applications.
+  - CVE-2026-106073 (low): Permission Model bypass with `fs.realpathSync`.
 - **Reason it can't be fixed now:** `.nvmrc`, `engines` and `amplify.yml` put the
   build on 24.22.1, and the build fails on anything older. The SSR compute runtime is
   different: Amplify picks it by the build's Node **major** only
@@ -203,16 +212,22 @@ enough context that the next person doesn't have to re-derive the decision.
   and AWS chooses the patch version. Until AWS rolls 24.22.1 out to its Node 24
   runtime, the deployed app can still be exposed to these CVEs. We have no setting to
   force a patch version.
-- **Mitigation:** The `tls`, `dns` and `http` fixes are all on the outbound side,
-  and the app has no inbound TLS for them to affect: browsers connect to Amplify
-  Hosting's CloudFront distribution, which terminates TLS, and the Next.js server
-  never opens a TLS listener of its own. CVE-2026-105481 is in the `http` client agent ("ensure agent data guard works
-  without I/O"), not the server. The app's outbound calls go only to fixed,
-  first-party endpoints: the payment-portal backend (SigV4-signed), Microsoft Entra
-  ID, and the AWS credential endpoints used for signing. It does not resolve or
-  connect to user-supplied hosts, and does not use the Node permission model. The
-  advisory doesn't describe the brotli and `crypto` fixes in detail, so treat those
-  two as unmitigated until the runtime is patched.
+- **Mitigation:**
+  - **TLS, DNS and HTTP (CVE-2026-106069, -105483, -106072, -105482, -105481):**
+    all affect outbound connections. Browsers reach the app through Amplify Hosting's
+    CloudFront distribution, which terminates TLS, so the Next.js server has no TLS
+    listener of its own. The server's outbound calls go only to fixed, first-party
+    hostnames: the payment-portal backend (SigV4-signed), Microsoft Entra ID, and the
+    AWS credential endpoints used for signing. It never resolves or connects to
+    user-supplied hosts or IP literals.
+  - **Brotli (CVE-2026-111497):** this is the one that matters. Server-side `fetch`
+    decompresses `br` response bodies automatically, but only from the first-party
+    endpoints above. Exploiting it would need one of those upstreams to be
+    compromised first. It is the main reason to confirm AWS's rollout promptly.
+  - **Not affected:** CVE-2026-106074 needs a Node startup snapshot or single
+    executable application, and the app uses neither. Its one `crypto.randomUUID()`
+    call (`src/components/ui/toast-context.tsx`) runs in the browser. CVE-2026-106073
+    needs the Node permission model, which the app does not enable.
 - **How to check:** Amplify build logs show only the _build_ Node version.
   `src/instrumentation.ts` logs the _runtime_ version once per server start, as
   `[dashboard] Node.js runtime v24.x.y`. Search the app's `/aws/amplify/<app-id>`
