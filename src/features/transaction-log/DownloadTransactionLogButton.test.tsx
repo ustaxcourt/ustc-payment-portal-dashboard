@@ -476,6 +476,34 @@ describe("DownloadTransactionLogButton", () => {
     expect(signal?.aborted).toBe(true);
   });
 
+  it("keeps an in-flight download running when the parent passes a new onProgress", async () => {
+    let signal: AbortSignal | undefined;
+    vi.mocked(fetchAllTransactions).mockImplementation(
+      (_tab, _range, _sorting, options) => {
+        signal = options?.signal;
+        return new Promise(() => { });
+      },
+    );
+    const ui = (onProgress: (text: string) => void) => (
+      <ToastProvider>
+        <DownloadTransactionLogButton
+          filters={NO_FILTERS}
+          range={range}
+          sorting={sorting}
+          onProgress={onProgress}
+        />
+      </ToastProvider>
+    );
+
+    const { rerender } = render(ui(() => { }));
+    await userEvent.click(downloadButton());
+    await waitFor(() => expect(signal).toBeDefined());
+
+    rerender(ui(() => { }));
+
+    expect(signal?.aborted).toBe(false);
+  });
+
   it("is disabled when the view has no rows", () => {
     renderButton(true);
     expectDownloadDisabled(true);

@@ -88,15 +88,24 @@ export default function DownloadTransactionLogButton({
     }
   }, [viewKey, clearError]);
 
+  // Refs keep the unmount cleanup below from re-running (and aborting a live
+  // download) when a parent passes a new callback identity.
+  const clearErrorRef = useRef(clearError);
+  const onProgressRef = useRef(onProgress);
+  useEffect(() => {
+    clearErrorRef.current = clearError;
+    onProgressRef.current = onProgress;
+  });
+
   // The toolbar unmounts when the log query errors. The parent renders the
   // progress text, so it must be told to drop it too.
   useEffect(
     () => () => {
       abortRef.current?.abort();
-      clearError();
-      onProgress("");
+      clearErrorRef.current();
+      onProgressRef.current("");
     },
-    [clearError, onProgress],
+    [],
   );
 
   const startDownload = async () => {
