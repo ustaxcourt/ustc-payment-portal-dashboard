@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider, useToast } from "./toast-context";
 
@@ -62,6 +62,71 @@ describe("ToastProvider", () => {
       vi.advanceTimersByTime(300);
     });
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("dismisses the newest persistent toast on Escape", () => {
+    renderProvider();
+    act(() => {
+      toast.showToast("First failure", "error", { persistent: true });
+      toast.showToast("Second failure", "error", { persistent: true });
+    });
+
+    act(() => {
+      fireEvent.keyDown(document, { key: "Escape" });
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(screen.queryByText("Second failure")).not.toBeInTheDocument();
+    expect(screen.getByText("First failure")).toBeInTheDocument();
+  });
+
+  it("leaves regular toasts alone on Escape", () => {
+    renderProvider();
+    act(() => {
+      toast.showToast("Link copied");
+    });
+
+    act(() => {
+      fireEvent.keyDown(document, { key: "Escape" });
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(screen.getByText("Link copied")).toBeInTheDocument();
+  });
+
+  it("ignores Escape that another handler already claimed", () => {
+    renderProvider();
+    act(() => {
+      toast.showToast("Download failed", "error", { persistent: true });
+    });
+
+    act(() => {
+      const event = new KeyboardEvent("keydown", {
+        key: "Escape",
+        cancelable: true,
+      });
+      event.preventDefault();
+      document.dispatchEvent(event);
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(screen.getByText("Download failed")).toBeInTheDocument();
+  });
+
+  it("stops listening for Escape once no persistent toast remains", () => {
+    const removeSpy = vi.spyOn(document, "removeEventListener");
+    renderProvider();
+    act(() => {
+      toast.showToast("Download failed", "error", { persistent: true });
+    });
+
+    act(() => {
+      fireEvent.keyDown(document, { key: "Escape" });
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(removeSpy).toHaveBeenCalledWith("keydown", expect.any(Function));
+    removeSpy.mockRestore();
   });
 
   it("ignores a second dismissal and one for a toast that is already gone", () => {

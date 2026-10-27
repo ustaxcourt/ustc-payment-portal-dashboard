@@ -114,6 +114,24 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     [dismissToast],
   );
 
+  // The container sits after the page in the DOM, so a keyboard user would
+  // otherwise tab through everything to reach the dismiss button.
+  const hasPersistent = toasts.some(
+    (toast) => toast.persistent && !toast.isClosing,
+  );
+  useEffect(() => {
+    if (!hasPersistent) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      const newest = toasts
+        .filter((toast) => toast.persistent && !toast.isClosing)
+        .at(-1);
+      if (newest) dismissToast(newest.id);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [hasPersistent, toasts, dismissToast]);
+
   const contextValue = useMemo(
     () => ({ showToast, dismissToast }),
     [showToast, dismissToast],
