@@ -12,6 +12,7 @@ import {
   EXPORT_ROW_LIMIT,
   ExportTooLargeError,
   fetchAllTransactions,
+  tooLargeMessage,
 } from "./exportTransactions";
 import {
   buildWorkbookInWorker,
@@ -29,9 +30,6 @@ type DownloadPhase =
   | { step: "idle" }
   | { step: "fetching"; fetched: number; total: number }
   | { step: "building" };
-
-const tooLargeMessage = (total: number) =>
-  `Downloads are limited to ${EXPORT_ROW_LIMIT.toLocaleString()} transactions, and this view has ${total.toLocaleString()}. Shorten the timeframe or add filters to reduce the count.`;
 
 const isAbort = (err: unknown) =>
   err instanceof DOMException && err.name === "AbortError";
@@ -153,7 +151,7 @@ export default function DownloadTransactionLogButton({
         setPhase({ step: "idle" });
         showError(
           err instanceof ExportTooLargeError
-            ? tooLargeMessage(err.total)
+            ? err.message
             : "The download failed. Try again.",
         );
       }

@@ -14,13 +14,15 @@ export const EXPORT_ROW_LIMIT = 50_000;
 const CONCURRENCY = 3;
 const PAGE_TIMEOUT_MS = 45_000;
 
+/** User-facing text, shared by the pre-check and `ExportTooLargeError`. */
+export const tooLargeMessage = (total: number) =>
+  `Downloads are limited to ${EXPORT_ROW_LIMIT.toLocaleString()} transactions, and this view has ${total.toLocaleString()}. Shorten the timeframe or add filters to reduce the count.`;
+
 export class ExportTooLargeError extends Error {
   readonly total: number;
 
   constructor(total: number) {
-    super(
-      `The current view has ${total.toLocaleString()} transactions; exports are limited to ${EXPORT_ROW_LIMIT.toLocaleString()}.`,
-    );
+    super(tooLargeMessage(total));
     this.name = "ExportTooLargeError";
     this.total = total;
   }
