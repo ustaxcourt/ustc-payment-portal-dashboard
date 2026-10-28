@@ -13,7 +13,7 @@ import {
   type TransactionColumnId,
 } from "./columnLabels";
 import SortableHeader from "./SortableHeader";
-import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE, PAYMENT_STATUS_TEXT_TONE } from "./statusStyles";
+import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TEXT_TONE, PAYMENT_STATUS_TONE } from "./statusStyles";
 import type {
   FeeType,
   MetadataKey,
