@@ -62,14 +62,9 @@ export default function DownloadTransactionLogButton({
     errorToastRef.current = null;
   }, [dismissToast]);
 
-  // The newest view, for an export that fails after the view has moved on.
-  const latestViewKeyRef = useRef(viewKey);
-  useEffect(() => {
-    latestViewKeyRef.current = viewKey;
-  }, [viewKey]);
-
+  // Shown even if the view has moved on since the download started: the
+  // download keeps running, so its failure must still be reported.
   const showError = (message: string) => {
-    if (viewKey !== latestViewKeyRef.current) return;
     clearError();
     errorToastRef.current = {
       id: showToast(message, "error", { persistent: true }),

@@ -67,6 +67,28 @@ function Harness({
   );
 }
 
+// The parent outlives the button, as TransactionLog does.
+function Parent() {
+  const [show, setShow] = useState(true);
+  const [progress, setProgress] = useState("");
+  return (
+    <>
+      <p data-testid="progress">{progress}</p>
+      <button type="button" onClick={() => setShow(false)}>
+        Remove toolbar
+      </button>
+      {show ? (
+        <DownloadTransactionLogButton
+          filters={NO_FILTERS}
+          range={range}
+          sorting={sorting}
+          onProgress={setProgress}
+        />
+      ) : null}
+    </>
+  );
+}
+
 const renderButton = (
   disabled = false,
   total?: number,
@@ -256,7 +278,7 @@ describe("DownloadTransactionLogButton", () => {
     );
   });
 
-  it("drops a failure that lands after the view has changed", async () => {
+  it("still reports a failure that lands after the view has changed", async () => {
     let rejectFetch: (reason: Error) => void = () => {};
     vi.mocked(fetchAllTransactions).mockReturnValue(
       new Promise((_resolve, reject) => {
@@ -275,8 +297,12 @@ describe("DownloadTransactionLogButton", () => {
     );
     rejectFetch(new ExportTooLargeError(60_000));
 
-    await waitFor(() => expectDownloadDisabled(false));
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Downloads are limited to 50,000 transactions",
+      ),
+    );
+    expectDownloadDisabled(false);
   });
 
   it("returns quietly to idle when the user cancels", async () => {
@@ -419,27 +445,6 @@ describe("DownloadTransactionLogButton", () => {
       },
     );
 
-    // The parent outlives the button, as TransactionLog does.
-    function Parent() {
-      const [show, setShow] = useState(true);
-      const [progress, setProgress] = useState("");
-      return (
-        <>
-          <p data-testid="progress">{progress}</p>
-          <button type="button" onClick={() => setShow(false)}>
-            Remove toolbar
-          </button>
-          {show ? (
-            <DownloadTransactionLogButton
-              filters={NO_FILTERS}
-              range={range}
-              sorting={sorting}
-              onProgress={setProgress}
-            />
-          ) : null}
-        </>
-      );
-    }
     render(
       <ToastProvider>
         <Parent />
