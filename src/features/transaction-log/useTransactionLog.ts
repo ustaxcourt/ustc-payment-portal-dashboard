@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { type AppliedDateRange, courtDayIsoBounds } from "./dateRange";
+import { appendFilterParams, pairedMetadata } from "./transactionLogParams";
 import type {
   TransactionLogResponse,
   TransactionSearchFilters,
@@ -11,11 +12,6 @@ import type {
 // The table shows one page; the footer reports the true total and the export
 // is the path to the complete set.
 const PAGE_SIZE = 200;
-
-const pairedMetadata = (filters?: TransactionSearchFilters) =>
-  filters?.metadataKey && filters?.metadataValue
-    ? { key: filters.metadataKey, value: filters.metadataValue }
-    : null;
 
 const fetchTransactionLogPage = async (
   range: AppliedDateRange,
@@ -35,17 +31,7 @@ const fetchTransactionLogPage = async (
     to: bounds.to,
   });
 
-  if (filters?.feeType) params.set("fee", filters.feeType);
-  if (filters?.payType) params.set("paymentMethod", filters.payType);
-  if (filters?.paymentStatus) params.set("status", filters.paymentStatus);
-  if (filters?.transactionStatus) {
-    params.set("transactionStatus", filters.transactionStatus);
-  }
-  const metadata = pairedMetadata(filters);
-  if (metadata) {
-    params.set("metadataKey", metadata.key);
-    params.set("metadataValue", metadata.value);
-  }
+  appendFilterParams(params, filters);
 
   const response = await fetch(`/api/transactions?${params}`, { signal });
 

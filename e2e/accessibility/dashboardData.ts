@@ -217,7 +217,10 @@ const asStatus = (value: string | null): PaymentStatus | null => {
   }
 };
 
-export async function stubDashboardResponses(page: Page): Promise<void> {
+export async function stubDashboardResponses(
+  page: Page,
+  { total }: { total?: number } = {},
+): Promise<void> {
   await page.route(/\/api\/totals$/, async (route) => {
     await route.fulfill({
       status: 200,
@@ -252,7 +255,7 @@ export async function stubDashboardResponses(page: Page): Promise<void> {
               : undefined,
           sort: asSortField(requestUrl.searchParams.get("sort")),
           order: asOrder(requestUrl.searchParams.get("order")),
-          total: rows.length,
+          total: total ?? rows.length,
         }),
       ),
     });

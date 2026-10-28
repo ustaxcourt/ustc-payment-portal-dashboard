@@ -6,6 +6,7 @@ import {
   ExportTooLargeError,
   fetchAllTransactions,
 } from "./exportTransactions";
+import { NO_FILTERS } from "./testFixtures";
 import type { TransactionLogEntry, TransactionSorting } from "./types";
 
 const range: AppliedDateRange = {
@@ -58,7 +59,7 @@ describe("fetchAllTransactions", () => {
     const fetch = vi.fn().mockResolvedValue(pageResponse([1, 2, 3], 3));
     vi.stubGlobal("fetch", fetch);
 
-    const result = await fetchAllTransactions("all", range, sorting);
+    const result = await fetchAllTransactions(NO_FILTERS, range, sorting);
 
     expect(result.rows.map((r) => r.agencyTrackingId)).toEqual([
       "agency-1",
@@ -72,11 +73,44 @@ describe("fetchAllTransactions", () => {
     expect(url.searchParams.get("status")).toBeNull();
   });
 
+  it("sends every active filter on each page request", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(pageResponse(ids(1, EXPORT_PAGE_SIZE), 6_000))
+      .mockResolvedValueOnce(pageResponse(ids(5_001, 1_000)));
+    vi.stubGlobal("fetch", fetch);
+
+    await fetchAllTransactions(
+      {
+        feeType: "PETITION_FILING_FEE",
+        payType: "ACH",
+        paymentStatus: "success",
+        transactionStatus: "processed",
+        metadataKey: "docketNumber",
+        metadataValue: "123-26",
+      },
+      range,
+      sorting,
+    );
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    for (const [input] of fetch.mock.calls) {
+      const q = new URL(input, "http://localhost").searchParams;
+      expect(q.get("fee")).toBe("PETITION_FILING_FEE");
+      expect(q.get("paymentMethod")).toBe("ACH");
+      expect(q.get("status")).toBe("success");
+      expect(q.get("transactionStatus")).toBe("processed");
+      expect(q.get("metadataKey")).toBe("docketNumber");
+      expect(q.get("metadataValue")).toBe("123-26");
+    }
+  });
+
   it("passes the status filter for a filtered tab", async () => {
     const fetch = vi.fn().mockResolvedValue(pageResponse([1], 1));
     vi.stubGlobal("fetch", fetch);
 
-    await fetchAllTransactions("failed", range, sorting);
+    await fetchAllTransactions(
+      { ...NO_FILTERS, paymentStatus: "failed" }, range, sorting);
 
     const url = new URL(fetch.mock.calls[0][0], "http://localhost");
     expect(url.searchParams.get("status")).toBe("failed");
@@ -98,7 +132,7 @@ describe("fetchAllTransactions", () => {
     });
     vi.stubGlobal("fetch", fetch);
 
-    const result = await fetchAllTransactions("all", range, sorting);
+    const result = await fetchAllTransactions(NO_FILTERS, range, sorting);
 
     expect(fetch).toHaveBeenCalledTimes(3);
     expect(result.rows).toHaveLength(total);
@@ -117,7 +151,7 @@ describe("fetchAllTransactions", () => {
     const fetch = vi.fn().mockResolvedValue(pageResponse([1, 2, 3]));
     vi.stubGlobal("fetch", fetch);
 
-    await expect(fetchAllTransactions("all", range, sorting)).rejects.toThrow(
+    await expect(fetchAllTransactions(NO_FILTERS, range, sorting)).rejects.toThrow(
       "missing its total row count",
     );
   });
@@ -128,7 +162,7 @@ describe("fetchAllTransactions", () => {
       .mockResolvedValue(pageResponse([1], EXPORT_ROW_LIMIT + 1));
     vi.stubGlobal("fetch", fetch);
 
-    await expect(fetchAllTransactions("all", range, sorting)).rejects.toThrow(
+    await expect(fetchAllTransactions(NO_FILTERS, range, sorting)).rejects.toThrow(
       ExportTooLargeError,
     );
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -151,7 +185,7 @@ describe("fetchAllTransactions", () => {
     });
     vi.stubGlobal("fetch", fetch);
 
-    const result = await fetchAllTransactions("all", range, sorting);
+    const result = await fetchAllTransactions(NO_FILTERS, range, sorting);
 
     expect(result.rows).toHaveLength(total);
     expect(fetch).toHaveBeenCalledTimes(3);
@@ -175,7 +209,7 @@ describe("fetchAllTransactions", () => {
     });
     vi.stubGlobal("fetch", fetch);
 
-    const result = await fetchAllTransactions("all", range, sorting);
+    const result = await fetchAllTransactions(NO_FILTERS, range, sorting);
 
     expect(result.rows).toHaveLength(total);
     expect(fetch).toHaveBeenCalledTimes(4);
@@ -194,7 +228,7 @@ describe("fetchAllTransactions", () => {
     vi.stubGlobal("fetch", fetch);
     const onProgress = vi.fn();
 
-    await fetchAllTransactions("all", range, sorting, { onProgress });
+    await fetchAllTransactions(NO_FILTERS, range, sorting, { onProgress });
 
     expect(onProgress).toHaveBeenCalledTimes(2);
     expect(onProgress.mock.calls.at(-1)?.[0]).toEqual({
