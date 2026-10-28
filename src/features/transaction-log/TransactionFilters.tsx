@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import MetadataSearch from "./MetadataSearch";
-import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TEXT_TONE } from "./statusStyles";
+import { PAYMENT_STATUS_LABEL, RADIO_STATUS_TEXT_TONE } from "./statusStyles";
 import {
   FEE_TYPE_LABEL,
   FEE_TYPES,
@@ -151,7 +151,7 @@ export default function TransactionFilters({
                 className="flex cursor-pointer items-center gap-2 text-sm font-medium"
               >
                 <RadioGroupItem value={status} />
-                <span className={PAYMENT_STATUS_TEXT_TONE[status]}>
+                <span className={RADIO_STATUS_TEXT_TONE[status]}>
                   {PAYMENT_STATUS_LABEL[status]} ({counts?.[status] ?? "—"})
                 </span>
               </label>

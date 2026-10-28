@@ -53,6 +53,10 @@
   --color-status-pending-foreground: var(--status-pending-foreground);
   --color-status-pending-subtle: var(--status-pending-subtle);
   --color-totals-header: var(--totals-header);
+  --color-radio-success-foreground: var(--radio-success-foreground);
+  --color-radio-failed-foreground: var(--radio-failed-foreground);
+  --color-radio-pending-foreground: var(--radio-pending-foreground);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -115,6 +119,11 @@
   --status-pending-foreground: var(--color-amber-900);
   --status-pending-subtle: var(--color-amber-50);
   --totals-header: var(--color-blue-100);
+
+  /* Radio status label colors */
+  --radio-success-foreground: var(--color-green-700);
+  --radio-failed-foreground: var(--color-red-700);
+  --radio-pending-foreground: var(--color-amber-700);
 }
 
 @layer base {
