@@ -13,8 +13,14 @@ export const PAYMENT_STATUS_TONE: Record<PaymentStatus, string> = {
 };
 
 /** Text-only variant for the Payment Status filter labels (radio group). */
-export const PAYMENT_STATUS_TEXT_TONE: Record<PaymentStatus, string> = {
+export const PAYMENT_STATUS_TEXT_TONE = {
   success: "text-status-success-foreground",
   failed: "text-status-failed-foreground",
   pending: "text-status-pending-foreground",
-};
+} satisfies Record<PaymentStatus, string>;
+
+export const RADIO_STATUS_TEXT_TONE = {
+  success: "text-radio-success-foreground",
+  failed: "text-radio-failed-foreground",
+  pending: "text-radio-pending-foreground",
+} satisfies Record<PaymentStatus, string>;
