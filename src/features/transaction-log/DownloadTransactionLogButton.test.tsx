@@ -395,6 +395,35 @@ describe("DownloadTransactionLogButton", () => {
     release({ rows: [], total: 0 });
   });
 
+  it("withdraws Cancel once the file starts saving", async () => {
+    vi.mocked(fetchAllTransactions).mockResolvedValue({
+      rows: [] as never[],
+      total: 0,
+    });
+    vi.mocked(buildWorkbookInWorker).mockResolvedValue(new ArrayBuffer(8));
+    let finishSave: () => void = () => {};
+    vi.mocked(saveWorkbook).mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishSave = resolve;
+        }),
+    );
+
+    renderButton();
+    await userEvent.click(downloadButton());
+
+    await waitFor(() => expect(saveWorkbook).toHaveBeenCalled());
+    expect(screen.queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Saving file…");
+    expectDownloadDisabled(true);
+
+    finishSave();
+    await waitFor(() =>
+      expect(screen.getByText("Download complete.")).toBeInTheDocument(),
+    );
+    expectDownloadDisabled(false);
+  });
+
   it("names the tooltip the same as the button", async () => {
     renderButton();
 

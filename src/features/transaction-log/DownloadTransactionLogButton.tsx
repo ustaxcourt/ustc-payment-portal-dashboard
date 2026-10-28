@@ -29,7 +29,8 @@ const LABEL = "Download Transaction Log";
 type DownloadPhase =
   | { step: "idle" }
   | { step: "fetching"; fetched: number; total: number }
-  | { step: "building" };
+  | { step: "building" }
+  | { step: "saving" };
 
 const isAbort = (err: unknown) =>
   err instanceof DOMException && err.name === "AbortError";
@@ -72,7 +73,8 @@ export default function DownloadTransactionLogButton({
     };
   };
 
-  const busy = phase.step === "fetching" || phase.step === "building";
+  const busy = phase.step !== "idle";
+  const cancellable = phase.step === "fetching" || phase.step === "building";
 
   // A message about one view must not outlive it.
   useEffect(() => {
@@ -134,6 +136,7 @@ export default function DownloadTransactionLogButton({
       if (controller.signal.aborted) {
         throw new DOMException("Download cancelled", "AbortError");
       }
+      setPhase({ step: "saving" });
       await saveWorkbook(destination, buffer, filename);
       setPhase({ step: "idle" });
       showToast("Download complete.", "success");
@@ -162,7 +165,9 @@ export default function DownloadTransactionLogButton({
         ? "Preparing download…"
         : phase.step === "building"
           ? "Building file…"
-          : "";
+          : phase.step === "saving"
+            ? "Saving file…"
+            : "";
 
   useEffect(() => {
     onProgress(progressText);
@@ -170,7 +175,7 @@ export default function DownloadTransactionLogButton({
 
   return (
     <>
-      {busy ? (
+      {cancellable ? (
         <Button
           type="button"
           size="sm"
