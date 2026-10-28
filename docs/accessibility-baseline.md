@@ -49,22 +49,41 @@ This baseline is limited to automated axe checks. It does not replace manual tes
 ## Status color verification (2026-10-27)
 
 The status palette uses green for successful payments, red for failed payments,
-and amber for pending payments, using the main branch palette:
+and amber for pending payments, using the main branch palette.
+
+### Status badges and indicators
 
 | Status | Background | Foreground |
-| ------ | ---------- | ---------- |
+| ----------- | ---------- | ---------- |
 | Successful | green-200 | green-800 |
 | Failed | red-200 | red-900 |
 | Pending | amber-200 | amber-900 |
 
 These pairs retain the reference design's saturated pastel badge backgrounds
-with darker text for AA contrast. The shared foregrounds also cover text-only
-filter labels, revenue trends, and payment breakdown amounts on white or muted
-surfaces. Unused alternate payment text tokens were removed so these surfaces
-continue to use the same accessible palette.
+with darker text to maintain AA contrast requirements for badges and other
+status indicators.
 
-All 8 tests in `npm run test:a11y` passed, including authentication setup, login,
-the default and filtered dashboards, the column picker, every column shown,
-the narrow filters drawer, and mixed positive, negative, and flat revenue trends.
-Verification required a fresh build cache because the previous generated CSS
-retained older, lower-contrast status colors despite changes to the source tokens.
+### Radio filter labels
+
+| Status | Foreground |
+| ----------- | ---------- |
+| Successful | green-700 |
+| Failed | red-700 |
+| Pending | amber-700 |
+
+Radio filter labels use slightly lighter 700-level foregrounds to provide
+visual distinction from badges while maintaining sufficient contrast on white
+backgrounds.
+
+The shared status foregrounds continue to be used for badges, text-only
+indicators, revenue trends, and payment breakdown amounts. Dedicated radio
+label tokens were introduced so filter labels can use the 700-level palette
+without affecting the contrast and appearance of status badges elsewhere in
+the application.
+
+All 8 tests in `npm run test:a11y` passed, including authentication setup,
+login, the default and filtered dashboards, the column picker, every column
+shown, the narrow filters drawer, and mixed positive, negative, and flat
+revenue trends. Verification required a fresh build cache because the previous
+generated CSS retained older status-token values despite changes to the source
+tokens.
