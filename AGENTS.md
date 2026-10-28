@@ -1,6 +1,6 @@
 # USTC Payment Portal Dashboard
 
-**Instructions here should only be updated through `AGENTS.md`. `copilot-instructions.md` and `CLAUDE.md` are symlinks to `AGENTS.md`**
+**Instructions here should only be updated through `AGENTS.md`. `CLAUDE.md` and `.github/copilot-instructions.md` are one-line pointers to this file, not symlinks: Copilot code review reads all three, so symlinks would send these instructions three times per review.**
 
 This is the USTC Payment Portal Dashboard. A Next.js App using TanStack Table to deliver auditable transaction records from USTC-Payment-Portal to the US Tax Court's Finance Team.
 
@@ -37,7 +37,7 @@ Core constraints:
 - Tests are colocated as `*.test.ts(x)` next to the source. The Vitest `@` alias maps to `src/`.
 - Run `npm run lint`, `npm run tsc` and `npm test` before considering work done. CI runs the same checks, plus build and accessibility.
 - Configuration for local development is in `.env.local` (copy from `.env.local.example`). Never commit secrets or edit `.env.local`.
-- `AGENTS.md` is the source of truth for instructions. `CLAUDE.md` and `.github/copilot-instructions.md` are symlinks to it.
+- `AGENTS.md` is the source of truth for instructions. `CLAUDE.md` and `.github/copilot-instructions.md` are one-line pointers to it.
 
 ## Agent Expectations
 
