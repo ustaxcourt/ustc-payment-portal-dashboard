@@ -27,7 +27,7 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.3.1 — deferred (2026-08-04, re-confirmed 2026-10-14)
+### @tanstack/react-table 8.21.3 → 9.3.1 — deferred (2026-08-04, re-confirmed 2026-10-21)
 
 - **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.3.1`.
 - **Reason:** v9 renames the table hook and changes its types, so the upgrade is a
@@ -52,9 +52,9 @@ enough context that the next person doesn't have to re-derive the decision.
   v9's deprecated `useLegacyTable` bridge, which would mean migrating twice. Keep
   the exact pin so automated updates cannot pull in v9.
 
-### next 15.5.28 → 16.4.1 — deferred (2026-07-27, re-confirmed 2026-10-14)
+### next 15.5.28 → 16.4.2 — deferred (2026-07-27, re-confirmed 2026-10-21)
 
-- **Current:** `15.5.28` (pinned exactly, not a range). **Available latest:** `16.4.1`.
+- **Current:** `15.5.28` (pinned exactly, not a range). **Available latest:** `16.4.2`.
 - **Reason:** AWS Amplify Hosting — the hosting target chosen for this app — documents
   Next.js support through version 15. Next 16 is not officially supported, and the
   Amplify Hosting issue tracker carries a concrete failure for it: _"Next.js 16.1 build
@@ -69,10 +69,11 @@ enough context that the next person doesn't have to re-derive the decision.
   through a lockfile refresh. **This pin is contingent on the Amplify hosting decision
   (ADR 0001 open question 3); if the team selects OpenNext instead, re-evaluate rather
   than assuming the pin is still required.**
-- **Re-checked 2026-10-14:** The Amplify Hosting docs still state support for apps
+- **Re-checked 2026-10-21:** The Amplify Hosting docs still state support for apps
   "built with Next.js versions up through Next.js 15", and compute-managed SSR for
-  "versions 12 through 15". No Next 16 support has been announced.
-- **Note:** Staying on 15.x is not the same as staying still. This cycle moved
+  "versions 12 through 15". No Next 16 support has been announced. `15.5.28` is
+  still the newest 15.5.x (the `backport` dist-tag).
+- **Note:** Staying on 15.x is not the same as staying still. PAY-494 moved
   15.5.26 → 15.5.28 within the pin. 15.5.28 (2026-10-14) is a security release:
   GHSA-2464-fhr4-w9xw (critical, unauthenticated RCE in the Image Optimization API
   when processing SVGs) and GHSA-p3m5-59mp-jv5r (high, App Router Server Actions
@@ -81,11 +82,11 @@ enough context that the next person doesn't have to re-derive the decision.
   optimizer endpoint is reachable without login. Patch releases on the 15.5 line should continue
   to be taken promptly while Next 16 remains deferred.
 
-### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17, re-confirmed 2026-10-14)
+### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17, re-confirmed 2026-10-21)
 
 - **Current:** `^5.9.3`. **Available latest:** `7.0.2`.
 - **Reason:** TypeScript 7 is the native port, and it breaks `next build` on
-  Next 15.5.25. `tsc --noEmit` and the full unit suite both pass on 7.0.2, so the
+  Next 15.5 (first seen on 15.5.25, still failing on 15.5.28). `tsc --noEmit` and the full unit suite both pass on 7.0.2, so the
   app's own types are fine — but Next loads `next.config.ts` through the TypeScript
   compiler API, and against 7.x that path throws:
 
@@ -98,7 +99,7 @@ enough context that the next person doesn't have to re-derive the decision.
   otherwise identical tree, where the build succeeds — so this is the TypeScript
   major, not anything else in this cycle.
 
-- **Re-checked 2026-10-14:** Same failure on `next@15.5.28` with `typescript@7.0.2`.
+- **Re-checked 2026-10-21:** Same failure on `next@15.5.28` with `typescript@7.0.2`.
   On the same tree with `typescript@5.9.3`, `next build` loads `next.config.ts` and
   proceeds to compile.
 
@@ -107,18 +108,24 @@ enough context that the next person doesn't have to re-derive the decision.
   and re-test with `npm run build`, not just `npm run tsc` — a passing typecheck
   hides this failure entirely.
 
-### @types/node 24.19.2 → 26.6.5 — deferred (2026-09-17, re-confirmed 2026-10-14)
+### @types/node 24.19.2 → 26.6.5 — deferred (2026-09-17, re-confirmed 2026-10-21)
 
 - **Current:** `^24.13.3` (resolves to `24.19.2`). **Available latest:** `26.6.5`.
 - **Reason:** `@types/node` majors track Node.js majors. This app runs Node 24 —
-  `.nvmrc` pins 24.20.0, `package.json` `engines` requires `>=24.20.0 <25.0.0`,
-  and CI resolves its Node from `.nvmrc`. Installing types for Node 26 against a
+  `.nvmrc` pins 24.22.1, `package.json` `engines` requires `>=24.22.1 <25.0.0`,
+  and CI resolves its Node from `.nvmrc`. Amplify does too: `amplify.yml` runs
+  `nvm install` before `npm ci` (strict via `.npmrc` `engine-strict`), and Amplify runs the app on the
+  Node major it was built with ([Node.js version support for Next.js
+  apps](https://docs.aws.amazon.com/amplify/latest/userguide/node-version-support-ssr.html)).
+  Before 2026-10-22 it skipped this and built on the image default, Node 22.18.0.
+  Only the major carries over; see the Node.js runtime entry under
+  [Accepted vulnerabilities](#accepted-vulnerabilities). Installing types for Node 26 against a
   Node 24 runtime would let the typechecker accept APIs that do not exist in
   production, which is worse than being a major behind.
 - **Plan:** Bump in lockstep with the Node runtime, not on its own. When this app
   moves to Node 26, move `@types/node` with it in the same change.
 
-### traverse 0.3.9 → 0.3.10 — held back via override (2026-10-15)
+### traverse 0.3.9 → 0.3.10 — held back via override (2026-10-15, re-confirmed 2026-10-21)
 
 - **Current:** `0.3.9` (forced by `package.json` `overrides`). **Available latest
   in range:** `0.3.10`.
@@ -152,7 +159,7 @@ enough context that the next person doesn't have to re-derive the decision.
   `@tailwindcss/postcss` resolves a patched PostCSS version. The flagged copy
   remains vendored inside `next@15.5.28` at
   `node_modules/next/node_modules/postcss` (still `8.4.31`). We do not control that
-  pin. The only remediation offered by `npm audit` is upgrading to `next@16.4.1`,
+  pin. The only remediation offered by `npm audit` is upgrading to `next@16.4.2`,
   which is currently deferred (see Deferred upgrades). This is also the only reason
   `npm audit` still lists `next` itself (moderate): GHSA-4jqv-mc3x-m676 and
   GHSA-mcj8-r9mp-w47p (SSG/ISR cache poisoning) were resolved by the move to
@@ -162,7 +169,7 @@ enough context that the next person doesn't have to re-derive the decision.
   and does not process user-supplied stylesheets.
 - **Revisit:** Re-test whenever a new 15.5.x patch is released or when the
   deferred Next 16 upgrade is revisited. Remove this entry once Next ships a
-  patched bundled PostCSS version.
+  patched bundled PostCSS version. Re-confirmed 2026-10-21: still `8.4.31`.
 
 ### GHSA-vfj7-8cjw-p6xm — braces@3.0.3 (high)
 
@@ -179,7 +186,54 @@ enough context that the next person doesn't have to re-derive the decision.
   bundle or run at request time, and it only globs our own repository.
 - **Revisit:** When `braces` publishes a patched release, or `shadcn`/`fast-glob`
   moves off it. Re-run `npm audit` on each dependency update and remove this entry
-  once a fix lands.
+  once a fix lands. Re-confirmed 2026-10-21: `braces` latest is still `3.0.3`.
+
+### CVE-2026-106069, CVE-2026-106072, CVE-2026-105483, CVE-2026-105482, CVE-2026-111497, CVE-2026-105481, CVE-2026-106074, CVE-2026-106073 — node@<24.22.1 on the Amplify SSR runtime (high) (2026-10-22)
+
+- **Advisory:** [Node.js October 21, 2026 security
+  releases](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
+  Fixed in 24.22.1. Severities are from the advisory, not the release notes, which
+  group CVE-2026-106069 and CVE-2026-106072 under one "High" line:
+  - CVE-2026-106069 (high): TLS hostname bypass when the host loosely resolves to an IP.
+  - CVE-2026-105483 (high): TLS hostname bypass for IPs written in fullwidth digits.
+  - CVE-2026-105482 (high): `dns.resolve` truncates names containing a NUL character.
+  - CVE-2026-111497 (high): Brotli decoder out-of-bounds write permits remote code execution.
+  - CVE-2026-106072 (medium): DNS SANs can authenticate non-canonical IPv4 endpoints.
+  - CVE-2026-105481 (medium): a keep-alive socket can process a response written
+    before its request was sent.
+  - CVE-2026-106074 (medium): `crypto` random caches are saved into startup snapshots
+    and single executable applications.
+  - CVE-2026-106073 (low): Permission Model bypass with `fs.realpathSync`.
+- **Reason it can't be fixed now:** `.nvmrc`, `engines` and `amplify.yml` put the
+  build on 24.22.1, and the build fails on anything older. The SSR compute runtime is
+  different: Amplify picks it by the build's Node **major** only
+  ([Node.js version support for Next.js
+  apps](https://docs.aws.amazon.com/amplify/latest/userguide/node-version-support-ssr.html)),
+  and AWS chooses the patch version. Until AWS rolls 24.22.1 out to its Node 24
+  runtime, the deployed app can still be exposed to these CVEs. We have no setting to
+  force a patch version.
+- **Mitigation:**
+  - **TLS, DNS and HTTP (CVE-2026-106069, -105483, -106072, -105482, -105481):**
+    all affect outbound connections. Browsers reach the app through Amplify Hosting's
+    CloudFront distribution, which terminates TLS, so the Next.js server has no TLS
+    listener of its own. The server's outbound calls go only to fixed, first-party
+    hostnames: the payment-portal backend (SigV4-signed), Microsoft Entra ID, and the
+    AWS credential endpoints used for signing. It never resolves or connects to
+    user-supplied hosts or IP literals.
+  - **Brotli (CVE-2026-111497):** this is the one that matters. Server-side `fetch`
+    decompresses `br` response bodies automatically, but only from the first-party
+    endpoints above. Exploiting it would need one of those upstreams to be
+    compromised first. It is the main reason to confirm AWS's rollout promptly.
+  - **Not affected:** CVE-2026-106074 needs a Node startup snapshot or single
+    executable application, and the app uses neither. Its one `crypto.randomUUID()`
+    call (`src/components/ui/toast-context.tsx`) runs in the browser. CVE-2026-106073
+    needs the Node permission model, which the app does not enable.
+- **How to check:** Amplify build logs show only the _build_ Node version.
+  `src/instrumentation.ts` logs the _runtime_ version once per server start, as
+  `[dashboard] Node.js runtime v24.x.y`. Search the app's `/aws/amplify/<app-id>`
+  CloudWatch log group for that line.
+- **Revisit:** On each dependency update. Remove this entry once AWS's Node 24 SSR
+  runtime is confirmed to be on 24.22.1 or later.
 
 <!-- Format:
 ### <advisory-id> — <package>@<version> (<severity>)
@@ -205,3 +259,4 @@ enough context that the next person doesn't have to re-derive the decision.
   and the Excel export works. Re-test export when this override changes.
 - **Remove when:** `exceljs` publishes a release that depends on `uuid >= 11.1.1`.
   Drop the override then, rather than moving it to a newer `uuid` major.
+  Re-confirmed 2026-10-21: `exceljs` latest is still `4.4.0`.
