@@ -138,6 +138,22 @@ describe("TransactionTable sort state", () => {
     });
   });
 
+  it("opens a text column ascending when the visible rows have no value", async () => {
+    const onSortingChange = vi.fn();
+    renderTable({ rows: [{ ...row, returnDetail: null }], onSortingChange });
+
+    await userEvent.click(
+      within(headerFor("Failure reason")).getByRole("button", {
+        name: "Failure reason",
+      }),
+    );
+
+    expect(onSortingChange).toHaveBeenCalledWith({
+      sort: "returnDetail",
+      order: "asc",
+    });
+  });
+
   it("flips direction rather than clearing the sort", async () => {
     const onSortingChange = vi.fn();
     renderTable({ onSortingChange });

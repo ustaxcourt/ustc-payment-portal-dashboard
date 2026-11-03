@@ -190,6 +190,7 @@ const SORTABLE_COLUMNS: TransactionColumnDef[] = [
     id: "transactionAmount",
     accessorKey: "transactionAmount",
     header: sortable,
+    sortDescFirst: true,
     size: 80,
     cell: ({ row }) => (
       <span className="tabular-nums">

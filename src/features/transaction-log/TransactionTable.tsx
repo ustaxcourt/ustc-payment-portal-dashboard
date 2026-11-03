@@ -64,6 +64,7 @@ export default function TransactionTable({
     columns,
     manualSorting: true,
     enableSortingRemoval: false,
+    sortDescFirst: false,
     state: { sorting: sortingState, columnVisibility },
     onSortingChange: (updater) => {
       const next =
