@@ -27,30 +27,30 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.3.1 — deferred (2026-08-04, re-confirmed 2026-10-21)
+### @tanstack/react-table 9.3.1 — exact pin retained after v9 migration (PAY-498, 2026-11-03)
 
-- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.3.1`.
-- **Reason:** v9 renames the table hook and changes its types, so the upgrade is a
-  source migration rather than a lockfile refresh. Sized on 2026-10-14:
-  - **Surface:** three files — `src/features/transaction-log/TransactionTable.tsx`,
-    `columns.tsx` and `columns.test.ts`. The table uses only the core row model
-    with `manualSorting`, plus sorting and column-visibility state. No client-side
-    filtering, pagination or grouping.
-  - **Changes:** `useReactTable` + `getCoreRowModel()` become `useTable({ features,
-    columns, data })` with the sorting and column-visibility features registered.
-    `ColumnDef<TData>` gains a leading `TFeatures` generic, which has to be threaded
-    through `columns.tsx`, the table props and the test. The `ColumnMeta` module
-    augmentation keeps working with `TFeatures` as its first generic.
-  - **Unchanged:** `flexRender`, `getHeaderGroups`, `getRowModel`,
-    `getIsSorted`/`toggleSorting`/`getCanSort`, `manualSorting`, and controlled
-    `state` with `onSortingChange`. v9 methods live on the prototype, but the table
-    only destructures the `{ row }` and `{ column }` context objects, not methods.
-  - **Estimate:** about 3 points. The code change is small, but the transaction log
-    is the app's riskiest surface (timeframe, filters, sorting, column visibility
-    and export must stay coherent), so it needs a full manual pass and e2e run.
-- **Plan:** Migrate under its own ticket rather than a dependency rotation. Skip
-  v9's deprecated `useLegacyTable` bridge, which would mean migrating twice. Keep
-  the exact pin so automated updates cannot pull in v9.
+- **Current:** `9.3.1` (pinned exactly, not `^9`). Migrated from `8.21.3` in
+  PAY-498, which closes the v8 → v9 deferral recorded here on 2026-08-04.
+- **What changed:** `useReactTable` + `getCoreRowModel()` became `useTable({ features,
+  columns, data })`, without the deprecated `useLegacyTable` bridge. Features are
+  registered explicitly in `src/features/transaction-log/tableFeatures.ts`:
+  - `rowSortingFeature` and `columnVisibilityFeature` for the controlled state.
+  - `columnSizingFeature` for the `size` column option and `getSize()`. The
+    original sizing missed this one. Without it the colgroup widths break, not
+    just the types.
+  - `TransactionTableFeatures` is threaded as the leading generic on `ColumnDef`,
+    `HeaderContext`, the table props and the tests.
+  - The global `ColumnMeta` augmentation now repeats v9's exact type parameters
+    (`in out TFeatures, in out TData, TValue extends CellData = CellData`).
+    TypeScript only merges an augmentation with identical parameters.
+  - `VisibilityState` was renamed to `ColumnVisibilityState`.
+- **Why the pin stays exact:** v9 is a young major with new store-backed
+  rendering, and the transaction log is the app's riskiest surface. A minor release
+  should be a deliberate, re-tested change, not something a lockfile refresh pulls in.
+- **On the next bump:** re-run `TransactionTable.test.tsx` (sort direction, no sort
+  removal, column widths, tab stops) and the `sorting`, `columns`,
+  `download-transaction-log`, `cancelledPayments` and `dashboard.a11y` auth specs,
+  then check timeframe, filters, sorting, column visibility and export together.
 
 ### next 15.5.28 → 16.4.2 — deferred (2026-07-27, re-confirmed 2026-10-21)
 
