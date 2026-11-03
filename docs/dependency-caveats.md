@@ -27,17 +27,6 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 9.3.1 — exact pin retained (PAY-498, 2026-11-03)
-
-- **Current:** `9.3.1`, the latest, pinned exactly rather than `^9`. PAY-498
-  migrated from `8.21.3` and closed the v8 → v9 deferral.
-- **Reason:** v9 is a young major with store-backed rendering, and the transaction
-  log is the app's riskiest surface. Take each 9.x release deliberately, not
-  through a lockfile refresh.
-- **On the next bump:** run `npm test` and the `sorting`, `columns`,
-  `download-transaction-log` and `cancelledPayments` auth e2e specs, then check
-  timeframe, filters, sorting, column visibility and export together.
-
 ### next 15.5.28 → 16.4.2 — deferred (2026-07-27, re-confirmed 2026-10-21)
 
 - **Current:** `15.5.28` (pinned exactly, not a range). **Available latest:** `16.4.2`.
