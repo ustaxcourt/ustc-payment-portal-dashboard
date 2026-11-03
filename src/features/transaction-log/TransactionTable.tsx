@@ -29,8 +29,7 @@ import {
   type TransactionSorting,
 } from "./types";
 
-// Core model only: the server owns sorting, filtering and pagination. The
-// registered features carry sorting/visibility state and column sizes.
+// Core model only: the server owns sorting, filtering and pagination.
 export default function TransactionTable({
   rows,
   columns,
