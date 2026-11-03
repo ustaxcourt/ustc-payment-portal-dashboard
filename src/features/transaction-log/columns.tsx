@@ -1,9 +1,11 @@
 "use client";
 
 import type {
+  CellData,
   ColumnDef,
   HeaderContext,
   RowData,
+  TableFeatures,
 } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatCourtStamp, formatCurrency, formatLabel } from "@/lib/format";
@@ -14,6 +16,7 @@ import {
 } from "./columnLabels";
 import SortableHeader from "./SortableHeader";
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TEXT_TONE, PAYMENT_STATUS_TONE } from "./statusStyles";
+import type { TransactionTableFeatures } from "./tableFeatures";
 import type {
   FeeType,
   MetadataKey,
@@ -109,13 +112,19 @@ export const withSearchedColumns = (
 };
 
 declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData extends RowData, TValue> {
+  interface ColumnMeta<
+    in out TFeatures extends TableFeatures,
+    in out TData extends RowData,
+    TValue extends CellData = CellData,
+  > {
     copyText?: (row: TData) => string;
     headerLabel?: string;
   }
 }
 
-const sortable = ({ column }: HeaderContext<TransactionLogEntry, unknown>) => (
+const sortable = ({
+  column,
+}: HeaderContext<TransactionTableFeatures, TransactionLogEntry, unknown>) => (
   <SortableHeader
     label={COLUMN_LABEL[column.id as TransactionSortField]}
     sorted={column.getIsSorted()}
@@ -138,7 +147,10 @@ const CourtStamp = ({ iso }: { iso: string }) => {
   );
 };
 
-type TransactionColumnDef = ColumnDef<TransactionLogEntry> & {
+type TransactionColumnDef = ColumnDef<
+  TransactionTableFeatures,
+  TransactionLogEntry
+> & {
   id: TransactionColumnId;
 };
 

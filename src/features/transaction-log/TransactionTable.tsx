@@ -2,11 +2,10 @@
 
 import {
   type ColumnDef,
+  type ColumnVisibilityState,
   flexRender,
-  getCoreRowModel,
   type SortingState,
-  useReactTable,
-  type VisibilityState,
+  useTable,
 } from "@tanstack/react-table";
 import type { KeyboardEvent } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -21,12 +20,17 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import {
+  type TransactionTableFeatures,
+  transactionTableFeatures,
+} from "./tableFeatures";
+import {
   isTransactionSortField,
   type TransactionLogEntry,
   type TransactionSorting,
 } from "./types";
 
-// Core model only: the server owns sorting, filtering and pagination.
+// Core model only: the server owns sorting, filtering and pagination. The
+// registered features carry sorting/visibility state and column sizes.
 export default function TransactionTable({
   rows,
   columns,
@@ -40,12 +44,12 @@ export default function TransactionTable({
   wrapperClassName = "flex-1 overflow-auto rounded-md border-2 lg:min-h-0",
 }: {
   rows: TransactionLogEntry[];
-  columns: ColumnDef<TransactionLogEntry>[];
+  columns: ColumnDef<TransactionTableFeatures, TransactionLogEntry>[];
   caption: string;
   headerTone: string;
   sorting: TransactionSorting;
   onSortingChange: (next: TransactionSorting) => void;
-  columnVisibility: VisibilityState;
+  columnVisibility: ColumnVisibilityState;
   emptyMessage: string;
   isRefreshing?: boolean;
   wrapperClassName?: string;
@@ -55,10 +59,10 @@ export default function TransactionTable({
     [sorting.sort, sorting.order],
   );
 
-  const table = useReactTable({
+  const table = useTable({
+    features: transactionTableFeatures,
     data: rows,
     columns,
-    getCoreRowModel: getCoreRowModel(),
     manualSorting: true,
     enableSortingRemoval: false,
     state: { sorting: sortingState, columnVisibility },
