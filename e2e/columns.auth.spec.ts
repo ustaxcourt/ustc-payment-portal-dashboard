@@ -194,7 +194,7 @@ test("on a short window the picker stays clear of the neighboring header buttons
 
   const picker = await columnPicker(page).boundingBox();
   expect(picker).not.toBeNull();
-  for (const name of ["Share View", "Download report"]) {
+  for (const name of ["Share View", "Download Transaction Log"]) {
     const button = await page.getByRole("button", { name }).boundingBox();
     expect(button).not.toBeNull();
     if (!picker || !button) return;
