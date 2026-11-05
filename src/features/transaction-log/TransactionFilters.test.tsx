@@ -2,18 +2,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import TransactionFilters from "./TransactionFilters";
+import { NO_FILTERS } from "./testFixtures";
 import type { TransactionSearchFilters } from "./types";
 
 type Props = Parameters<typeof TransactionFilters>[0];
-
-const NO_FILTERS: TransactionSearchFilters = {
-  feeType: null,
-  payType: null,
-  paymentStatus: null,
-  transactionStatus: null,
-  metadataKey: null,
-  metadataValue: null,
-};
 
 const renderFilters = (
   overrides: Omit<Partial<Props>, "filters"> & {

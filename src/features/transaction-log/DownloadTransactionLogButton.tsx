@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppTooltip } from "@/components/ui/AppTooltip";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
+import { useToast } from "@/components/ui/toast-context";
 import type { AppliedDateRange } from "./dateRange";
+import { exportCriteriaRows } from "./exportCriteria";
 import { exportFilename } from "./exportFilename";
 import {
+  EXPORT_ROW_LIMIT,
   ExportTooLargeError,
   fetchAllTransactions,
+  tooLargeMessage,
 } from "./exportTransactions";
 import {
   buildWorkbookInWorker,
@@ -17,7 +21,8 @@ import {
   type SaveDestination,
   saveWorkbook,
 } from "./exportWorkbook";
-import type { TransactionSorting, TransactionTab } from "./types";
+import { exportViewKey } from "./transactionLogParams";
+import type { TransactionSearchFilters, TransactionSorting } from "./types";
 
 const LABEL = "Download Transaction Log";
 
@@ -25,65 +30,128 @@ type DownloadPhase =
   | { step: "idle" }
   | { step: "fetching"; fetched: number; total: number }
   | { step: "building" }
-  | { step: "error"; message: string };
+  | { step: "saving" };
 
 const isAbort = (err: unknown) =>
   err instanceof DOMException && err.name === "AbortError";
 
 export default function DownloadTransactionLogButton({
-  tab,
+  filters,
   range,
   sorting,
   disabled,
+  total,
+  onProgress,
 }: {
-  tab: TransactionTab;
+  filters: TransactionSearchFilters;
   range: AppliedDateRange;
   sorting: TransactionSorting;
   disabled?: boolean;
+  /** Row count of the current view; lets an oversized export be refused
+   *  before the save dialog opens. */
+  total?: number;
+  onProgress: (text: string) => void;
 }) {
   const [phase, setPhase] = useState<DownloadPhase>({ step: "idle" });
   const abortRef = useRef<AbortController | null>(null);
+  const { showToast, dismissToast } = useToast();
+  const errorToastRef = useRef<{ id: string; viewKey: string } | null>(null);
+  const viewKey = exportViewKey(filters, range, sorting);
 
-  const busy = phase.step === "fetching" || phase.step === "building";
+  const clearError = useCallback(() => {
+    if (errorToastRef.current) dismissToast(errorToastRef.current.id);
+    errorToastRef.current = null;
+  }, [dismissToast]);
 
-  // The toolbar unmounts when the log query errors.
-  useEffect(() => () => abortRef.current?.abort(), []);
+  // Shown even if the view has moved on since the download started: the
+  // download keeps running, so its failure must still be reported.
+  const showError = (message: string) => {
+    clearError();
+    errorToastRef.current = {
+      id: showToast(message, "error", { persistent: true }),
+      viewKey,
+    };
+  };
+
+  const busy = phase.step !== "idle";
+  const cancellable = phase.step === "fetching" || phase.step === "building";
+
+  // A message about one view must not outlive it.
+  useEffect(() => {
+    if (errorToastRef.current && errorToastRef.current.viewKey !== viewKey) {
+      clearError();
+    }
+  }, [viewKey, clearError]);
+
+  // Refs keep the unmount cleanup below from re-running (and aborting a live
+  // download) when a parent passes a new callback identity.
+  const clearErrorRef = useRef(clearError);
+  const onProgressRef = useRef(onProgress);
+  useEffect(() => {
+    clearErrorRef.current = clearError;
+    onProgressRef.current = onProgress;
+  });
+
+  // The toolbar unmounts when the log query errors. The parent renders the
+  // progress text, so it must be told to drop it too.
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      clearErrorRef.current();
+      onProgressRef.current("");
+    },
+    [],
+  );
 
   const startDownload = async () => {
     const controller = new AbortController();
     abortRef.current = controller;
     let destination: SaveDestination | null = null;
+    clearError();
+
+    // Best effort: the on-screen total can be stale, so the check after page 1
+    // in fetchAllTransactions remains the authority.
+    if (total !== undefined && total > EXPORT_ROW_LIMIT) {
+      showError(tooLargeMessage(total));
+      abortRef.current = null;
+      return;
+    }
 
     try {
-      const filename = exportFilename(range, tab);
+      const filename = exportFilename(range, filters);
       destination = await pickSaveDestination(filename);
 
       setPhase({ step: "fetching", fetched: 0, total: 0 });
-      const { rows } = await fetchAllTransactions(tab, range, sorting, {
+      const { rows } = await fetchAllTransactions(filters, range, sorting, {
         signal: controller.signal,
         onProgress: (progress) => setPhase({ step: "fetching", ...progress }),
       });
       setPhase({ step: "building" });
-      const buffer = await buildWorkbookInWorker(rows, controller.signal);
+      const buffer = await buildWorkbookInWorker(
+        rows,
+        exportCriteriaRows(range, sorting, filters),
+        controller.signal,
+      );
       // A cancel landing after the build resolves must not write the file.
       if (controller.signal.aborted) {
         throw new DOMException("Download cancelled", "AbortError");
       }
+      setPhase({ step: "saving" });
       await saveWorkbook(destination, buffer, filename);
       setPhase({ step: "idle" });
+      showToast("Download complete.", "success");
     } catch (err) {
       if (destination) void discardSaveDestination(destination);
-      if (isAbort(err)) {
+      if (isAbort(err) || controller.signal.aborted) {
         setPhase({ step: "idle" });
       } else {
         console.error("Transaction log download failed:", err);
-        setPhase({
-          step: "error",
-          message:
-            err instanceof ExportTooLargeError
-              ? `${err.message} Narrow the timeframe and try again.`
-              : "The download failed. Try again.",
-        });
+        setPhase({ step: "idle" });
+        showError(
+          err instanceof ExportTooLargeError
+            ? err.message
+            : "The download failed. Try again.",
+        );
       }
     } finally {
       abortRef.current = null;
@@ -97,19 +165,17 @@ export default function DownloadTransactionLogButton({
         ? "Preparing download…"
         : phase.step === "building"
           ? "Building file…"
-          : "";
+          : phase.step === "saving"
+            ? "Saving file…"
+            : "";
+
+  useEffect(() => {
+    onProgress(progressText);
+  }, [progressText, onProgress]);
 
   return (
     <>
-      <span aria-live="polite" className="sr-only">
-        {progressText}
-      </span>
-      {progressText ? (
-        <p aria-hidden className="text-xs text-muted-foreground">
-          {progressText}
-        </p>
-      ) : null}
-      {busy ? (
+      {cancellable ? (
         <Button
           type="button"
           size="sm"
@@ -118,11 +184,6 @@ export default function DownloadTransactionLogButton({
         >
           Cancel
         </Button>
-      ) : null}
-      {phase.step === "error" ? (
-        <p role="alert" className="text-xs text-destructive">
-          {phase.message}
-        </p>
       ) : null}
       <AppTooltip content={LABEL}>
         <IconButton

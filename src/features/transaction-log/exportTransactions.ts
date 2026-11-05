@@ -1,9 +1,10 @@
 import { type AppliedDateRange, courtDayIsoBounds } from "./dateRange";
+import { appendFilterParams } from "./transactionLogParams";
 import type {
   TransactionLogEntry,
   TransactionLogResponse,
+  TransactionSearchFilters,
   TransactionSorting,
-  TransactionTab,
 } from "./types";
 
 /** Mirrors `TRANSACTION_LOG_MAX_EXPORT_PAGE_SIZE` in the payment portal. */
@@ -13,13 +14,15 @@ export const EXPORT_ROW_LIMIT = 50_000;
 const CONCURRENCY = 3;
 const PAGE_TIMEOUT_MS = 45_000;
 
+/** User-facing text, shared by the pre-check and `ExportTooLargeError`. */
+export const tooLargeMessage = (total: number) =>
+  `Downloads are limited to ${EXPORT_ROW_LIMIT.toLocaleString()} transactions, and this view has ${total.toLocaleString()}. Shorten the timeframe or add filters to reduce the count.`;
+
 export class ExportTooLargeError extends Error {
   readonly total: number;
 
   constructor(total: number) {
-    super(
-      `The current view has ${total.toLocaleString()} transactions; exports are limited to ${EXPORT_ROW_LIMIT.toLocaleString()}.`,
-    );
+    super(tooLargeMessage(total));
     this.name = "ExportTooLargeError";
     this.total = total;
   }
@@ -28,7 +31,7 @@ export class ExportTooLargeError extends Error {
 export type ExportProgress = { fetched: number; total: number };
 
 const fetchExportPage = async (
-  tab: TransactionTab,
+  filters: TransactionSearchFilters,
   range: AppliedDateRange,
   sorting: TransactionSorting,
   page: number,
@@ -44,7 +47,7 @@ const fetchExportPage = async (
     sort: sorting.sort,
     to: bounds.to,
   });
-  if (tab !== "all") params.set("status", tab);
+  appendFilterParams(params, filters);
 
   const timeout = AbortSignal.timeout(PAGE_TIMEOUT_MS);
   const response = await fetch(`/api/transactions?${params}`, {
@@ -74,7 +77,7 @@ const withRetry = async <T>(fn: () => Promise<T>): Promise<T> => {
  *  shift page boundaries. When the assembled rows disagree with page 1's
  *  total, the set moved underneath us — refetch once from the top. */
 export const fetchAllTransactions = async (
-  tab: TransactionTab,
+  filters: TransactionSearchFilters,
   range: AppliedDateRange,
   sorting: TransactionSorting,
   options: {
@@ -82,10 +85,10 @@ export const fetchAllTransactions = async (
     onProgress?: (progress: ExportProgress) => void;
   } = {},
 ): Promise<{ rows: TransactionLogEntry[]; total: number }> => {
-  const first = await fetchAllOnce(tab, range, sorting, options);
+  const first = await fetchAllOnce(filters, range, sorting, options);
   if (first.rows.length === first.total) return first;
   throwIfAborted(options.signal);
-  return fetchAllOnce(tab, range, sorting, options);
+  return fetchAllOnce(filters, range, sorting, options);
 };
 
 const throwIfAborted = (signal?: AbortSignal) => {
@@ -95,7 +98,7 @@ const throwIfAborted = (signal?: AbortSignal) => {
 };
 
 const fetchAllOnce = async (
-  tab: TransactionTab,
+  filters: TransactionSearchFilters,
   range: AppliedDateRange,
   sorting: TransactionSorting,
   options: {
@@ -106,7 +109,7 @@ const fetchAllOnce = async (
   const { signal, onProgress } = options;
 
   const first = await withRetry(() =>
-    fetchExportPage(tab, range, sorting, 1, signal),
+    fetchExportPage(filters, range, sorting, 1, signal),
   );
   // Page 1 must carry the total; guessing from one page would silently
   // truncate the file and blind the consistency check.
@@ -131,7 +134,7 @@ const fetchAllOnce = async (
         const page = nextPage;
         nextPage += 1;
         const result = await withRetry(() =>
-          fetchExportPage(tab, range, sorting, page, signal),
+          fetchExportPage(filters, range, sorting, page, signal),
         );
         pages[page - 1] = result.data;
         fetched += result.data.length;

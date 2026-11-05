@@ -5,17 +5,9 @@ import {
   defaultColumnVisibility,
   effectiveDefaultVisibility,
 } from "./columns";
+import { NO_FILTERS } from "./testFixtures";
 import type { TransactionSearchFilters } from "./types";
 import { useColumnVisibility } from "./useColumnVisibility";
-
-const NO_FILTERS: TransactionSearchFilters = {
-  feeType: null,
-  payType: null,
-  paymentStatus: null,
-  transactionStatus: null,
-  metadataKey: null,
-  metadataValue: null,
-};
 
 const filtered = (
   overrides: Partial<TransactionSearchFilters>,

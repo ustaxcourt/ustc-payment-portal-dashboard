@@ -137,6 +137,44 @@ test.describe("dashboard accessibility", () => {
     });
   });
 
+  test("the persistent export error toast meets WCAG 2.1 Level A and AA", async ({
+    page,
+  }) => {
+    const route = "/";
+
+    // A view over the export limit is refused before the save dialog opens,
+    // which raises the persistent error toast without any file picker.
+    await stubDashboardResponses(page, { total: 50_001 });
+    await page.goto(route);
+
+    await expectAccessiblePage({
+      page,
+      pageName: "Dashboard export error toast",
+      route,
+      ready: async () => {
+        await expect(
+          page.getByRole("grid", { name: /Transaction log, All/i }),
+        ).toBeVisible();
+
+        const button = page.getByRole("button", {
+          name: "Download Transaction Log",
+        });
+        await expect(button).toBeEnabled();
+        await button.click();
+
+        // Next's route announcer is also a role="alert", so match on text.
+        await expect(
+          page
+            .getByRole("alert")
+            .filter({ hasText: "Downloads are limited to 50,000 transactions" }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("button", { name: "Dismiss notification" }),
+        ).toBeVisible();
+      },
+    });
+  });
+
   test.describe("narrow layout", () => {
     test.use({ viewport: { width: 375, height: 800 } });
 
