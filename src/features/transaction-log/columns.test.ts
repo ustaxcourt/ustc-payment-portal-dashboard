@@ -12,6 +12,7 @@ import {
   withFeeDefaults,
   withSearchedColumns,
 } from "./columns";
+import type { TransactionTableFeatures } from "./tableFeatures";
 import type { TransactionLogEntry, TransactionSearchFilters } from "./types";
 import { TRANSACTION_SORT_FIELDS } from "./types";
 
@@ -37,7 +38,7 @@ const entry = (overrides: Partial<TransactionLogEntry>) =>
   overrides as TransactionLogEntry;
 
 const renderCell = (
-  column: ColumnDef<TransactionLogEntry>,
+  column: ColumnDef<TransactionTableFeatures, TransactionLogEntry>,
   overrides: Partial<TransactionLogEntry>,
 ) =>
   (

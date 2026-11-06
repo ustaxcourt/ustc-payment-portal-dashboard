@@ -97,18 +97,18 @@ test("the headers are reachable and operable from the keyboard", async ({
 test("changing the payment status filter keeps the current sort", async ({
   page,
 }) => {
-  await page.goto("/?status=failed&sort=returnDetail&order=asc");
-  await showColumns(page, "Failure reason");
+  await page.goto("/?status=failed&sort=feeName&order=asc");
 
   await expect(
-    page.getByRole("columnheader", { name: /Failure reason/ }),
+    page.getByRole("columnheader", { name: /Fee/ }),
   ).toHaveAttribute("aria-sort", "ascending");
 
   await page.getByRole("radio", { name: /Successful/ }).click();
 
-  await expect(page).toHaveURL(/sort=returnDetail/);
+  await expect(page).toHaveURL(/sort=feeName/);
+  await expect(page).toHaveURL(/order=asc/);
   await expect(
-    page.getByRole("columnheader", { name: /Failure reason/ }),
+    page.getByRole("columnheader", { name: /Fee/ }),
   ).toHaveAttribute("aria-sort", "ascending");
 });
 

@@ -27,31 +27,6 @@ enough context that the next person doesn't have to re-derive the decision.
 
 ## Deferred upgrades
 
-### @tanstack/react-table 8.21.3 → 9.3.1 — deferred (2026-08-04, re-confirmed 2026-10-21)
-
-- **Current:** `8.21.3` (pinned exactly, not `^8`). **Available latest:** `9.3.1`.
-- **Reason:** v9 renames the table hook and changes its types, so the upgrade is a
-  source migration rather than a lockfile refresh. Sized on 2026-10-14:
-  - **Surface:** three files — `src/features/transaction-log/TransactionTable.tsx`,
-    `columns.tsx` and `columns.test.ts`. The table uses only the core row model
-    with `manualSorting`, plus sorting and column-visibility state. No client-side
-    filtering, pagination or grouping.
-  - **Changes:** `useReactTable` + `getCoreRowModel()` become `useTable({ features,
-    columns, data })` with the sorting and column-visibility features registered.
-    `ColumnDef<TData>` gains a leading `TFeatures` generic, which has to be threaded
-    through `columns.tsx`, the table props and the test. The `ColumnMeta` module
-    augmentation keeps working with `TFeatures` as its first generic.
-  - **Unchanged:** `flexRender`, `getHeaderGroups`, `getRowModel`,
-    `getIsSorted`/`toggleSorting`/`getCanSort`, `manualSorting`, and controlled
-    `state` with `onSortingChange`. v9 methods live on the prototype, but the table
-    only destructures the `{ row }` and `{ column }` context objects, not methods.
-  - **Estimate:** about 3 points. The code change is small, but the transaction log
-    is the app's riskiest surface (timeframe, filters, sorting, column visibility
-    and export must stay coherent), so it needs a full manual pass and e2e run.
-- **Plan:** Migrate under its own ticket rather than a dependency rotation. Skip
-  v9's deprecated `useLegacyTable` bridge, which would mean migrating twice. Keep
-  the exact pin so automated updates cannot pull in v9.
-
 ### next 15.5.28 → 16.4.2 — deferred (2026-07-27, re-confirmed 2026-10-21)
 
 - **Current:** `15.5.28` (pinned exactly, not a range). **Available latest:** `16.4.2`.
