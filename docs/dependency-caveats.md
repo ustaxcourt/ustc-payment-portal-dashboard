@@ -108,20 +108,20 @@ enough context that the next person doesn't have to re-derive the decision.
   and re-test with `npm run build`, not just `npm run tsc` — a passing typecheck
   hides this failure entirely.
 
-### @types/node 24.19.2 → 26.6.5 — deferred (2026-09-17, re-confirmed 2026-10-21)
+### @types/node 24.19.2 → 26.6.5 — deferred (2026-09-17, re-confirmed 2026-11-05)
 
 - **Current:** `^24.13.3` (resolves to `24.19.2`). **Available latest:** `26.6.5`.
 - **Reason:** `@types/node` majors track Node.js majors. This app runs Node 24 —
-  `.nvmrc` pins 24.22.1, `package.json` `engines` requires `>=24.22.1 <25.0.0`,
-  and CI resolves its Node from `.nvmrc`. Amplify does too: `amplify.yml` runs
-  `nvm install` before `npm ci` (strict via `.npmrc` `engine-strict`), and Amplify runs the app on the
-  Node major it was built with ([Node.js version support for Next.js
-  apps](https://docs.aws.amazon.com/amplify/latest/userguide/node-version-support-ssr.html)).
-  Before 2026-10-22 it skipped this and built on the image default, Node 22.18.0.
-  Only the major carries over; see the Node.js runtime entry under
-  [Accepted vulnerabilities](#accepted-vulnerabilities). Installing types for Node 26 against a
-  Node 24 runtime would let the typechecker accept APIs that do not exist in
-  production, which is worse than being a major behind.
+  `.nvmrc` pins `24.22.1`, `package.json` `engines` requires
+  `>=24.20.0 <25.0.0`, and CI resolves its Node version from `.nvmrc`.
+  Amplify does too: `amplify.yml` runs `nvm install` before `npm ci` (strict via
+  `.npmrc` `engine-strict`), and Amplify runs the app on the Node major it was
+  built with (Node.js version support for Next.js apps). Before 2026-10-22 it
+  skipped this and built on the image default, Node 22.18.0. Only the major
+  carries over; see the Node.js runtime entry under
+  [Accepted vulnerabilities](#accepted-vulnerabilities). Installing Node 26 type
+  definitions against a Node 24 runtime would let the typechecker accept APIs
+  that do not exist in production, which is worse than being a major behind.
 - **Plan:** Bump in lockstep with the Node runtime, not on its own. When this app
   moves to Node 26, move `@types/node` with it in the same change.
 
