@@ -39,8 +39,8 @@ enough context that the next person doesn't have to re-derive the decision.
   makes Turbopack the default build engine, so a plain `next build` produced
   `▲ Next.js 16.x (Turbopack)` with no opt-in. On the 15.5.x line the build runs on
   webpack.
-- **Plan:** Upgrade when Amplify documents Next 16 support and the Turbopack bundler
-  issue is closed. Pinned exactly rather than `^15` so the major cannot drift in
+- **Plan:** Upgrade when Amplify documents Next 16 support, then prove it with a
+  preview-branch build before merging. Pinned exactly rather than `^15` so the major cannot drift in
   through a lockfile refresh. **This pin is contingent on the Amplify hosting decision
   (ADR 0001 open question 3); if the team selects OpenNext instead, re-evaluate rather
   than assuming the pin is still required.**
@@ -48,22 +48,36 @@ enough context that the next person doesn't have to re-derive the decision.
   "built with Next.js versions up through Next.js 15", and compute-managed SSR for
   "versions 12 through 15". No Next 16 support has been announced. `15.5.28` is
   still the newest 15.5.x (the `backport` dist-tag).
-- **Re-checked 2026-11-09:** `15.5.29` is the newest 15.5.x (the `backport`
-  dist-tag), and `next build` still runs on webpack.
-- **Note:** Staying on 15.x is not the same as staying still. 15.5.29 (2026-11-03)
-  is a security release for three moderate advisories: GHSA-pc58-hwjq-p385
-  (cross-client response injection when forwarding fetched responses),
-  GHSA-7qx7-33qx-rqx2 (SVG rejection bypass in image optimization) and
-  GHSA-f3mh-rxg3-f5g2 (HttpOnly cookie exposure on Edge runtime routes). They are
-  published on the Next.js repository, so `npm audit` did not flag them. The image
-  optimization advisory is in scope for the same reason as GHSA-2464-fhr4-w9xw
-  below. PAY-494 moved 15.5.26 → 15.5.28 within the pin. 15.5.28 (2026-10-14) is a security release:
-  GHSA-2464-fhr4-w9xw (critical, unauthenticated RCE in the Image Optimization API
-  when processing SVGs) and GHSA-p3m5-59mp-jv5r (high, App Router Server Actions
-  DoS). This app is in scope for the first: `src/app/page.tsx` uses `next/image`,
-  and `src/middleware.ts` excludes `_next/image` from the auth gate, so the
-  optimizer endpoint is reachable without login. Patch releases on the 15.5 line should continue
-  to be taken promptly while Next 16 remains deferred.
+- **Re-checked 2026-11-09:** The Amplify Hosting docs still state support "up
+  through Next.js 15", and compute-managed SSR for "versions 12 through 15". The
+  EEXIST issue quoted above (aws-amplify/amplify-hosting#4074) was closed as
+  completed on 2026-02-17, but users reported the same failure on Next 16.2.9 as
+  late as 2026-07-03, so it is not evidence that Next 16 deploys cleanly. The
+  deferral now rests on the documented support alone. `15.5.29` is the newest
+  15.5.x (the `backport` dist-tag), and `next build` still runs on webpack.
+- **Note:** Staying on 15.x is not the same as staying still. Patch releases on
+  the 15.5 line should continue to be taken promptly while Next 16 remains
+  deferred.
+  - **15.5.28 (2026-10-14, PAY-494):** GHSA-2464-fhr4-w9xw (critical,
+    unauthenticated RCE in the Image Optimization API when processing SVGs) and
+    GHSA-p3m5-59mp-jv5r (high, App Router Server Actions DoS). This app is in scope
+    for the first: `src/app/page.tsx` uses `next/image`, and `src/middleware.ts`
+    excludes `_next/image` from the auth gate, so the optimizer endpoint is
+    reachable without login.
+  - **15.5.29 (2026-11-03, PAY-507):** three moderate advisories, published on the
+    Next.js repository rather than the global advisory database, so `npm audit`
+    does not flag them.
+    - GHSA-7qx7-33qx-rqx2 (SVG rejection bypass in image optimization): **in
+      scope**, for the same reason as GHSA-2464-fhr4-w9xw.
+    - GHSA-pc58-hwjq-p385 (response desync when a route handler returns a fetched
+      upstream response unchanged): **not in scope**. `src/app/api/transactions`
+      and `src/app/api/totals` read the upstream body and build a new
+      `NextResponse`, so upstream framing never reaches the client.
+    - GHSA-f3mh-rxg3-f5g2 (HttpOnly cookies duplicated into an internal header
+      when an Edge runtime route handler sets them through `NextResponse`): **not
+      in scope**. No route handler sets `runtime = "edge"`. The session cookie is
+      set by the NextAuth handler on the Node runtime, and `src/middleware.ts` only
+      reads it.
 
 ### typescript 5.9.3 → 7.0.2 — deferred (2026-09-17, re-confirmed 2026-11-09)
 
@@ -103,10 +117,27 @@ enough context that the next person doesn't have to re-derive the decision.
   `.npmrc` `engine-strict`), and Amplify runs the app on the Node major it was
   built with (Node.js version support for Next.js apps). Before 2026-10-22 it
   skipped this and built on the image default, Node 22.18.0. Only the major
-  carries over, and AWS picks the patch version: on 2026-11-09 the dev app's
-  runtime logged `v24.22.2`. Installing Node 26 type
+  carries over, and AWS picks the patch version. Installing Node 26 type
   definitions against a Node 24 runtime would let the typechecker accept APIs
   that do not exist in production, which is worse than being a major behind.
+- **Runtime patch check:** Because AWS picks the patch, a Node security release
+  is not fixed in production when `.nvmrc` moves. AWS's rollout of 24.22.1 lagged
+  the 2026-10-21 release (aws-amplify/amplify-hosting#4111). `src/instrumentation.ts`
+  logs `[dashboard] Node.js runtime v24.x.y` once per server start, so list the
+  versions seen in the last week with:
+
+  ```sh
+  aws logs filter-log-events --no-cli-pager \
+    --log-group-name /aws/amplify/<app-id> \
+    --filter-pattern '"Node.js runtime"' \
+    --start-time $(( ($(date +%s) - 7*86400) * 1000 )) \
+    --query 'events[].message' --output text | tr '\t' '\n' | sort -u
+  ```
+
+  If any version is older than the fix, add an entry under
+  [Accepted vulnerabilities](#accepted-vulnerabilities) until AWS catches up.
+  On 2026-11-09 the dev app logged only `v24.22.2`, which closed the
+  October 2026 entry.
 - **Plan:** Bump in lockstep with the Node runtime, not on its own. When this app
   moves to Node 26, move `@types/node` with it in the same change.
 
@@ -165,8 +196,9 @@ enough context that the next person doesn't have to re-derive the decision.
   (devDependency): `shadcn` → `ts-morph@26.0.0` → `@ts-morph/common@0.27.0`, which
   declares `minimatch@^10.0.1`. The newest `@ts-morph/common` (`0.29.0`) still
   declares `^10.0.1`, so no upstream release reaches the fix. An override to 11 was
-  rejected for the same reason as the `traverse` hold: it would force a major
-  outside the range the parent declares. `npm audit`'s suggested "fix"
+  rejected because it would force a major outside the range `@ts-morph/common`
+  declares, and the CLI is not covered by our tests, so a break would surface only
+  the next time someone adds a component. `npm audit`'s suggested "fix"
   (downgrading `shadcn` to 1.0.0) is not real remediation.
 - **Mitigation:** Exploiting it needs attacker-controlled glob patterns. `shadcn` is
   a dev-time CLI used to add components, not shipped in the app bundle or run at
