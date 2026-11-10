@@ -137,7 +137,9 @@ enough context that the next person doesn't have to re-derive the decision.
   If any version is older than the fix, add an entry under
   [Accepted vulnerabilities](#accepted-vulnerabilities) until AWS catches up.
   On 2026-11-09 the dev app logged only `v24.22.2`, which closed the
-  October 2026 entry.
+  October 2026 entry. That check covered dev alone: stg and prod have never
+  completed an Amplify build, so they serve no SSR traffic and log no runtime
+  version. Run the same check against their app IDs once they go live.
 - **Plan:** Bump in lockstep with the Node runtime, not on its own. When this app
   moves to Node 26, move `@types/node` with it in the same change.
 
