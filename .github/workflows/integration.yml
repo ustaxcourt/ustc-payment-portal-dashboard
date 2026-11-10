@@ -1,0 +1,46 @@
+name: Dashboard integration tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment containing the real-login storage state
+        required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
+      base_url:
+        description: Deployed dashboard URL
+        required: true
+        type: string
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run dashboard integration tests
+        run: npm run test:integration
+        env:
+          E2E_BASE_URL: ${{ inputs.base_url }}
+          E2E_CHANNEL: chromium
+          E2E_STORAGE_STATE_JSON: ${{ secrets.E2E_STORAGE_STATE_JSON }}
+      - name: Upload Playwright integration artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-integration-${{ inputs.environment }}-${{ github.run_id }}
+          path: |
+            e2e/integration-report
+            e2e/integration-results
+          if-no-files-found: error
+          retention-days: 14
