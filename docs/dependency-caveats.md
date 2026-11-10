@@ -217,10 +217,16 @@ enough context that the next person doesn't have to re-derive the decision.
   `@shadcn/registry@0.2.1`. `npm audit`'s suggested "fix" (downgrading `shadcn` to
   1.0.0) is not real remediation.
 - **Mitigation:** Exploiting it needs attacker-controlled objects reaching the
-  merge. The CLI merges only our own `components.json` and registry configuration,
-  is not shipped in the app bundle, and does not run at request time.
+  merge. The CLI merges our local `components.json` and, during `shadcn add`, the
+  `tailwind`, `cssVars`, `css` and `envVars` of registry items it fetches. That
+  second input is remote: `components.json` sets `"registries": {}`, so the only
+  source is the default registry at `ui.shadcn.com`, over HTTPS. The CLI runs only
+  when a developer adds a component, its output goes through code review like any
+  other change, and it is not shipped in the app bundle or run at request time.
 - **Revisit:** When `deepmerge` publishes a fix or `shadcn` drops it. Re-run
-  `npm audit` on each dependency update.
+  `npm audit` on each dependency update. **Re-assess before adding a third-party
+  registry to `components.json`**, because that would let a source we don't
+  control feed the merge.
 
 <!-- Format:
 ### <advisory-id> — <package>@<version> (<severity>)
