@@ -1,0 +1,75 @@
+name: Dashboard integration tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment containing the real-login storage state
+        required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Resolve deployed dashboard URL
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            if [ -z "${CONFIGURED_NEXTAUTH_URL}" ]; then
+              echo "Missing required GitHub environment variable: NEXTAUTH_URL" >&2
+              exit 1
+            fi
+            NEXTAUTH_URL="${CONFIGURED_NEXTAUTH_URL}"
+          else
+            if [ -z "${AMPLIFY_APP_ID}" ]; then
+              echo "Missing required GitHub environment variable: AMPLIFY_APP_ID" >&2
+              exit 1
+            fi
+            SUBDOMAIN="$(printf '%s' "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')"
+            NEXTAUTH_URL="https://${SUBDOMAIN}.${AMPLIFY_APP_ID}.amplifyapp.com"
+          fi
+
+          NEXTAUTH_URL="${NEXTAUTH_URL%/}"
+          echo "NEXTAUTH_URL=${NEXTAUTH_URL}" >> "${GITHUB_ENV}"
+          echo "Testing deployed dashboard: ${NEXTAUTH_URL}"
+
+          if [ -z "${E2E_ERROR_BASE_URL}" ]; then
+            echo "Missing required GitHub environment variable: E2E_ERROR_BASE_URL" >&2
+            exit 1
+          fi
+          E2E_ERROR_BASE_URL="${E2E_ERROR_BASE_URL%/}"
+          echo "E2E_ERROR_BASE_URL=${E2E_ERROR_BASE_URL}" >> "${GITHUB_ENV}"
+          echo "Testing error handling against: ${E2E_ERROR_BASE_URL}"
+        env:
+          AMPLIFY_APP_ID: ${{ vars.AMPLIFY_APP_ID }}
+          CONFIGURED_NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
+          E2E_ERROR_BASE_URL: ${{ vars.E2E_ERROR_BASE_URL }}
+      - name: Run dashboard integration tests
+        run: npm run test:integration
+        env:
+          E2E_CHANNEL: chromium
+          E2E_STORAGE_STATE_JSON: ${{ secrets.E2E_STORAGE_STATE_JSON }}
+      - name: Upload Playwright integration artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-integration-${{ inputs.environment }}-${{ github.run_id }}
+          path: |
+            e2e/integration-report
+            e2e/integration-results
+          if-no-files-found: error
+          retention-days: 14
