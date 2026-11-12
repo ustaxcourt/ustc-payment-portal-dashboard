@@ -19,7 +19,8 @@
     "test:a11y": "playwright test --config e2e/playwright.config.ts --project=accessibility-anonymous --project=accessibility-authenticated",
     "test:e2e:login": "playwright test --config e2e/playwright.config.ts --project=setup --headed",
     "test:integration:auth": "playwright test --config e2e/playwright.integration.config.ts --project=integration-auth --headed",
-    "test:integration": "playwright test --config e2e/playwright.integration.config.ts --project=integration",
+    "test:integration": "playwright test --config e2e/playwright.integration.config.ts --project=integration --project=integration-error",
+    "test:integration:dashboard": "playwright test --config e2e/playwright.integration.config.ts --project=integration",
     "test:integration:error": "playwright test --config e2e/playwright.integration.config.ts --project=integration-error"
   },
   "dependencies": {

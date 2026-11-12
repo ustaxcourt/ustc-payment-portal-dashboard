@@ -16,14 +16,19 @@ test("shows the failing live API request and a user-facing error", async ({
   await page.goto("/");
 
   const response = await failedRequest;
+  const diagnostic = `${response.request().method()} ${response.url()} returned ${response.status()}: ${await response.text()}`;
   expect(
     response.status(),
-    `${response.request().method()} ${response.url()} unexpectedly succeeded`,
+    `${diagnostic}; expected a backend failure`,
   ).toBeGreaterThanOrEqual(400);
   await expect(
     page.getByText(
       /Could not load the (transaction log|revenue totals|payment breakdown)\./,
     ),
+    diagnostic,
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Try again" }),
+    diagnostic,
+  ).toBeVisible();
 });

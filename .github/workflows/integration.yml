@@ -46,9 +46,18 @@ jobs:
           NEXTAUTH_URL="${NEXTAUTH_URL%/}"
           echo "NEXTAUTH_URL=${NEXTAUTH_URL}" >> "${GITHUB_ENV}"
           echo "Testing deployed dashboard: ${NEXTAUTH_URL}"
+
+          if [ -z "${E2E_ERROR_BASE_URL}" ]; then
+            echo "Missing required GitHub environment variable: E2E_ERROR_BASE_URL" >&2
+            exit 1
+          fi
+          E2E_ERROR_BASE_URL="${E2E_ERROR_BASE_URL%/}"
+          echo "E2E_ERROR_BASE_URL=${E2E_ERROR_BASE_URL}" >> "${GITHUB_ENV}"
+          echo "Testing error handling against: ${E2E_ERROR_BASE_URL}"
         env:
           AMPLIFY_APP_ID: ${{ vars.AMPLIFY_APP_ID }}
           CONFIGURED_NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
+          E2E_ERROR_BASE_URL: ${{ vars.E2E_ERROR_BASE_URL }}
       - name: Run dashboard integration tests
         run: npm run test:integration
         env:

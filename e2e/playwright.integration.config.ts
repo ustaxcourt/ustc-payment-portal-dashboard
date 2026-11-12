@@ -1,5 +1,9 @@
 import path from "node:path";
-import { defineConfig, devices } from "@playwright/test";
+import {
+  type BrowserContextOptions,
+  defineConfig,
+  devices,
+} from "@playwright/test";
 
 const BASE_URL = process.env.NEXTAUTH_URL;
 
@@ -13,9 +17,36 @@ export const INTEGRATION_STORAGE_STATE =
   process.env.E2E_STORAGE_STATE ??
   path.join(__dirname, ".auth/integration.json");
 
-const storageState = process.env.E2E_STORAGE_STATE_JSON
-  ? JSON.parse(process.env.E2E_STORAGE_STATE_JSON)
-  : INTEGRATION_STORAGE_STATE;
+type InlineStorageState = Exclude<
+  BrowserContextOptions["storageState"],
+  string | undefined
+>;
+
+const storageStateFor = (
+  baseUrl: string,
+): BrowserContextOptions["storageState"] => {
+  if (!process.env.E2E_STORAGE_STATE_JSON) return INTEGRATION_STORAGE_STATE;
+
+  const state = JSON.parse(
+    process.env.E2E_STORAGE_STATE_JSON,
+  ) as InlineStorageState;
+  const target = new URL(baseUrl);
+
+  return {
+    ...state,
+    cookies: state.cookies.map((cookie) =>
+      /^(?:__Secure-)?next-auth\.session-token$/.test(cookie.name)
+        ? {
+            ...cookie,
+            domain: target.hostname,
+            secure: target.protocol === "https:",
+          }
+        : cookie,
+    ),
+  };
+};
+
+const storageState = storageStateFor(BASE_URL);
 
 const BROWSER_CHANNEL = process.env.E2E_CHANNEL ?? "msedge";
 
@@ -64,7 +95,9 @@ export default defineConfig({
         ...devices["Desktop Edge"],
         channel: BROWSER_CHANNEL,
         baseURL: process.env.E2E_ERROR_BASE_URL ?? BASE_URL,
-        storageState,
+        storageState: storageStateFor(
+          process.env.E2E_ERROR_BASE_URL ?? BASE_URL,
+        ),
       },
     },
   ],
