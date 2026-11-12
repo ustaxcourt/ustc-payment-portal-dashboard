@@ -41,7 +41,7 @@ export default defineConfig({
     },
     {
       name: "setup",
-      testMatch: /auth\.setup\.ts$/,
+      testMatch: /(^|\/)auth\.setup\.ts$/,
       use: { ...devices["Desktop Edge"], channel: BROWSER_CHANNEL },
     },
     {

@@ -1,5 +1,9 @@
+import path from "node:path";
 import { expect, test as setup } from "@playwright/test";
-import { INTEGRATION_STORAGE_STATE } from "./playwright.integration.config";
+
+const integrationStorageState =
+  process.env.E2E_STORAGE_STATE ??
+  path.join(__dirname, ".auth/integration.json");
 
 setup("capture a real authenticated session", async ({ page }) => {
   setup.setTimeout(5 * 60_000);
@@ -15,5 +19,5 @@ setup("capture a real authenticated session", async ({ page }) => {
   ).toBeVisible({ timeout: 5 * 60_000 });
   await expect(page).not.toHaveURL(/\/login/);
 
-  await page.context().storageState({ path: INTEGRATION_STORAGE_STATE });
+  await page.context().storageState({ path: integrationStorageState });
 });

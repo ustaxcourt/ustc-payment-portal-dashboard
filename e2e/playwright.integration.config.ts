@@ -1,11 +1,11 @@
 import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
-const BASE_URL = process.env.E2E_BASE_URL;
+const BASE_URL = process.env.NEXTAUTH_URL;
 
 if (!BASE_URL) {
   throw new Error(
-    "E2E_BASE_URL is required for integration tests and must point to a deployed dashboard.",
+    "NEXTAUTH_URL is required for integration tests and must point to a deployed dashboard.",
   );
 }
 
