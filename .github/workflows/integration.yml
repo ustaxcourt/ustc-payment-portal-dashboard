@@ -30,7 +30,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Run dashboard integration tests
-        run: npm run test:integration
+        run: E2E_BASE_URL=${{ env.E2E_BASE_URL }} npm run test:integration
         env:
           E2E_BASE_URL: ${{ inputs.base_url }}
           E2E_CHANNEL: chromium
