@@ -44,10 +44,6 @@ enough context that the next person doesn't have to re-derive the decision.
   through a lockfile refresh. **This pin is contingent on the Amplify hosting decision
   (ADR 0001 open question 3); if the team selects OpenNext instead, re-evaluate rather
   than assuming the pin is still required.**
-- **Re-checked 2026-10-21:** The Amplify Hosting docs still state support for apps
-  "built with Next.js versions up through Next.js 15", and compute-managed SSR for
-  "versions 12 through 15". No Next 16 support has been announced. `15.5.28` is
-  still the newest 15.5.x (the `backport` dist-tag).
 - **Re-checked 2026-11-09:** The Amplify Hosting docs still state support "up
   through Next.js 15", and compute-managed SSR for "versions 12 through 15". The
   EEXIST issue quoted above (aws-amplify/amplify-hosting#4074) was closed as
