@@ -35,7 +35,7 @@ const storageStateFor = (
   return {
     ...state,
     cookies: state.cookies.map((cookie) =>
-      /^(?:__Secure-)?next-auth\.session-token$/.test(cookie.name)
+      /^(?:__Secure-)?next-auth\.session-token(?:\.\d+)?$/.test(cookie.name)
         ? {
             ...cookie,
             domain: target.hostname,
