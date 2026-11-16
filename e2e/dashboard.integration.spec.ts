@@ -5,31 +5,14 @@ import {
   type Response,
   test,
 } from "@playwright/test";
+import { PAYMENT_STATUS_LABEL } from "@/features/transaction-log/statusStyles";
+import type { TransactionLogResponse } from "@/features/transaction-log/types";
 import { projectedFees } from "../src/features/revenue-totals/projection";
 import {
   TOTAL_PERIODS,
   type TotalsResponse,
 } from "../src/features/revenue-totals/types";
 import { formatCurrency, formatWholeCurrency } from "../src/lib/format";
-
-type Transaction = {
-  feeName: string;
-  transactionAmount: number;
-  paymentStatus: "success" | "failed" | "pending";
-};
-
-type TransactionResponse = {
-  data: Transaction[];
-  total: number;
-  sort: string;
-  order: "asc" | "desc";
-};
-
-const PAYMENT_STATUS_LABEL = {
-  success: "Successful",
-  failed: "Failed",
-  pending: "Pending",
-} as const;
 
 const dashboardResponse = (page: Page, endpoint: string) =>
   page.waitForResponse((response) => {
@@ -52,7 +35,7 @@ const expectSuccessfulApiResponse = async (
 
 const expectTransactionsRendered = async (
   page: Page,
-  response: TransactionResponse,
+  response: TransactionLogResponse,
 ) => {
   expect(
     response.data.length,
@@ -138,7 +121,7 @@ test("loads authenticated dashboard data from live APIs", async ({ page }) => {
   await expectSuccessfulApiResponse(totalsResponse);
 
   const transactions =
-    (await transactionsResponse.json()) as TransactionResponse;
+    (await transactionsResponse.json()) as TransactionLogResponse;
   const totals = (await totalsResponse.json()) as TotalsResponse;
 
   expect(Array.isArray(transactions.data)).toBe(true);
@@ -167,7 +150,7 @@ test("sorts and filters using live transaction requests", async ({ page }) => {
     .click();
   const sortedResponse = await sortedResponsePromise;
   await expectSuccessfulApiResponse(sortedResponse);
-  const sorted = (await sortedResponse.json()) as TransactionResponse;
+  const sorted = (await sortedResponse.json()) as TransactionLogResponse;
 
   expect(sorted.sort).toBe("transactionAmount");
   expect(sorted.order).toBe("desc");
@@ -186,7 +169,7 @@ test("sorts and filters using live transaction requests", async ({ page }) => {
   await page.getByRole("radio", { name: /Successful/ }).click();
   const filteredResponse = await filteredResponsePromise;
   await expectSuccessfulApiResponse(filteredResponse);
-  const filtered = (await filteredResponse.json()) as TransactionResponse;
+  const filtered = (await filteredResponse.json()) as TransactionLogResponse;
 
   expect(
     filtered.data.every(({ paymentStatus }) => paymentStatus === "success"),
@@ -202,7 +185,7 @@ test("sorts and filters using live transaction requests", async ({ page }) => {
   await expectSuccessfulApiResponse(sharedUrlResponse);
   const sharedUrl = new URL(sharedUrlResponse.url());
   const sharedTransactions =
-    (await sharedUrlResponse.json()) as TransactionResponse;
+    (await sharedUrlResponse.json()) as TransactionLogResponse;
   expect(sharedUrl.searchParams.get("status")).toBe("success");
   expect(sharedUrl.searchParams.get("sort")).toBe("transactionAmount");
   expect(sharedUrl.searchParams.get("order")).toBe("desc");
