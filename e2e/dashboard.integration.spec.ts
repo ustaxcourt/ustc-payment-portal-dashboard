@@ -17,6 +17,12 @@ import { formatCurrency, formatWholeCurrency } from "../src/lib/format";
 const dashboardResponse = (page: Page, endpoint: string) =>
   page.waitForResponse((response) => {
     const url = new URL(response.url());
+    if (
+      url.pathname === "/api/transactions" &&
+      url.searchParams.get("includeFeeBreakdown") === "true"
+    ) {
+      return false;
+    }
     return url.pathname === endpoint && response.request().method() === "GET";
   });
 
