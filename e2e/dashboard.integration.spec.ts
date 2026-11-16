@@ -14,6 +14,12 @@ import {
 } from "../src/features/revenue-totals/types";
 import { formatCurrency, formatWholeCurrency } from "../src/lib/format";
 
+const waitForTransactionLog = async (page: Page) => {
+  await expect(
+    page.getByRole("grid", { name: /Transaction log/ }),
+  ).toHaveAttribute("aria-busy", "false");
+};
+
 const dashboardResponse = (page: Page, endpoint: string) =>
   page.waitForResponse((response) => {
     const url = new URL(response.url());
@@ -169,6 +175,7 @@ test("sorts and filters using live transaction requests", async ({ page }) => {
   await expect(
     page.getByRole("columnheader", { name: /Amount/ }),
   ).toHaveAttribute("aria-sort", "descending");
+  await waitForTransactionLog(page);
   await expectTransactionsRendered(page, sorted);
 
   const filteredResponsePromise = dashboardResponse(page, "/api/transactions");
@@ -183,6 +190,7 @@ test("sorts and filters using live transaction requests", async ({ page }) => {
   expect(filtered.sort).toBe("transactionAmount");
   expect(filtered.order).toBe("desc");
   await expect(page).toHaveURL(/status=success/);
+  await waitForTransactionLog(page);
   await expectTransactionsRendered(page, filtered);
 
   const sharedUrlResponsePromise = dashboardResponse(page, "/api/transactions");
@@ -199,5 +207,6 @@ test("sorts and filters using live transaction requests", async ({ page }) => {
   await expect(
     page.getByRole("columnheader", { name: /Amount/ }),
   ).toHaveAttribute("aria-sort", "descending");
+  await waitForTransactionLog(page);
   await expectTransactionsRendered(page, sharedTransactions);
 });
