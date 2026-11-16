@@ -91,11 +91,11 @@ const expectTotalsRendered = async (page: Page, totals: TotalsResponse) => {
     const current = totals.current[period];
     const trend = totals.yoyTrends[period];
     expect(Number.isFinite(current.total)).toBe(true);
-    expect(Number.isFinite(trend.difference)).toBe(true);
-    expect(Number.isFinite(trend.percentChange)).toBe(true);
     if (trend.difference === null || trend.percentChange === null) {
       throw new Error(`${period} YoY trend did not resolve to real numbers`);
     }
+    expect(Number.isFinite(trend.difference)).toBe(true);
+    expect(Number.isFinite(trend.percentChange)).toBe(true);
 
     await expect(currentCells.nth(index)).toHaveText(
       formatCurrency(current.total),
