@@ -54,7 +54,7 @@
     "@types/node": "^24.13.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "axe-core": "4.14.0",
+    "axe-core": "~4.14.1",
     "jsdom": "^31.0.0",
     "shadcn": "^4.23.0",
     "tailwindcss": "^4",
@@ -64,5 +64,8 @@
   "overrides": {
     "traverse": "0.3.9",
     "uuid": "11.1.1"
+  },
+  "allowScripts": {
+    "fsevents": false
   }
 }
