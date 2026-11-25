@@ -108,7 +108,7 @@ enough context that the next person doesn't have to re-derive the decision.
 - **Current:** `^24.13.3` (resolves to `24.19.2`). **Available latest:** `26.6.6`.
 - **Reason:** `@types/node` majors track Node.js majors. This app runs Node 24 —
   `.nvmrc` pins `24.22.3`, `package.json` `engines` requires
-  `>=24.22.1 <25.0.0`, and CI resolves its Node version from `.nvmrc`.
+  `>=24.22.3 <25.0.0`, and CI resolves its Node version from `.nvmrc`.
   Amplify does too: `amplify.yml` runs `nvm install` before `npm ci` (strict via
   `.npmrc` `engine-strict`), and Amplify runs the app on the Node major it was
   built with (Node.js version support for Next.js apps). Before 2026-10-22 it
@@ -146,10 +146,11 @@ enough context that the next person doesn't have to re-derive the decision.
   use-after-free, CVE-2026-123872 TLS 1.2 renegotiation bypassing client-certificate
   auth). Most only matter if the app terminates HTTP/2 or TLS itself. Here Amplify
   fronts the Node server, so exposure is probably limited, but we take the patch
-  anyway. `.nvmrc` governs only local dev and CI: production runs whatever patch AWS
-  provides. Dev last logged `v24.22.2` (2026-11-09), so run the runtime check above
-  after AWS rolls out 24.22.3. Until the logs show `v24.22.3`, production may still
-  be exposed. `engines` stays at `>=24.22.1` and was not raised.
+  anyway. `.nvmrc` governs only local dev, CI: production runs whatever patch AWS
+  provides. Dev logged `v24.22.2` on 2026-11-09, but the runtime check above showed
+  `v24.22.3` on dev on 2026-11-25, so this release needed no Accepted vulnerabilities
+  entry. Run the check against stg and prod too, as it only covered dev.
+  `engines` is bumped to `>=24.22.3` to keep devs off vulnerable versions.
 - **Plan:** Bump in lockstep with the Node runtime, not on its own. When this app
   moves to Node 26, move `@types/node` with it in the same change.
 
