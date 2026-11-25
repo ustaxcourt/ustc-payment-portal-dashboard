@@ -107,8 +107,8 @@ enough context that the next person doesn't have to re-derive the decision.
 
 - **Current:** `^24.13.3` (resolves to `24.19.2`). **Available latest:** `26.6.6`.
 - **Reason:** `@types/node` majors track Node.js majors. This app runs Node 24 —
-  `.nvmrc` pins `24.22.1`, `package.json` `engines` requires
-  `>=24.22.1 <25.0.0`, and CI resolves its Node version from `.nvmrc`.
+  `.nvmrc` pins `24.22.3`, `package.json` `engines` requires
+  `>=24.22.3 <25.0.0`, and CI resolves its Node version from `.nvmrc`.
   Amplify does too: `amplify.yml` runs `nvm install` before `npm ci` (strict via
   `.npmrc` `engine-strict`), and Amplify runs the app on the Node major it was
   built with (Node.js version support for Next.js apps). Before 2026-10-22 it
@@ -136,6 +136,21 @@ enough context that the next person doesn't have to re-derive the decision.
   October 2026 entry. That check covered dev alone: stg and prod have never
   completed an Amplify build, so they serve no SSR traffic and log no runtime
   version. Run the same check against their app IDs once they go live.
+- **Node 24.22.3 security release (2026-11-11, PAY-508):** `.nvmrc` moved from
+  `24.22.1` to `24.22.3`, the 24.x fix in the November 2026 Node.js security
+  release (16 CVEs affecting 24.x, 7 of them high; also updates bundled llhttp,
+  undici and sqlite). Release notes:
+  <https://nodejs.org/en/blog/vulnerability/november-2026-security-releases>. The
+  high-severity items concern the HTTP/2 and TLS server stacks (for example
+  CVE-2026-123863 remote crash via HTTP/2 abort, CVE-2026-123864 HTTPS
+  use-after-free, CVE-2026-123872 TLS 1.2 renegotiation bypassing client-certificate
+  auth). Most only matter if the app terminates HTTP/2 or TLS itself. Here Amplify
+  fronts the Node server, so exposure is probably limited, but we take the patch
+  anyway. `.nvmrc` governs only local dev, CI, and amplify build: production runs whatever patch AWS
+  provides. Dev logged `v24.22.2` on 2026-11-09, but the runtime check above showed
+  `v24.22.3` on dev on 2026-11-25, so this release needed no Accepted vulnerabilities
+  entry. Run the check against stg and prod too, as it only covered dev.
+  `engines` is bumped to `>=24.22.3` to keep devs off vulnerable versions.
 - **Plan:** Bump in lockstep with the Node runtime, not on its own. When this app
   moves to Node 26, move `@types/node` with it in the same change.
 
