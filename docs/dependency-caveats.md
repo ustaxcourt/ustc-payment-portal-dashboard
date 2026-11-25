@@ -146,7 +146,7 @@ enough context that the next person doesn't have to re-derive the decision.
   use-after-free, CVE-2026-123872 TLS 1.2 renegotiation bypassing client-certificate
   auth). Most only matter if the app terminates HTTP/2 or TLS itself. Here Amplify
   fronts the Node server, so exposure is probably limited, but we take the patch
-  anyway. `.nvmrc` governs only local dev, CI: production runs whatever patch AWS
+  anyway. `.nvmrc` governs only local dev, CI, and amplify build: production runs whatever patch AWS
   provides. Dev logged `v24.22.2` on 2026-11-09, but the runtime check above showed
   `v24.22.3` on dev on 2026-11-25, so this release needed no Accepted vulnerabilities
   entry. Run the check against stg and prod too, as it only covered dev.
